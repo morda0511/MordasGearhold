@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+.vs/
+
+# Local only: asset preview sheet and the copy of the icon used for packing.
+thunderstore-assets/contact-sheet.png
+thunderstore-assets/mordas-gearhold/contact-sheet.png
+thunderstore-assets/icon.png
