@@ -17,6 +17,15 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-dyes.png" width="80" alt="Dyes"> | **Dyes** – recolour your armour with swatches and fine controls, with a live 3D preview. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
 
+## In game
+**The Gearhold panel** – sets, equipment slots, the YOUR VIKING sheet and the quickslots with their hotkeys:
+
+![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Gearhold%20Menu.png)
+
+**The look menu** – pick a look, hide a piece or dye it, with a 3D preview of your character:
+
+![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Transmog%20Menu.png)
+
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
 ## What it does
