@@ -1,5 +1,23 @@
+![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
+
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.15.1 (test build)
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.15.1
+
+Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes – all in a panel built from Valheim's own UI.
+
+## At a glance
+| | |
+|---|---|
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-sets.png" width="80" alt="Sets"> | **3 equipment sets** – switch your whole loadout with one click or hotkey. The inventory stays shared. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-slots.png" width="80" alt="Slots"> | **Real slots, no copies** – Head, Chest, Legs, Cape, Shield, Utility, Trinket and Ammo in their own panel. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-quickslots.png" width="80" alt="Quickslots"> | **8 quickslots** with your own hotkeys and a small bar on the HUD. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-ammo.png" width="80" alt="Ammo"> | **3 ammo slots** – switch arrows instantly with Alt+1/2/3. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-trinkets.png" width="80" alt="Trinkets"> | **Up to 3 trinkets and 3 utility items** worn at once (configurable 1–3). |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-transmog.png" width="80" alt="Transmog"> | **Transmog** – wear the look of any armour you know, per set; weapons get their own look. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-dyes.png" width="80" alt="Dyes"> | **Dyes** – recolour your armour with swatches and fine controls, with a live 3D preview. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
+
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
 ## What it does
 - **Three independent equipment sets.** A set is exactly what lies in the Gearhold panel: armour, shield, three utility items, three trinkets, three ammo slots and 8 quickslots (food, potions, ...).
@@ -137,24 +155,17 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 - **Valheim Mannequins:** works. Quickslot keys no longer dress a mannequin by accident.
 - **Not tested yet:** EpicLoot, Backpacks, Morda-Graveyard.
 
-## Build
-```
-dotnet build -c Release
-```
-Copies the DLL into the Thunderstore profile "Solo Gameplay" (`-p:Deploy=false` to only build). Translations via JSON files are planned.
+## Installation
+- **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
+- **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
 
-## Test round (use a character copy!)
-1. **Load the character.** A bow that 0.6.0 kept in the ranged slot is back in the grid. Nothing lies on the ground.
-2. **Ammo:** put wood arrows into Ammo 1 and fire arrows into Ammo 2. `Alt+2` selects the fire arrows (message top left), and hotbar item 2 is *not* used. `Alt+1` switches back.
-3. **Shield:**
-   - Shield in Shield, sword in the hotbar. Draw the sword with its hotbar key: the shield comes along.
-   - Press the hotbar key again (sword away): the shield goes away too.
-   - Swap sword ↔ axe: the shield stays. Eat with the sword drawn: the shield stays.
-4. **Quickslots:**
-   - Food in Quickslot 1, press Z → you eat.
-   - Look at a mannequin and press a quickslot key → nothing is handed over.
-   - Rebind Quickslot 2 to `K` with the button below it. The HUD bar shows K.
-5. **YOUR VIKING** with sword and shield drawn shows WEAPON and SHIELD values, and the list fits above the quickslots.
-6. **Fill the slots of set 1, switch to set 2 and back.** The slots are back. The grid did not change.
-7. **Die, switch set, loot the grave.** Everything returns to its place.
-8. **Log out and in after each step.** Check `BepInEx/LogOutput.log` for `Gearhold` errors.
+## Building from source
+```
+dotnet build -c Release -p:Deploy=false
+```
+- The game folder is set in `Directory.Build.props`. Override it with `-p:ValheimDir=...` and `-p:BepInExProfile=...`.
+- Without `-p:Deploy=false`, the DLL is copied into that BepInEx profile.
+
+Source and issues: https://github.com/morda0511/MordasGearhold
+
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-footer.png)
