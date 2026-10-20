@@ -7,3 +7,5 @@ obj/
 thunderstore-assets/contact-sheet.png
 thunderstore-assets/mordas-gearhold/contact-sheet.png
 thunderstore-assets/icon.png
+thunderstore/packs/
+thunderstore/*/plugins/
