@@ -1,4 +1,5 @@
 using System;
+using BepInEx.Configuration;
 using MordasGearhold.Core;
 using MordasGearhold.Patches;
 using TMPro;
@@ -8,14 +9,24 @@ using UnityEngine.UI;
 namespace MordasGearhold.UI
 {
     /// <summary>
-    /// HUD bar at the bottom centre: every OCCUPIED quickslot of the active set with its item, amount and its
-    /// current hotkey (read from the config each frame, so a key changed in the panel shows up at once).
-    /// Built from the vanilla hotbar element; the key sits above each slot on one line, so long keys like
-    /// "Alt+1" stay readable.
+    /// A HUD bar of Gearhold slots: every OCCUPIED slot of the active set with its item, amount and its current
+    /// hotkey (read from the config each frame, so a key changed in the panel shows up at once). Built from the
+    /// vanilla hotbar element; the key sits above each slot on one line, so long keys like "Alt+1" stay readable.
+    /// There are three bars, each with its own position (QuickslotBarEditor): the 8 quickslots, the 3 food slots
+    /// and the 3 mead slots.
     /// </summary>
-    internal static class QuickslotBar
+    internal sealed class QuickslotBar
     {
         private const float KeyHeight = 20f;
+
+        internal static readonly QuickslotBar Quick = new QuickslotBar("Quickslots", GearSlot.Quick1, Topology.QuickslotCount,
+            () => Plugin.QuickslotBarX, () => Plugin.QuickslotBarY);
+        internal static readonly QuickslotBar Food = new QuickslotBar("Food", GearSlot.Food1, Topology.FoodSlotCount,
+            () => Plugin.FoodBarX, () => Plugin.FoodBarY);
+        internal static readonly QuickslotBar Mead = new QuickslotBar("Mead", GearSlot.Mead1, Topology.MeadSlotCount,
+            () => Plugin.MeadBarX, () => Plugin.MeadBarY);
+
+        internal static readonly QuickslotBar[] All = { Quick, Food, Mead };
 
         private sealed class Element
         {
@@ -27,29 +38,53 @@ namespace MordasGearhold.UI
             public GameObject Equipped;
         }
 
-        private static Hud s_hud;
-        private static RectTransform s_root;
-        private static readonly Element[] s_elements = new Element[Topology.QuickslotCount];
-        private static float s_spacing = 70f;
-        private static bool s_failed;
+        internal readonly string Name;
+        private readonly GearSlot m_first;
+        private readonly Element[] m_elements;
+        private readonly Func<ConfigEntry<float>> m_x;
+        private readonly Func<ConfigEntry<float>> m_y;
+        private Hud m_hud;
+        private RectTransform m_root;
+        private float m_spacing = 70f;
+        private bool m_failed;
 
-        internal static void Tick(Hud hud, Player player)
+        private QuickslotBar(string name, GearSlot first, int count, Func<ConfigEntry<float>> x, Func<ConfigEntry<float>> y)
         {
-            if (s_failed)
+            Name = name;
+            m_first = first;
+            m_elements = new Element[count];
+            m_x = x;
+            m_y = y;
+        }
+
+        internal ConfigEntry<float> X => m_x();
+        internal ConfigEntry<float> Y => m_y();
+
+        internal static void TickAll(Hud hud, Player player)
+        {
+            foreach (QuickslotBar bar in All)
+            {
+                bar.Tick(hud, player);
+            }
+        }
+
+        private void Tick(Hud hud, Player player)
+        {
+            if (m_failed)
             {
                 return;
             }
             try
             {
-                if (s_hud != hud || s_root == null)
+                if (m_hud != hud || m_root == null)
                 {
                     Build(hud);
                 }
-                if (s_root == null)
+                if (m_root == null)
                 {
                     return;
                 }
-                // while its position window is open the bar shows on top of the inventory screen, all slots
+                // while the position window is open the bars show on top of the inventory screen, all slots
                 bool preview = QuickslotBarEditor.IsOpen;
                 bool show = player != null && GearholdState.IsReady(player) && hud.m_rootObject.activeInHierarchy
                     && (preview || (Plugin.ShowQuickslotBar.Value && !InventoryGui.IsVisible()));
@@ -57,41 +92,40 @@ namespace MordasGearhold.UI
                 {
                     show = Refresh(player, preview) > 0;
                 }
-                if (s_root.gameObject.activeSelf != show)
+                if (m_root.gameObject.activeSelf != show)
                 {
-                    s_root.gameObject.SetActive(show);
+                    m_root.gameObject.SetActive(show);
                 }
             }
             catch (Exception ex)
             {
-                s_failed = true;
-                if (s_root != null)
+                m_failed = true;
+                if (m_root != null)
                 {
-                    s_root.gameObject.SetActive(false);
+                    m_root.gameObject.SetActive(false);
                 }
-                Plugin.Log.LogError("Gearhold quickslot bar failed, bar disabled until restart: " + ex);
+                Plugin.Log.LogError("Gearhold " + Name + " bar failed, bar disabled until restart: " + ex);
             }
         }
 
-        private static void Build(Hud hud)
+        private void Build(Hud hud)
         {
-            s_hud = hud;
+            m_hud = hud;
             HotkeyBar bar = hud.GetComponentInChildren<HotkeyBar>(true);
             if (bar == null || bar.m_elementPrefab == null)
             {
                 return;
             }
-            s_spacing = bar.m_elementSpace;
-            s_root = UiKit.Rect("MordasGearholdQuickslots", hud.m_rootObject.transform);
-            s_root.anchorMin = s_root.anchorMax = new Vector2(0.5f, 0f);
-            s_root.pivot = new Vector2(0.5f, 0f);
-            s_root.sizeDelta = new Vector2(s_spacing * Topology.QuickslotCount, s_spacing + KeyHeight);
-            s_root.anchoredPosition = new Vector2(0f, 100f);
+            m_spacing = bar.m_elementSpace;
+            m_root = UiKit.Rect("MordasGearhold" + Name + "Bar", hud.m_rootObject.transform);
+            m_root.anchorMin = m_root.anchorMax = new Vector2(0.5f, 0f);
+            m_root.pivot = new Vector2(0.5f, 0f);
+            m_root.sizeDelta = new Vector2(m_spacing * m_elements.Length, m_spacing + KeyHeight);
 
-            for (int i = 0; i < s_elements.Length; i++)
+            for (int i = 0; i < m_elements.Length; i++)
             {
-                GameObject go = UnityEngine.Object.Instantiate(bar.m_elementPrefab, s_root);
-                go.name = "Quickslot" + (i + 1);
+                GameObject go = UnityEngine.Object.Instantiate(bar.m_elementPrefab, m_root);
+                go.name = Name + (i + 1);
                 Transform t = go.transform;
                 TMP_Text vanillaBinding = t.Find("binding")?.GetComponent<TMP_Text>();
                 if (vanillaBinding != null)
@@ -104,7 +138,7 @@ namespace MordasGearhold.UI
                 keyRect.anchorMin = new Vector2(0.5f, 1f);
                 keyRect.anchorMax = new Vector2(0.5f, 1f);
                 keyRect.pivot = new Vector2(0.5f, 0f);
-                keyRect.sizeDelta = new Vector2(s_spacing + 10f, KeyHeight);
+                keyRect.sizeDelta = new Vector2(m_spacing + 10f, KeyHeight);
                 keyRect.anchoredPosition = new Vector2(0f, 1f);
                 key.enableAutoSizing = true;
                 key.fontSizeMin = 10f;
@@ -112,7 +146,7 @@ namespace MordasGearhold.UI
                 key.outlineWidth = 0.2f;
                 key.outlineColor = Color.black;
 
-                s_elements[i] = new Element
+                m_elements[i] = new Element
                 {
                     Go = go,
                     Icon = t.Find("icon")?.GetComponent<Image>(),
@@ -125,21 +159,21 @@ namespace MordasGearhold.UI
                 t.Find("selected")?.gameObject.SetActive(false);
                 go.SetActive(false);
             }
-            s_root.gameObject.SetActive(false);
+            m_root.gameObject.SetActive(false);
         }
 
         /// <summary>
         /// Lays out the occupied slots centred at the configured position; returns how many there are. In the
-        /// position window (preview) all eight slots show, empty ones without an item, so the bar is always visible.
+        /// position window (preview) all slots show, empty ones without an item, so the bar is always visible.
         /// </summary>
-        private static int Refresh(Player player, bool preview)
+        private int Refresh(Player player, bool preview)
         {
-            s_root.localScale = Vector3.one * Plugin.QuickslotBarScale.Value;
-            s_root.anchoredPosition = new Vector2(Plugin.QuickslotBarX.Value, Plugin.QuickslotBarY.Value);
+            m_root.localScale = Vector3.one * Plugin.QuickslotBarScale.Value;
+            m_root.anchoredPosition = new Vector2(X.Value, Y.Value);
             int shown = 0;
-            for (int i = 0; i < s_elements.Length; i++)
+            for (int i = 0; i < m_elements.Length; i++)
             {
-                if (preview || Equipment.ItemIn(player, Topology.QuickSlot(i)) != null)
+                if (preview || Equipment.ItemIn(player, m_first + i) != null)
                 {
                     shown++;
                 }
@@ -148,11 +182,12 @@ namespace MordasGearhold.UI
             {
                 return 0;
             }
-            float x = -(shown - 1) * s_spacing / 2f;
-            for (int i = 0; i < s_elements.Length; i++)
+            float x = -(shown - 1) * m_spacing / 2f;
+            for (int i = 0; i < m_elements.Length; i++)
             {
-                Element e = s_elements[i];
-                ItemDrop.ItemData item = Equipment.ItemIn(player, Topology.QuickSlot(i));
+                Element e = m_elements[i];
+                GearSlot slot = m_first + i;
+                ItemDrop.ItemData item = Equipment.ItemIn(player, slot);
                 if (item == null && !preview)
                 {
                     if (e.Go.activeSelf) e.Go.SetActive(false);
@@ -163,9 +198,9 @@ namespace MordasGearhold.UI
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 // the vanilla element's pivot is not its centre: place it by its visual centre
                 rect.anchoredPosition = new Vector2(x, 0f) - rect.rect.center;
-                x += s_spacing;
+                x += m_spacing;
 
-                e.Key.text = Plugin.KeyLabel(i);
+                e.Key.text = Plugin.KeyLabel(slot);
                 if (e.Icon != null)
                 {
                     e.Icon.gameObject.SetActive(item != null);

@@ -1,6 +1,6 @@
 {
     "name": "MordasGearhold",
-    "version_number": "1.2.0",
+    "version_number": "1.3.0",
     "website_url": "https://github.com/morda0511/MordasGearhold",
     "description": "Three switchable equipment sets, shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utilities, weightless coin slot, transmog looks, armour dyes and weapon glow colours in a Valheim-style panel.",
     "dependencies": [

@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.2.0";
+        public const string ModVersion = "1.3.0";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -36,6 +36,12 @@ namespace MordasGearhold
         internal static ConfigEntry<KeyboardShortcut> KeyNextSet;
         internal static readonly ConfigEntry<KeyboardShortcut>[] KeyQuickslots = new ConfigEntry<KeyboardShortcut>[Topology.QuickslotCount];
         internal static readonly ConfigEntry<KeyboardShortcut>[] KeyAmmo = new ConfigEntry<KeyboardShortcut>[Topology.AmmoSlotCount];
+        internal static readonly ConfigEntry<KeyboardShortcut>[] KeyFood = new ConfigEntry<KeyboardShortcut>[Topology.FoodSlotCount];
+        internal static readonly ConfigEntry<KeyboardShortcut>[] KeyMead = new ConfigEntry<KeyboardShortcut>[Topology.MeadSlotCount];
+        internal static ConfigEntry<float> FoodBarX;
+        internal static ConfigEntry<float> FoodBarY;
+        internal static ConfigEntry<float> MeadBarX;
+        internal static ConfigEntry<float> MeadBarY;
         internal static ConfigEntry<bool> AutoEquip;
         internal static ConfigEntry<bool> AutoShield;
         internal static ConfigEntry<bool> SharedFirstForCrafting;
@@ -88,6 +94,16 @@ namespace MordasGearhold
                 KeyAmmo[i] = Config.Bind("2 - Hotkeys", "Ammo" + (i + 1), new KeyboardShortcut(KeyCode.Alpha1 + i, KeyCode.LeftAlt),
                     "Select the ammo in Gearhold ammo slot " + (i + 1) + " of the active set.");
             }
+            for (int i = 0; i < KeyFood.Length; i++)
+            {
+                KeyFood[i] = Config.Bind("2 - Hotkeys", "Food" + (i + 1), KeyboardShortcut.Empty,
+                    "Eat the food in Gearhold food slot " + (i + 1) + " of the active set. Also editable in the panel.");
+            }
+            for (int i = 0; i < KeyMead.Length; i++)
+            {
+                KeyMead[i] = Config.Bind("2 - Hotkeys", "Mead" + (i + 1), KeyboardShortcut.Empty,
+                    "Drink the mead in Gearhold mead slot " + (i + 1) + " of the active set. Also editable in the panel.");
+            }
 
             AutoEquip = Config.Bind("3 - Behaviour", "AutoEquip", true,
                 "Equip newly picked-up or crafted gear when the matching slot of the active set is empty. Never replaces equipped gear.");
@@ -116,6 +132,15 @@ namespace MordasGearhold
             QuickslotBarY = Config.Bind("4 - UI", "QuickslotBarY", 14f,
                 new ConfigDescription("Height of the quickslot bar above the bottom edge. Easiest set with the HUD BAR button in the panel.",
                     new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
+            // food: next to the vanilla food boxes at the bottom left; meads: right of the quickslots
+            FoodBarX = Config.Bind("4 - UI", "FoodBarX", -700f, new ConfigDescription("Left/right position of the food bar on the HUD (0 = centre).",
+                new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
+            FoodBarY = Config.Bind("4 - UI", "FoodBarY", 40f, new ConfigDescription("Height of the food bar above the bottom edge.",
+                new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
+            MeadBarX = Config.Bind("4 - UI", "MeadBarX", 380f, new ConfigDescription("Left/right position of the mead bar on the HUD (0 = centre).",
+                new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
+            MeadBarY = Config.Bind("4 - UI", "MeadBarY", 14f, new ConfigDescription("Height of the mead bar above the bottom edge.",
+                new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 
@@ -161,32 +186,56 @@ namespace MordasGearhold
             else if (Pressed(KeyNextSet.Value)) SetSwitcher.TrySwitch(player, (GearholdState.ActiveSet(player) + 1) % Topology.SetCount);
             else
             {
-                for (int i = 0; i < KeyQuickslots.Length; i++)
+                foreach (GearSlot slot in HotkeySlots)
                 {
-                    if (Pressed(KeyQuickslots[i].Value))
+                    ConfigEntry<KeyboardShortcut> key = KeyFor(slot);
+                    if (key != null && Pressed(key.Value))
                     {
-                        UseQuickslot(player, i);
+                        UseSlot(player, slot);
                         break;
                     }
                 }
             }
         }
 
+        /// <summary>Every slot with its own use key: the 8 quickslots, the 3 food and the 3 mead slots.</summary>
+        internal static readonly GearSlot[] HotkeySlots =
+        {
+            GearSlot.Quick1, GearSlot.Quick2, GearSlot.Quick3, GearSlot.Quick4, GearSlot.Quick5, GearSlot.Quick6, GearSlot.Quick7, GearSlot.Quick8,
+            GearSlot.Food1, GearSlot.Food2, GearSlot.Food3, GearSlot.Mead1, GearSlot.Mead2, GearSlot.Mead3,
+        };
+
+        /// <summary>The use key of a quickslot, food or mead slot; null for other slots.</summary>
+        internal static ConfigEntry<KeyboardShortcut> KeyFor(GearSlot slot)
+        {
+            if (slot >= GearSlot.Quick1 && slot <= GearSlot.Quick8) return KeyQuickslots[slot - GearSlot.Quick1];
+            if (Topology.IsFoodSlot(slot)) return KeyFood[slot - GearSlot.Food1];
+            if (Topology.IsMeadSlot(slot)) return KeyMead[slot - GearSlot.Mead1];
+            return null;
+        }
+
+        internal static string KeyLabel(GearSlot slot)
+        {
+            ConfigEntry<KeyboardShortcut> key = KeyFor(slot);
+            return key != null ? FormatKey(key.Value) : "";
+        }
+
+        internal static void UseQuickslot(Player player, int index) => UseSlot(player, Topology.QuickSlot(index));
+
         /// <summary>
         /// The vanilla hotbar call (Player.UseHotbarItem -> UseItem). With fromInventoryGui = false vanilla first
         /// offers the item to whatever the player looks at (item stand, mannequin, ...), which takes it away;
         /// by default quickslots use fromInventoryGui = true so they only eat, drink or equip.
         /// </summary>
-        internal static void UseQuickslot(Player player, int index)
+        internal static void UseSlot(Player player, GearSlot slot)
         {
-            ItemDrop.ItemData item = Patches.Equipment.ItemIn(player, Topology.QuickSlot(index));
+            ItemDrop.ItemData item = Patches.Equipment.ItemIn(player, slot);
             if (item != null && !player.IsDead() && !player.InCutscene() && !player.IsTeleporting())
             {
                 player.UseItem(null, item, !QuickslotsUseOnTarget.Value);
             }
         }
 
-        internal static string KeyLabel(int quickslot) => FormatKey(KeyQuickslots[quickslot].Value);
 
         internal static string AmmoKeyLabel(int ammoSlot) => FormatKey(KeyAmmo[ammoSlot].Value);
 
@@ -246,6 +295,8 @@ namespace MordasGearhold
         {
             foreach (ConfigEntry<KeyboardShortcut> entry in KeyQuickslots) yield return entry;
             foreach (ConfigEntry<KeyboardShortcut> entry in KeyAmmo) yield return entry;
+            foreach (ConfigEntry<KeyboardShortcut> entry in KeyFood) yield return entry;
+            foreach (ConfigEntry<KeyboardShortcut> entry in KeyMead) yield return entry;
             yield return KeySet1;
             yield return KeySet2;
             yield return KeySet3;

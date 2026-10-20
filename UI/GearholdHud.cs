@@ -8,7 +8,7 @@ namespace MordasGearhold.UI
             Hud hud = Hud.instance;
             if (hud != null)
             {
-                QuickslotBar.Tick(hud, Player.m_localPlayer);
+                QuickslotBar.TickAll(hud, Player.m_localPlayer);
             }
         }
     }

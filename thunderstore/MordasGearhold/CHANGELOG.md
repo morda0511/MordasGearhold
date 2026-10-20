@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+- Food and mead slots get their own hotkeys, set with a button under each slot (unbound at first).
+- Food and mead get their own HUD bars: food next to the food boxes at the bottom left, meads right of the quickslots.
+- The HUD BAR window moves each bar on its own: pick QUICKSLOTS, FOOD or MEAD, then use the sliders.
+
 ## 1.2.0
 - 3 food and 3 mead slots per set, right above the quickslots (right-click to eat or drink).
 - YOUR VIKING: ENCHANTMENTS section with the added-up enchantments of worn gear (Path of Valheiman); the drawn weapon lists its own.

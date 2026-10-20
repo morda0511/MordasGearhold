@@ -16,7 +16,7 @@ namespace MordasGearhold.UI
         internal const float RangeX = 900f;
         internal const float RangeY = 900f;
         private const float Width = 460f;
-        private const float Height = 214f;
+        private const float Height = 254f;
 
         private static InventoryGui s_gui;
         private static RectTransform s_window;
@@ -24,6 +24,8 @@ namespace MordasGearhold.UI
         private static Slider s_y;
         private static TMP_Text s_xValue;
         private static TMP_Text s_yValue;
+        private static QuickslotBar s_bar = QuickslotBar.Quick;
+        private static readonly Button[] s_tabs = new Button[3];
 
         internal static bool IsOpen => s_window != null && s_window.gameObject.activeSelf;
 
@@ -38,11 +40,22 @@ namespace MordasGearhold.UI
             {
                 Build(gui);
             }
-            s_x.SetValueWithoutNotify(Plugin.QuickslotBarX.Value);
-            s_y.SetValueWithoutNotify(Plugin.QuickslotBarY.Value);
-            ShowValues();
+            Select(s_bar);
             s_window.SetAsLastSibling();
             s_window.gameObject.SetActive(true);
+        }
+
+        /// <summary>Which bar the sliders move: quickslots, food or mead.</summary>
+        private static void Select(QuickslotBar bar)
+        {
+            s_bar = bar;
+            for (int i = 0; i < s_tabs.Length; i++)
+            {
+                s_tabs[i].interactable = QuickslotBar.All[i] != bar; // like the vanilla tabs: the chosen one looks pressed
+            }
+            s_x.SetValueWithoutNotify(s_bar.X.Value);
+            s_y.SetValueWithoutNotify(s_bar.Y.Value);
+            ShowValues();
         }
 
         internal static void Close()
@@ -64,8 +77,8 @@ namespace MordasGearhold.UI
 
         private static void ShowValues()
         {
-            s_xValue.text = Mathf.RoundToInt(Plugin.QuickslotBarX.Value).ToString();
-            s_yValue.text = Mathf.RoundToInt(Plugin.QuickslotBarY.Value).ToString();
+            s_xValue.text = Mathf.RoundToInt(s_bar.X.Value).ToString();
+            s_yValue.text = Mathf.RoundToInt(s_bar.Y.Value).ToString();
         }
 
         private static void Build(InventoryGui gui)
@@ -89,26 +102,31 @@ namespace MordasGearhold.UI
             }
             board.raycastTarget = true;
 
-            TMP_Text title = UiKit.Text(s_window, gui.m_craftingStationName, "QUICKSLOT BAR", 22f, UiKit.Gold, TextAlignmentOptions.Center);
+            TMP_Text title = UiKit.Text(s_window, gui.m_craftingStationName, "HUD BARS", 22f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(title.rectTransform, Width / 2f, 28f, Width - 40f, 30f);
-
-            s_x = AddSlider(gui, "Left / right", 76f, -RangeX, RangeX, out s_xValue, v =>
+            for (int i = 0; i < s_tabs.Length; i++)
             {
-                Plugin.QuickslotBarX.Value = Mathf.Round(v);
+                QuickslotBar bar = QuickslotBar.All[i];
+                s_tabs[i] = AddButton(gui, bar.Name.ToUpperInvariant(), Width / 2f + (i - 1) * 140f, 66f, 130f, () => Select(bar));
+            }
+
+            s_x = AddSlider(gui, "Left / right", 116f, -RangeX, RangeX, out s_xValue, v =>
+            {
+                s_bar.X.Value = Mathf.Round(v);
                 ShowValues();
             });
-            s_y = AddSlider(gui, "Up / down", 118f, 0f, RangeY, out s_yValue, v =>
+            s_y = AddSlider(gui, "Up / down", 158f, 0f, RangeY, out s_yValue, v =>
             {
-                Plugin.QuickslotBarY.Value = Mathf.Round(v);
+                s_bar.Y.Value = Mathf.Round(v);
                 ShowValues();
             });
 
             AddButton(gui, "RESET", Width / 2f - 80f, Height - 36f, 130f, () =>
             {
-                Plugin.QuickslotBarX.Value = (float)Plugin.QuickslotBarX.DefaultValue;
-                Plugin.QuickslotBarY.Value = (float)Plugin.QuickslotBarY.DefaultValue;
-                s_x.SetValueWithoutNotify(Plugin.QuickslotBarX.Value);
-                s_y.SetValueWithoutNotify(Plugin.QuickslotBarY.Value);
+                s_bar.X.Value = (float)s_bar.X.DefaultValue;
+                s_bar.Y.Value = (float)s_bar.Y.DefaultValue;
+                s_x.SetValueWithoutNotify(s_bar.X.Value);
+                s_y.SetValueWithoutNotify(s_bar.Y.Value);
                 ShowValues();
             });
             AddButton(gui, "DONE", Width / 2f + 80f, Height - 36f, 130f, Close);
@@ -146,7 +164,7 @@ namespace MordasGearhold.UI
             return slider;
         }
 
-        private static void AddButton(InventoryGui gui, string label, float x, float y, float width, Action onClick)
+        private static Button AddButton(InventoryGui gui, string label, float x, float y, float width, Action onClick)
         {
             Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_window).GetComponent<Button>();
             button.gameObject.SetActive(true);
@@ -162,6 +180,7 @@ namespace MordasGearhold.UI
                 text.fontSizeMin = 10f;
                 text.fontSizeMax = 17f;
             }
+            return button;
         }
     }
 }

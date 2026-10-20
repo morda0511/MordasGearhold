@@ -19,7 +19,7 @@ namespace MordasGearhold.UI
     internal static class GearholdPanel
     {
         private const float DesignWidth = 460f;
-        private const float DesignHeight = 1022f;
+        private const float DesignHeight = 1054f;
         private const float SlotTop = 178f;
         private const float SlotStep = 88f;
         private const float CompactHeight = 140f;
@@ -220,14 +220,16 @@ namespace MordasGearhold.UI
             {
                 Slot food = AddSlot(gui, GearSlot.Food1 + n, null, foodX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
                 food.Label = "Food " + (n + 1);
+                food.KeyButton = AddKeyButton(gui, food.Kind, food.Label, foodX + (n - 1) * (QuickSize + 6f), provisionsTop + 94f);
             }
             for (int n = 0; n < Topology.MeadSlotCount; n++)
             {
                 Slot mead = AddSlot(gui, GearSlot.Mead1 + n, null, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
                 mead.Label = "Mead " + (n + 1);
+                mead.KeyButton = AddKeyButton(gui, mead.Kind, mead.Label, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 94f);
             }
 
-            float quickTop = provisionsTop + 92f;
+            float quickTop = provisionsTop + 124f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, quickTop, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
             UiKit.Place(quickTitle.rectTransform, DesignWidth / 2f, quickTop + 18f, DesignWidth - 50f, 22f);
@@ -251,7 +253,7 @@ namespace MordasGearhold.UI
                 float slotX = DesignWidth / 2f + (x - 3.5f) * (QuickSize + 6f);
                 Slot quick = AddSlot(gui, Topology.QuickSlot(x), null, slotX, quickTop + 58f, QuickSize);
                 quick.Label = "Quickslot " + (x + 1);
-                quick.KeyButton = AddKeyButton(gui, x, slotX, quickTop + 96f);
+                quick.KeyButton = AddKeyButton(gui, quick.Kind, quick.Label, slotX, quickTop + 96f);
             }
             s_footer = UiKit.Text(s_body, body, "", 12f, UiKit.Dim, TextAlignmentOptions.Center);
             UiKit.Place(s_footer.rectTransform, DesignWidth / 2f, quickTop + 124f, DesignWidth - 30f, 18f);
@@ -306,14 +308,14 @@ namespace MordasGearhold.UI
         }
 
         /// <summary>Small vanilla-style button under a quickslot: shows the key, a click lets you press a new one.</summary>
-        private static TMP_Text AddKeyButton(InventoryGui gui, int quickslot, float x, float y)
+        private static TMP_Text AddKeyButton(InventoryGui gui, GearSlot slot, string name, float x, float y)
         {
             Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
-            button.gameObject.name = "QuickslotKey" + (quickslot + 1);
+            button.gameObject.name = "Key" + slot;
             button.gameObject.SetActive(true);
             button.interactable = true;
             button.onClick = new Button.ButtonClickedEvent();
-            button.onClick.AddListener(() => KeyRebinder.Begin(Plugin.KeyQuickslots[quickslot]));
+            button.onClick.AddListener(() => KeyRebinder.Begin(Plugin.KeyFor(slot)));
             UiKit.Place((RectTransform)button.transform, x, y, QuickSize + 2f, 24f);
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
@@ -335,7 +337,7 @@ namespace MordasGearhold.UI
                 tooltip = button.gameObject.AddComponent<UITooltip>();
                 tooltip.m_tooltipPrefab = prefab;
             }
-            tooltip.m_topic = "Quickslot " + (quickslot + 1);
+            tooltip.m_topic = name;
             tooltip.m_text = "Click, then press the new key (Shift / Ctrl / Alt allowed).\nEsc cancels · Delete clears.";
             return label;
         }
@@ -446,9 +448,8 @@ namespace MordasGearhold.UI
                 Draw(player, slot, drag);
                 if (slot.KeyButton != null)
                 {
-                    int quickslot = slot.Kind - GearSlot.Quick1;
-                    string key = Plugin.KeyLabel(quickslot);
-                    slot.KeyButton.text = KeyRebinder.IsWaitingFor(Plugin.KeyQuickslots[quickslot]) ? "<color=#ffc96e>...</color>" : (key.Length > 0 ? key : "–");
+                    string key = Plugin.KeyLabel(slot.Kind);
+                    slot.KeyButton.text = KeyRebinder.IsWaitingFor(Plugin.KeyFor(slot.Kind)) ? "<color=#ffc96e>...</color>" : (key.Length > 0 ? key : "–");
                 }
                 if (slot.Caption != null && Topology.IsAmmoSlot(slot.Kind))
                 {
