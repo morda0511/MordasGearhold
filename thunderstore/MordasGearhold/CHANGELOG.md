@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- When a set switch fails and is rolled back, the gear you wore is put on again (it stayed in its slots, but unworn).
+
 ## 1.0.0
 First public release.
 - Three switchable equipment sets with a shared inventory grid.

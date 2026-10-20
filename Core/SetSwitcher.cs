@@ -124,6 +124,7 @@ namespace MordasGearhold.Core
             // ---- 2. mutate
             List<ItemDrop.ItemData> placed = new List<ItemDrop.ItemData>();
             List<ItemDrop.ItemData> removed = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> wornBefore = outgoing.Where(i => i.m_equipped && player.IsItemEquiped(i)).ToList();
             try
             {
                 foreach (ItemDrop.ItemData item in outgoing)
@@ -168,6 +169,16 @@ namespace MordasGearhold.Core
             {
                 Plugin.Log.LogError("Set switch failed, rolling back: " + ex);
                 Rollback(player, inventory, placed, removed, journal, from, target);
+                // the rollback puts the very same items back; what was worn before is worn again
+                // (extra trinkets/utilities need no equip call: Trinkets.Tick activates them in their slot)
+                foreach (ItemDrop.ItemData item in wornBefore)
+                {
+                    if (inventory.ContainsItem(item) && !player.IsItemEquiped(item) && !Patches.Trinkets.IsExtraCell(player, item.m_gridPos))
+                    {
+                        item.m_equipped = false;
+                        player.EquipItem(item, false);
+                    }
+                }
                 return Fail(player, "Set switch failed – your gear was restored");
             }
 
