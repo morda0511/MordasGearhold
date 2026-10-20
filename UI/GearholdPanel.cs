@@ -658,7 +658,8 @@ namespace MordasGearhold.UI
             }
             if (slot.Item != null)
             {
-                tooltip.Set(slot.Item.m_shared.m_name, slot.Item.GetTooltip(), s_gui.m_playerGrid.m_tooltipAnchor);
+                // the same call as an inventory cell: Path of Valheiman (and other tooltip mods) show their own tooltip
+                Access.CreateItemTooltip(s_gui.m_playerGrid, slot.Item, tooltip);
             }
             else
             {

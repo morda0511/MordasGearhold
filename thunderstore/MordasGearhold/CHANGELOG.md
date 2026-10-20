@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3
+- Gearhold slots show the same item tooltip as inventory cells, so tooltip mods like Path of Valheiman (enchantments, sockets, compare) work on them too.
+
 ## 1.3.2
 - YOUR VIKING, UTILITY: every worn utility item is listed by name with what it does, including the fixed bonuses and enchantments of Path of Valheiman belts and rings (they were missing before). Trinkets show their Path of Valheiman bonuses too.
 

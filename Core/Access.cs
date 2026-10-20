@@ -53,6 +53,18 @@ namespace MordasGearhold.Core
                 AccessTools.Method(typeof(InventoryGui), "SetupDragItem",
                     new[] { typeof(ItemDrop.ItemData), typeof(Inventory), typeof(int) }));
 
+        // private void InventoryGrid.CreateItemTooltip(ItemData item, UITooltip tooltip): the vanilla item tooltip;
+        // other mods (Path of Valheiman) hook it to show their own tooltip
+        private static readonly Action<InventoryGrid, ItemDrop.ItemData, UITooltip> CreateItemTooltipDelegate =
+            AccessTools.MethodDelegate<Action<InventoryGrid, ItemDrop.ItemData, UITooltip>>(
+                AccessTools.Method(typeof(InventoryGrid), "CreateItemTooltip", new[] { typeof(ItemDrop.ItemData), typeof(UITooltip) }));
+
+        /// <summary>Fills a tooltip for an item exactly like an inventory cell does, including other mods' tooltips.</summary>
+        internal static void CreateItemTooltip(InventoryGrid grid, ItemDrop.ItemData item, UITooltip tooltip)
+        {
+            CreateItemTooltipDelegate(grid, item, tooltip);
+        }
+
         private static AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> Slot(string name)
         {
             return AccessTools.FieldRefAccess<Humanoid, ItemDrop.ItemData>(name);
