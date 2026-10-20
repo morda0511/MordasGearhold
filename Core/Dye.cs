@@ -65,6 +65,17 @@ namespace MordasGearhold.Core
             DyeRenderer.Apply(player);
         }
 
+        /// <summary>All colours of one set as stored (null = none); the look menu restores this when closed without saving.</summary>
+        internal static string ReadSet(Player player, int set) =>
+            player.m_customData.TryGetValue(Key(set), out string raw) ? raw : null;
+
+        internal static void WriteSet(Player player, int set, string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) player.m_customData.Remove(Key(set));
+            else player.m_customData[Key(set)] = raw;
+            DyeRenderer.Apply(player);
+        }
+
         private static Dictionary<string, DyeValue> Read(Player player)
         {
             Dictionary<string, DyeValue> result = new Dictionary<string, DyeValue>();

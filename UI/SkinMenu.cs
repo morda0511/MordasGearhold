@@ -9,31 +9,59 @@ namespace MordasGearhold.UI
 {
     /// <summary>
     /// Look and colour menu, opened by a right-click on a Gearhold armour/shield slot or by Alt + right-click on a
-    /// weapon in the inventory. Left: a live 3D view of your character. Right: OWN LOOK, the look grid and, for
-    /// armour and shield, COLOR. Built from the same vanilla parts as the panel. A click outside closes it.
+    /// weapon in the inventory. It sits in the middle of the screen. Left: a live 3D view of your character with
+    /// SAVE below it. Right: tabs for Head/Chest/Legs/Cape/Shield, OWN LOOK, the look grid and, for armour and
+    /// shield, COLOR. Every choice shows on the character at once, but only SAVE keeps it: the back arrow (or
+    /// closing the inventory) puts the looks and colours back to how they were when the menu opened.
     /// </summary>
     internal static class SkinMenu
     {
-        private const int Columns = 6;
-        private const float Cell = 56f;
-        private const float Pad = 16f;
-        private const float PreviewWidth = 240f;
-        private const float ColorRow = 32f;
+        private const int Columns = 7;
+        private const float Cell = 64f;
+        private const float Pad = 20f;
+        private const float PreviewWidth = 360f;
+        private const float ColorRow = 34f;
         private const float ColorHeader = 30f;
-        private const float SwatchRow = 40f;
+        private const float SwatchRow = 44f;
+        private const float MinHeight = 640f;
+
+        private static readonly Transmog.Piece[] s_pieces =
+        {
+            Transmog.Piece.Helmet, Transmog.Piece.Chest, Transmog.Piece.Legs, Transmog.Piece.Shoulder, Transmog.Piece.Shield,
+        };
 
         private static InventoryGui s_gui;
         private static RectTransform s_blocker;
         private static RectTransform s_menu;
         private static RectTransform s_content;
 
+        // what the menu changed since it opened is undone by this, unless SAVE was pressed
+        private static Action s_revert;
+
         internal static bool IsOpen => s_blocker != null && s_blocker.gameObject.activeSelf;
 
         internal static void OpenForPiece(Player player, Transmog.Piece piece)
         {
+            if (!IsOpen)
+            {
+                int set = GearholdState.ActiveSet(player);
+                string looks0 = Transmog.ReadSetLooks(player, set);
+                string dyes0 = Dye.ReadSet(player, set);
+                s_revert = () =>
+                {
+                    Transmog.WriteSetLooks(player, set, looks0);
+                    Dye.WriteSet(player, set, dyes0);
+                };
+            }
             string current = Transmog.GetLook(player, piece);
             List<GameObject> looks = Transmog.LooksFor(player, Transmog.TypeOf(piece), null);
-            Open(piece.ToString().ToUpperInvariant() + " LOOK", current, looks, look =>
+            // the window keeps one size for all five pieces, so switching tabs does not make it jump
+            int maxLooks = 0;
+            foreach (Transmog.Piece p in s_pieces)
+            {
+                maxLooks = Mathf.Max(maxLooks, p == piece ? looks.Count : Transmog.LooksFor(player, Transmog.TypeOf(p), null).Count);
+            }
+            Open("LOOKS & COLORS", current, looks, maxLooks, look =>
             {
                 Transmog.SetLook(player, piece, look);
                 OpenForPiece(player, piece); // redraw: the chosen look gets its mark, the menu stays open
@@ -42,23 +70,42 @@ namespace MordasGearhold.UI
 
         internal static void OpenForWeapon(Player player, ItemDrop.ItemData weapon)
         {
+            if (!IsOpen)
+            {
+                string look0 = Transmog.GetItemLook(weapon);
+                s_revert = () => Transmog.SetItemLook(player, weapon, look0);
+            }
             string current = Transmog.GetItemLook(weapon);
             List<GameObject> looks = Transmog.LooksFor(player, weapon.m_shared.m_itemType, weapon.m_shared.m_skillType);
             string name = Localization.instance.Localize(weapon.m_shared.m_name).ToUpperInvariant();
-            Open(name + " LOOK", current, looks, look =>
+            Open(name + " LOOK", current, looks, looks.Count, look =>
             {
                 Transmog.SetItemLook(player, weapon, look);
                 OpenForWeapon(player, weapon);
             });
         }
 
-        internal static void Close()
+        /// <summary>Closes the menu. Without <paramref name="save"/>, every change made in it is undone.</summary>
+        internal static void Close(bool save = false)
         {
+            Action revert = s_revert;
+            s_revert = null;
             if (s_blocker != null)
             {
                 s_blocker.gameObject.SetActive(false);
             }
             CharacterPreview.End();
+            if (!save && revert != null && Player.m_localPlayer != null)
+            {
+                try
+                {
+                    revert();
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.LogWarning("Gearhold look menu: could not undo the unsaved changes: " + ex.Message);
+                }
+            }
         }
 
         /// <summary>Called every frame by the panel: the menu lives only while the inventory is open.</summary>
@@ -74,8 +121,7 @@ namespace MordasGearhold.UI
             }
         }
 
-
-        private static void Open(string title, string current, List<GameObject> looks, Action<string> choose,
+        private static void Open(string title, string current, List<GameObject> looks, int maxLooks, Action<string> choose,
             Player dyePlayer = null, Transmog.Piece? dyePiece = null)
         {
             InventoryGui gui = InventoryGui.instance;
@@ -83,44 +129,61 @@ namespace MordasGearhold.UI
             {
                 return;
             }
-            bool reopen = IsOpen; // redraw after a choice: keep the menu where it is
             if (s_gui != gui || s_blocker == null)
             {
                 Build(gui);
-                reopen = false;
             }
-            Vector2 oldPosition = s_menu.anchoredPosition;
             for (int i = s_content.childCount - 1; i >= 0; i--)
             {
                 UnityEngine.Object.Destroy(s_content.GetChild(i).gameObject);
             }
 
-            // grid: the "Hide" cell first, then every unlocked look
-            int cells = looks.Count + 1;
-            int rows = Mathf.CeilToInt(cells / (float)Columns);
-            float ox = PreviewWidth;                      // left edge of the right-hand column
-            float columnWidth = Pad * 2f + Columns * Cell;
-            float width = ox + columnWidth;
-            float height = Pad * 2f + 34f + 40f + rows * Cell;
             bool dyeable = dyePlayer != null && dyePiece.HasValue;
+            int cells = looks.Count + 1; // the "Hide" cell first, then every unlocked look
+            int rows = Mathf.Max(1, Mathf.CeilToInt((maxLooks + 1) / (float)Columns));
+            float ox = Pad + PreviewWidth;               // left edge of the right-hand column
+            float columnWidth = Pad * 2f + Columns * Cell;
+            float inner = columnWidth - Pad * 2f;
+            float cx = ox + columnWidth / 2f;
+            float width = ox + columnWidth;
+
+            float tabsY = Pad + 50f;
+            float ownLookY = dyeable ? tabsY + 40f : Pad + 50f;
+            float gridTop = ownLookY + 24f;
+            float height = gridTop + rows * Cell + Pad;
             if (dyeable)
             {
-                height += 10f + ColorHeader + SwatchRow + 3 * ColorRow + 38f;
+                height += 10f + ColorHeader + SwatchRow + 3 * ColorRow + 40f;
             }
-            height = Mathf.Max(height, 380f);
+            height = Mathf.Max(height, MinHeight);
             s_menu.sizeDelta = new Vector2(width, height);
 
-            TMP_Text header = UiKit.Text(s_content, gui.m_craftingStationName, title, 20f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(header.rectTransform, width / 2f, Pad + 12f, width - Pad * 2f, 26f);
+            // back arrow (discard) top left, title in the middle
+            AddButton(gui, "< BACK", Pad + 50f, Pad + 14f, 100f, false, () => Close());
+            TMP_Text header = UiKit.Text(s_content, gui.m_craftingStationName, title, 22f, UiKit.Gold, TextAlignmentOptions.Center);
+            UiKit.Place(header.rectTransform, width / 2f, Pad + 14f, width - 300f, 30f);
 
-            // live 3D view of your character
-            float previewTop = Pad + 34f;
-            CharacterPreview.CreateView(s_content, Pad + (PreviewWidth - Pad) / 2f, previewTop + (height - previewTop - Pad) / 2f,
-                PreviewWidth - Pad, height - previewTop - Pad);
+            // left: live 3D view of your character, SAVE below it
+            float previewTop = Pad + 40f;
+            float previewBottom = height - Pad - 48f;
+            float previewX = Pad + (PreviewWidth - Pad) / 2f;
+            CharacterPreview.CreateView(s_content, previewX, (previewTop + previewBottom) / 2f,
+                PreviewWidth - Pad, previewBottom - previewTop);
+            AddButton(gui, "SAVE", previewX, height - Pad - 18f, 200f, false, () => Close(save: true));
 
-            AddButton(gui, "OWN LOOK", ox + columnWidth / 2f, Pad + 34f + 14f, columnWidth - Pad * 2f, current == null, () => choose(null));
+            // right: one tab per piece, so all of them can be changed without leaving the menu
+            if (dyeable)
+            {
+                float tabWidth = inner / s_pieces.Length;
+                for (int i = 0; i < s_pieces.Length; i++)
+                {
+                    Transmog.Piece piece = s_pieces[i];
+                    AddButton(gui, PieceLabel(piece), ox + Pad + tabWidth / 2f + i * tabWidth, tabsY, tabWidth - 6f,
+                        piece == dyePiece.Value, () => OpenForPiece(dyePlayer, piece));
+                }
+            }
 
-            float gridTop = Pad + 34f + 40f;
+            AddButton(gui, "OWN LOOK", cx, ownLookY, inner, current == null, () => choose(null));
             for (int i = 0; i < cells; i++)
             {
                 float x = ox + Pad + Cell / 2f + (i % Columns) * Cell;
@@ -140,17 +203,24 @@ namespace MordasGearhold.UI
                 AddColorSection(gui, dyePlayer, dyePiece.Value, ox, columnWidth, gridTop + rows * Cell + 10f);
             }
 
-            if (reopen)
-            {
-                s_menu.anchoredPosition = oldPosition;
-            }
-            else
-            {
-                PlaceAtMouse(width, height);
-            }
+            // centred on the screen; scaled down when the screen is too small for it
+            Rect area = s_blocker.rect;
+            float scale = Mathf.Min(1f, (area.width - 40f) / width, (area.height - 40f) / height);
+            s_menu.localScale = Vector3.one * Mathf.Max(0.4f, scale);
+            s_menu.anchoredPosition = Vector2.zero;
             s_blocker.SetAsLastSibling();
             s_blocker.gameObject.SetActive(true);
             CharacterPreview.Begin();
+        }
+
+        private static string PieceLabel(Transmog.Piece piece)
+        {
+            switch (piece)
+            {
+                case Transmog.Piece.Helmet: return "HEAD";
+                case Transmog.Piece.Shoulder: return "CAPE";
+                default: return piece.ToString().ToUpperInvariant();
+            }
         }
 
         private static readonly (string name, float hue)[] s_hues =
@@ -161,8 +231,8 @@ namespace MordasGearhold.UI
 
         /// <summary>
         /// COLOR for this piece in the active set: swatches that turn the piece's dominant colour into the chosen
-        /// one, Black / White / Grey, then fine controls (Color, Intensity, Brightness) and RESET COLOR.
-        /// Every click recolours the character at once; the menu stays open.
+        /// one, Black / White / Grey, then fine controls (Color, Intensity, Brightness) and a small RESET.
+        /// Every click recolours the character at once; SAVE keeps it.
         /// </summary>
         private static void AddColorSection(InventoryGui gui, Player player, Transmog.Piece piece, float ox, float columnWidth, float top)
         {
@@ -190,7 +260,7 @@ namespace MordasGearhold.UI
             // swatches: 8 colours + black, white, grey
             int count = s_hues.Length + 3;
             float step = inner / count;
-            float size = Mathf.Min(step - 4f, 28f);
+            float size = Mathf.Min(step - 6f, 34f);
             float swatchY = top + ColorHeader + SwatchRow / 2f;
             for (int i = 0; i < count; i++)
             {
@@ -222,7 +292,7 @@ namespace MordasGearhold.UI
             {
                 int channel = row;
                 float y = rowsTop + ColorRow / 2f + row * ColorRow;
-                TMP_Text label = UiKit.Text(s_content, gui.m_recipeDecription, names[row], 15f, UiKit.Parchment, TextAlignmentOptions.Left);
+                TMP_Text label = UiKit.Text(s_content, gui.m_recipeDecription, names[row], 16f, UiKit.Parchment, TextAlignmentOptions.Left);
                 UiKit.Place(label.rectTransform, ox + Pad + 60f, y, 120f, 24f);
                 AddButton(gui, "-", ox + columnWidth - Pad - 150f, y, 40f, false, () =>
                 {
@@ -230,7 +300,7 @@ namespace MordasGearhold.UI
                     Nudge(ref d, channel, -steps[channel]);
                     SetDye(d);
                 });
-                values[row] = UiKit.Text(s_content, gui.m_recipeDecription, "", 15f, UiKit.Gold, TextAlignmentOptions.Center);
+                values[row] = UiKit.Text(s_content, gui.m_recipeDecription, "", 16f, UiKit.Gold, TextAlignmentOptions.Center);
                 UiKit.Place(values[row].rectTransform, ox + columnWidth - Pad - 90f, y, 70f, 24f);
                 AddButton(gui, "+", ox + columnWidth - Pad - 30f, y, 40f, false, () =>
                 {
@@ -240,7 +310,7 @@ namespace MordasGearhold.UI
                 });
             }
             float resetY = rowsTop + 3 * ColorRow + 20f;
-            AddButton(gui, "RESET COLOR", cx, resetY, inner, false, () => SetDye(default));
+            AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, resetY, 120f, false, () => SetDye(default));
             Refresh();
         }
 
@@ -289,22 +359,19 @@ namespace MordasGearhold.UI
             s_gui = gui;
             RectTransform parent = (RectTransform)gui.m_player.parent;
 
-            // full-screen catcher: a click outside the menu closes it
+            // full-screen layer behind the menu: keeps clicks away from the inventory while the menu is open
+            // (it does not close the menu; that is the back arrow)
             s_blocker = UiKit.Rect("MordasGearholdSkinMenu", parent);
             s_blocker.anchorMin = Vector2.zero;
             s_blocker.anchorMax = Vector2.one;
             s_blocker.offsetMin = s_blocker.offsetMax = Vector2.zero;
             Image catcher = s_blocker.gameObject.AddComponent<Image>();
-            catcher.color = new Color(0f, 0f, 0f, 0.001f);
-            Button closeButton = s_blocker.gameObject.AddComponent<Button>();
-            closeButton.transition = Selectable.Transition.None;
-            closeButton.onClick.AddListener(Close);
+            catcher.color = new Color(0f, 0f, 0f, 0.35f);
 
             s_menu = UiKit.Rect("Menu", s_blocker);
             s_menu.anchorMin = s_menu.anchorMax = new Vector2(0.5f, 0.5f);
-            s_menu.pivot = new Vector2(0f, 1f);
-            // clicks bubble up to the nearest click handler; without this one, a click on the board or the
-            // preview would reach the close-catcher behind the menu
+            s_menu.pivot = new Vector2(0.5f, 0.5f);
+            // clicks bubble up to the nearest click handler; this one keeps them inside the menu
             s_menu.gameObject.AddComponent<ClickSink>();
             Image darken = UiKit.Named(gui.m_crafting, "Darken");
             if (darken != null)
@@ -316,7 +383,7 @@ namespace MordasGearhold.UI
             {
                 board.color = UiKit.PanelFallback;
             }
-            board.raycastTarget = true; // clicks on the menu itself do not close it
+            board.raycastTarget = true;
 
             s_content = UiKit.Rect("Content", s_menu);
             s_content.anchorMin = Vector2.zero;
@@ -332,14 +399,15 @@ namespace MordasGearhold.UI
             button.interactable = !selected; // like the vanilla tabs: the active choice looks pressed
             button.onClick = new Button.ButtonClickedEvent();
             button.onClick.AddListener(() => onClick());
-            UiKit.Place((RectTransform)button.transform, x, y, width, 28f);
+            UiKit.Place((RectTransform)button.transform, x, y, width, 30f);
             TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
             if (text != null)
             {
                 text.text = label;
+                text.richText = false; // "< BACK" is text, not a tag
                 text.enableAutoSizing = true;
                 text.fontSizeMin = 10f;
-                text.fontSizeMax = 16f;
+                text.fontSizeMax = 17f;
             }
         }
 
@@ -387,18 +455,6 @@ namespace MordasGearhold.UI
             {
                 input.m_onLeftClick = _ => onClick();
             }
-        }
-
-        private static void PlaceAtMouse(float width, float height)
-        {
-            RectTransform parent = (RectTransform)s_blocker.parent;
-            Canvas canvas = parent.GetComponentInParent<Canvas>();
-            Camera camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(s_blocker, Input.mousePosition, camera, out Vector2 local);
-            Rect area = s_blocker.rect;
-            float x = Mathf.Clamp(local.x + 12f, area.xMin + 10f, area.xMax - width - 10f);
-            float y = Mathf.Clamp(local.y - 12f, area.yMin + height + 10f, area.yMax - 10f);
-            s_menu.anchoredPosition = new Vector2(x, y);
         }
     }
 }

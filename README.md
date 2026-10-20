@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.15.2
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -58,11 +58,12 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 Change how your gear **looks** without changing the gear itself.
 
 - **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well.
-- **Armour and shield** (Head, Chest, Legs, Cape, Shield): right-click the slot in the Gearhold panel.
+- **Armour and shield** (Head, Chest, Legs, Cape, Shield): right-click one of these slots in the Gearhold panel. The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it.
   - **OWN LOOK** shows the real item.
   - The first cell, **Hide** (a box with a red slash), makes the piece invisible. To take gear off, left-click the slot.
   - Or click one of your unlocked looks of the same kind.
   - Looks are saved **per set**, so each set can have its own outfit.
+- **SAVE and BACK:** every choice shows on your character right away, but only **SAVE** (under the character) keeps it. **< BACK** (top left), Esc or closing the inventory throws the changes away.
 - **Weapons and bows:** `Alt` + right-click the weapon in the inventory. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
@@ -71,11 +72,11 @@ Change how your gear **looks** without changing the gear itself.
 - **Character selection:** the character on the selection screen already wears the looks and colours of its active set.
 
 ## Dyes (colours)
-Recolour Head, Chest, Legs, Cape and Shield: right-click the slot. The menu shows only your character in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**.
+Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**.
 
 - **Colour swatches** (Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink, Black, White, Grey): the piece's main colour is measured and shifted towards the swatch, so "Red" really ends up reddish.
 - **Fine controls:** **Color** turns the colour around the colour wheel (±15° per click), **Intensity** makes it stronger or greyer, **Brightness** lighter or darker (±10 % per click).
-- **RESET COLOR** goes back to the original colours.
+- **RESET** goes back to the original colours of that piece.
 - Skin under and around the armour keeps its colour: the painted armour is only recoloured where it covers the body.
 - Colours are saved **per set** and work together with looks, so a borrowed look can be dyed as well.
 - **How it works:** only your character's copy is recoloured, never the item itself or other players' copies.

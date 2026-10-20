@@ -214,6 +214,17 @@ namespace MordasGearhold.Core
             Refresh(player);
         }
 
+        /// <summary>All looks of one set as stored (null = none); the look menu restores this when closed without saving.</summary>
+        internal static string ReadSetLooks(Player player, int set) =>
+            player.m_customData.TryGetValue(LookKey(set), out string raw) ? raw : null;
+
+        internal static void WriteSetLooks(Player player, int set, string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) player.m_customData.Remove(LookKey(set));
+            else player.m_customData[LookKey(set)] = raw;
+            Refresh(player);
+        }
+
         internal static string GetItemLook(ItemDrop.ItemData item)
         {
             return item != null && item.m_customData.TryGetValue(ItemSkinKey, out string look) && look.Length > 0 ? look : null;
