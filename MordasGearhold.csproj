@@ -9,7 +9,7 @@
     <AssemblyName>MordasGearhold</AssemblyName>
     <RootNamespace>MordasGearhold</RootNamespace>
     <Product>Morda's Gearhold</Product>
-    <Version>0.17.0</Version>
+    <Version>0.18.0</Version>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DebugType>portable</DebugType>
   </PropertyGroup>

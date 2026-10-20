@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.17.0
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.18.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -48,6 +48,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
   - **RESISTANCES** (e.g. Frost: Resistant, Spirit: Immune), including effects active right now.
 
   Health, stamina and eitr are left out because the vanilla HUD already shows them.
+- **Coin slot** (top right of the panel, next to the title): coins you pick up go in there on their own and **weigh nothing**. It is shared by all three sets. It holds one full stack of coins; anything beyond stays in the inventory and weighs as usual. Turn the automatic moving off with `AutoStoreCoins`.
 - **Auto-equip:** new armour, shields, trinkets and ammo you pick up or craft go into an **empty** slot only. Gear you already wear is never replaced. A new trinket goes into Trinket 2 or 3 when Trinket 1 is taken.
 - **Auto-shield:**
   - Equip a one-handed weapon from the hotbar, and the set's shield comes along.
@@ -99,7 +100,7 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 | Action | Result |
 |---|---|
 | Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
-| Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item is picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
+| Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item or the coins are picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
 | Right-click a slot | Head, Chest, Legs, Cape, Shield, or a weapon in a quickslot: open the look menu. Other slots: use the item (eat, drink, use this ammo). |
 | Key button under a quickslot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
 | SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |

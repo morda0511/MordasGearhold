@@ -7,9 +7,10 @@ namespace MordasGearhold.Core
     /// <summary>The fixed Gearhold slots. Each one is a real cell of the vanilla inventory in a hidden row.</summary>
     internal enum GearSlot
     {
-        // Indices must never shift. Retired cells: 6 = weapon slot (up to 0.3.0), 8 = ranged slot (up to 0.6.0);
-        // weapons and bows live in the hotbar now. Items found in retired cells are moved into the grid.
-        Helmet, Chest, Legs, Shoulder, Utility, Trinket, Shield = 7,     // hidden row 0
+        // Indices must never shift. Retired cell: 8 = ranged slot (up to 0.6.0); bows live in the hotbar now, items
+        // found there are moved into the grid. Cell 6 was the weapon slot up to 0.3.0 and is the coin slot since
+        // 0.18.0: it belongs to no set (all sets share it), and anything but coins found there goes into the grid.
+        Helmet, Chest, Legs, Shoulder, Utility, Trinket, Coins, Shield,  // hidden row 0
         Ammo = 9, Ammo2, Ammo3, Trinket2, Trinket3, Utility2, Utility3,  // hidden row 1 (full)
         Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8 // hidden row 2
     }
@@ -46,8 +47,16 @@ namespace MordasGearhold.Core
             return rows > 0 ? rows : VanillaRows + Plugin.ExtraRows.Value;
         }
 
-        /// <summary>True for the hidden Gearhold slot rows (the only rows a set consists of).</summary>
-        internal static bool IsSetOwned(Player player, int y) => y >= GridRows(player);
+        /// <summary>True for the hidden Gearhold slot cells a set consists of: the hidden rows except the shared coin slot.</summary>
+        internal static bool IsSetOwned(Player player, Vector2i pos)
+        {
+            int grid = GridRows(player);
+            return pos.y >= grid && !(pos.y == grid + (int)GearSlot.Coins / Width && pos.x == (int)GearSlot.Coins % Width);
+        }
+
+        internal const string CoinsName = "$item_coins";
+
+        internal static bool IsCoins(ItemDrop.ItemData item) => item != null && item.m_shared.m_name == CoinsName;
 
         internal static Vector2i Cell(Player player, GearSlot slot)
         {
@@ -136,11 +145,15 @@ namespace MordasGearhold.Core
             return pos.y >= LogicalHiddenBase ? new Vector2i(pos.x, GridRows(player) + pos.y - LogicalHiddenBase) : pos;
         }
 
-        /// <summary>Whether a stored (logical) position is a Gearhold slot cell.</summary>
+        /// <summary>
+        /// Whether a stored (logical) position is a slot cell of a set. The coin slot is none: an old record there
+        /// (the weapon slot of 0.1.0–0.3.0) goes into the grid like any other leftover.
+        /// </summary>
         internal static bool IsSlotRecord(Vector2i logical)
         {
+            int index = (logical.y - LogicalHiddenBase) * Width + logical.x;
             return logical.x >= 0 && logical.x < Width && logical.y >= LogicalHiddenBase && logical.y < LogicalHiddenBase + HiddenRows
-                && Enum.IsDefined(typeof(GearSlot), (logical.y - LogicalHiddenBase) * Width + logical.x);
+                && index != (int)GearSlot.Coins && Enum.IsDefined(typeof(GearSlot), index);
         }
 
         /// <summary>Rows bought from the trader (vanilla unique key "invrows", base 4).</summary>

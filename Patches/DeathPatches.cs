@@ -104,7 +104,7 @@ namespace MordasGearhold.Patches
             Container container = grave.GetComponent<Container>();
             foreach (ItemDrop.ItemData item in container.GetInventory().GetAllItems())
             {
-                if (Topology.IsSetOwned(player, item.m_gridPos.y))
+                if (Topology.IsSetOwned(player, item.m_gridPos))
                 {
                     return true;
                 }

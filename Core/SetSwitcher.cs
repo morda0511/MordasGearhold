@@ -84,8 +84,8 @@ namespace MordasGearhold.Core
                 return Fail(player, $"Set {target + 1} is damaged ({error})");
             }
 
-            List<ItemDrop.ItemData> outgoing = inventory.GetAllItems().Where(i => Topology.IsSetOwned(player, i.m_gridPos.y)).ToList();
-            List<ItemDrop.ItemData> shared = inventory.GetAllItems().Where(i => !Topology.IsSetOwned(player, i.m_gridPos.y)).ToList();
+            List<ItemDrop.ItemData> outgoing = inventory.GetAllItems().Where(i => Topology.IsSetOwned(player, i.m_gridPos)).ToList();
+            List<ItemDrop.ItemData> shared = inventory.GetAllItems().Where(i => !Topology.IsSetOwned(player, i.m_gridPos)).ToList();
             List<int> sharedStacks = shared.Select(i => i.m_stack).ToList();
 
             SetPackage outPackage = new SetPackage { SetIndex = from };
@@ -376,7 +376,7 @@ namespace MordasGearhold.Core
                 }
                 return;
             }
-            string live = GearholdState.Fingerprint(player, player.GetInventory().GetAllItems().Where(i => Topology.IsSetOwned(player, i.m_gridPos.y)));
+            string live = GearholdState.Fingerprint(player, player.GetInventory().GetAllItems().Where(i => Topology.IsSetOwned(player, i.m_gridPos)));
             int active = GearholdState.ActiveSet(player);
             bool finished = active == journal.To && live == journal.InFingerprint;
             bool untouched = active == journal.From && live == journal.OutFingerprint;

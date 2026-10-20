@@ -173,6 +173,8 @@ namespace MordasGearhold.UI
             AddSlot(gui, GearSlot.Trinket, "Trinket 1", rightX, Row(4));
             AddSlot(gui, GearSlot.Trinket2, "Trinket 2", rightX, Row(5));
             AddSlot(gui, GearSlot.Trinket3, "Trinket 3", rightX, Row(6));
+            // the coin slot, top right next to the title: shared by all sets, coins there weigh nothing
+            AddSlot(gui, GearSlot.Coins, null, DesignWidth - 44f, 46f, 52f);
             for (int n = 0; n < Topology.AmmoSlotCount; n++)
             {
                 Slot ammo = AddSlot(gui, Topology.AmmoSlot(n), "Ammo " + (n + 1), rightX, Row(1 + n));
@@ -459,7 +461,11 @@ namespace MordasGearhold.UI
             LookBadge.Show(e.transform, marker);
             if (item == null)
             {
-                e.m_icon.enabled = false;
+                // the empty coin slot shows a faint coin, so it is clear what goes there
+                Sprite hint = slot.Kind == GearSlot.Coins ? CoinIcon() : null;
+                e.m_icon.enabled = hint != null;
+                e.m_icon.sprite = hint;
+                e.m_icon.color = new Color(1f, 1f, 1f, 0.25f);
                 e.m_equiped.enabled = false;
                 e.m_amount.enabled = false;
                 if (e.m_quality != null) e.m_quality.enabled = false;
@@ -487,6 +493,18 @@ namespace MordasGearhold.UI
             }
         }
 
+        private static Sprite s_coinIcon;
+
+        private static Sprite CoinIcon()
+        {
+            if (s_coinIcon == null && ObjectDB.instance != null)
+            {
+                ItemDrop coins = ObjectDB.instance.GetItemPrefab("Coins")?.GetComponent<ItemDrop>();
+                s_coinIcon = coins != null ? coins.m_itemData.GetIcon() : null;
+            }
+            return s_coinIcon;
+        }
+
         // ------------------------------------------------------------------ input
 
         private static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
@@ -494,6 +512,10 @@ namespace MordasGearhold.UI
             if (slot >= GearSlot.Quick1)
             {
                 return true;
+            }
+            if (slot == GearSlot.Coins)
+            {
+                return Topology.IsCoins(item);
             }
             if (Topology.IsTrinketSlot(slot))
             {
@@ -524,7 +546,7 @@ namespace MordasGearhold.UI
                 {
                     return;
                 }
-                if (slot.Kind >= GearSlot.Quick1)
+                if (slot.Kind >= GearSlot.Quick1 || slot.Kind == GearSlot.Coins)
                 {
                     // quickslots: pick the item up like in the vanilla grid; click another quickslot to move or swap,
                     // or a grid cell to put it back into the inventory
@@ -555,7 +577,7 @@ namespace MordasGearhold.UI
             ItemDrop.ItemData occupant = Equipment.ItemIn(player, kind);
             bool occupantWorn = occupant != null && occupant.m_equipped;
             Equipment.MoveToCell(player, item, Topology.Cell(player, kind));
-            if (kind >= GearSlot.Quick1 || Topology.IsExtraSlot(kind) || item.m_equipped)
+            if (kind >= GearSlot.Quick1 || kind == GearSlot.Coins || Topology.IsExtraSlot(kind) || item.m_equipped)
             {
                 return; // extra trinkets need no equip call: Trinkets.Tick activates them in their slot
             }

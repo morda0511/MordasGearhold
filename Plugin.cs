@@ -19,7 +19,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "0.17.0";
+        public const string ModVersion = "0.18.0";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -39,6 +39,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> QuickslotsUseOnTarget;
         internal static ConfigEntry<bool> AutoEat;
         internal static ConfigEntry<bool> AutoEatEarly;
+        internal static ConfigEntry<bool> AutoStoreCoins;
         internal static ConfigEntry<bool> ShowPanel;
         internal static ConfigEntry<bool> ShowQuickslotBar;
         internal static ConfigEntry<float> QuickslotBarScale;
@@ -97,6 +98,8 @@ namespace MordasGearhold
                 "Eat food from the active set's quickslots automatically when one of your three food slots is empty.");
             AutoEatEarly = Config.Bind("3 - Behaviour", "AutoEatEarly", false,
                 "With AutoEat: also eat as soon as the game lets you eat a food again (at half its time), so no food slot runs empty.");
+            AutoStoreCoins = Config.Bind("3 - Behaviour", "AutoStoreCoins", true,
+                "Move the coins you carry into the coin slot (top right of the panel) on their own. Coins there weigh nothing.");
 
             ShowPanel = Config.Bind("4 - UI", "ShowPanel", true, "Show the Gearhold panel in the middle of the inventory screen.");
             ShowQuickslotBar = Config.Bind("4 - UI", "ShowQuickslotBar", true,
@@ -127,6 +130,7 @@ namespace MordasGearhold
             }
             Patches.Equipment.LateShieldCheck(player);
             Patches.Trinkets.Tick(player);
+            Patches.Coins.Tick(player);
             Patches.AutoEat.Tick(player);
             Transmog.Tick(player);
             if (InputBlocked())
