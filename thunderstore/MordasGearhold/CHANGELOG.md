@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.2
+- YOUR VIKING, UTILITY: every worn utility item is listed by name with what it does, including the fixed bonuses and enchantments of Path of Valheiman belts and rings (they were missing before). Trinkets show their Path of Valheiman bonuses too.
+
 ## 1.3.1
 - Each HUD bar (quickslots, food, mead) can be a row or a column: ROW / COLUMN in the HUD BAR window.
 

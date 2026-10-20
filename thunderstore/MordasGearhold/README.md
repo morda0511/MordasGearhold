@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.1
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.2
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -45,6 +45,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
   - the equipment modifiers (movement, stamina costs, heat),
   - **WEAPON** (only while a weapon is drawn): damage per type, stamina/eitr use, block armour, block force, parry bonus, knockback, backstab, durability,
   - **SHIELD** (only while a shield is worn): block armour, block force, parry bonus,
+  - **UTILITY** (only with worn utility items): each item by name with its while-worn effect, and with Path of Valheiman its fixed bonuses (belts, rings) and enchantments,
   - **TRINKETS** (only with active trinkets): total max adrenaline, and each effect with the game's own description,
     e.g. what happens at full adrenaline,
   - **RESISTANCES** (e.g. Frost: Resistant, Spirit: Immune), including effects active right now.

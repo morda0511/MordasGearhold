@@ -139,14 +139,14 @@ namespace MordasGearhold.UI
             List<ItemDrop.ItemData> worn = new List<ItemDrop.ItemData>
             {
                 Access.HelmetItem(player), Access.ChestItem(player), Access.LegItem(player), Access.ShoulderItem(player),
-                Access.UtilityItem(player), Access.TrinketItem(player),
+                Access.TrinketItem(player), // utility items show all their lines in UTILITY instead
             };
             ItemDrop.ItemData left = Access.LeftItem(player);
             if (left != null && left.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield)
             {
                 worn.Add(left);
             }
-            worn.AddRange(Trinkets.ActiveExtras(player));
+            worn.AddRange(Trinkets.ActiveExtras(player).FindAll(i => i.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket));
 
             List<string> order = new List<string>();
             Dictionary<string, (double[] sums, bool[] signed, int[] decimals)> lines = new Dictionary<string, (double[], bool[], int[])>();
@@ -238,6 +238,10 @@ namespace MordasGearhold.UI
             {
                 Effect(sb, item.m_shared.m_fullAdrenalineSE, "at full adrenaline");
                 Effect(sb, item.m_shared.m_equipStatusEffect, "while worn");
+                foreach (string text in PathOfValheiman.Implicits(item)) // Path of Valheiman: what the trinket always does
+                {
+                    sb.Append("  ").Append(Clip(s_tags.Replace(text, "").Trim(), 34)).Append('\n');
+                }
             }
         }
 
@@ -251,15 +255,62 @@ namespace MordasGearhold.UI
                 active.Add(main);
             }
             active.AddRange(Trinkets.ActiveExtras(player).FindAll(i => i.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility));
-            if (!active.Exists(i => i.m_shared.m_equipStatusEffect != null))
+            if (active.Count == 0)
             {
                 return;
             }
+            // every worn utility item by name with all it does: the vanilla while-worn effect, and with
+            // Path of Valheiman its implicit lines (belts, rings: carry weight, regeneration ...) and enchantments
             Header(sb, "UTILITY");
             foreach (ItemDrop.ItemData item in active)
             {
-                Effect(sb, item.m_shared.m_equipStatusEffect, "while worn");
+                sb.Append("<color=").Append(Head).Append('>').Append(Clip(Localization.instance.Localize(item.m_shared.m_name), 30)).Append("</color>\n");
+                int lines = 0;
+                if (item.m_shared.m_equipStatusEffect != null)
+                {
+                    lines += EffectLines(sb, item.m_shared.m_equipStatusEffect);
+                }
+                foreach (string text in PathOfValheiman.Implicits(item))
+                {
+                    sb.Append("  ").Append(Clip(s_tags.Replace(text, "").Trim(), 34)).Append('\n');
+                    lines++;
+                }
+                foreach ((string text, bool local) in PathOfValheiman.Affixes(item))
+                {
+                    if (local) continue;
+                    sb.Append("  <color=").Append(Magic).Append('>').Append(Clip(s_tags.Replace(text, "").Trim(), 34)).Append("</color>\n");
+                    lines++;
+                }
+                if (lines == 0)
+                {
+                    sb.Append("  <color=").Append(Muted).Append('>').Append(Clip(UtilitySummary(item), 34)).Append("</color>\n");
+                }
             }
+        }
+
+        /// <summary>For a utility item without effect lines: its plain equipment modifiers, or "no extra effect".</summary>
+        private static string UtilitySummary(ItemDrop.ItemData item)
+        {
+            ItemDrop.ItemData.SharedData s = item.m_shared;
+            List<string> parts = new List<string>();
+            if (s.m_movementModifier != 0f) parts.Add("Movement " + (s.m_movementModifier * 100f).ToString("+0;-0") + "%");
+            if (s.m_maxAdrenaline != 0f) parts.Add("Max adrenaline " + s.m_maxAdrenaline.ToString("+0;-0"));
+            return parts.Count > 0 ? string.Join(", ", parts) : "no extra effect";
+        }
+
+        /// <summary>The description lines of a status effect (up to four), without its title; returns how many.</summary>
+        private static int EffectLines(StringBuilder sb, StatusEffect effect)
+        {
+            string tooltip = Localization.instance.Localize(effect.GetTooltipString() ?? "");
+            int lines = 0;
+            foreach (string raw in tooltip.Split('\n'))
+            {
+                string line = s_tags.Replace(raw, "").Trim();
+                if (line.Length == 0) continue;
+                if (++lines > 4) break;
+                sb.Append("  ").Append(Clip(line, 34)).Append('\n');
+            }
+            return System.Math.Min(lines, 4);
         }
 
         private static readonly Regex s_tags = new Regex("<.*?>");

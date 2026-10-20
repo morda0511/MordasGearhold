@@ -93,6 +93,53 @@ namespace MordasGearhold.Patches
 
         internal static bool Present => BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(Guid);
 
+        private static bool s_implicitsResolved;
+        private static MethodInfo s_implicits;
+        private static PropertyInfo s_implicitText;
+
+        /// <summary>
+        /// The implicit lines of an item (Path of Valheiman belts, rings, ...: what the item itself always does, e.g.
+        /// "+50 carry weight"), read through Valheiman.Api.Items.Implicits. Empty without Path of Valheiman.
+        /// </summary>
+        internal static List<string> Implicits(ItemDrop.ItemData item)
+        {
+            List<string> result = new List<string>();
+            if (item == null || !Present)
+            {
+                return result;
+            }
+            if (!s_implicitsResolved)
+            {
+                s_implicitsResolved = true;
+                Type items = AccessTools.TypeByName("Valheiman.Api.Items");
+                Type info = AccessTools.TypeByName("Valheiman.Api.ImplicitInfo");
+                s_implicits = items != null ? AccessTools.Method(items, "Implicits", new[] { typeof(ItemDrop.ItemData) }) : null;
+                s_implicitText = info != null ? AccessTools.Property(info, "Text") : null;
+            }
+            if (s_implicits == null || s_implicitText == null)
+            {
+                return result;
+            }
+            try
+            {
+                if (s_implicits.Invoke(null, new object[] { item }) is System.Collections.IEnumerable list)
+                {
+                    foreach (object line in list)
+                    {
+                        if (s_implicitText.GetValue(line) is string text && text.Length > 0)
+                        {
+                            result.Add(text);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogDebug("Path of Valheiman implicits unavailable: " + ex.Message);
+            }
+            return result;
+        }
+
         private static bool s_affixesResolved;
         private static MethodInfo s_affixes;
         private static PropertyInfo s_affixText;
