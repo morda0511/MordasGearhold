@@ -507,30 +507,7 @@ namespace MordasGearhold.UI
 
         // ------------------------------------------------------------------ input
 
-        private static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
-        {
-            if (slot >= GearSlot.Quick1)
-            {
-                return true;
-            }
-            if (slot == GearSlot.Coins)
-            {
-                return Topology.IsCoins(item);
-            }
-            if (Topology.IsTrinketSlot(slot))
-            {
-                return item.m_shared.m_itemType == ItemType.Trinket;
-            }
-            if (Topology.IsUtilitySlot(slot))
-            {
-                return item.m_shared.m_itemType == ItemType.Utility;
-            }
-            if (Topology.IsAmmoSlot(slot))
-            {
-                return item.m_shared.m_itemType == ItemType.Ammo;
-            }
-            return Topology.SlotFor(item) == slot;
-        }
+        private static bool Accepts(GearSlot slot, ItemDrop.ItemData item) => Topology.Accepts(slot, item);
 
         private static void OnLeftClick(Slot slot)
         {

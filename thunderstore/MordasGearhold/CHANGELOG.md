@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+- Path of Valheiman: its equipment rows are never rebuilt on load any more, even when the character was saved with them (that moved items into its slots although its equipment system was off).
+- On load, items lying in a Gearhold slot they do not belong in are moved into the inventory.
+
 ## 1.1.0
 - Works with Path of Valheiman: Gearhold turns its own equipment system off through Path of Valheiman's API, because both mods used the same inventory rows (set switches failed, gear landed in the wrong slots). The rest of Path of Valheiman keeps working.
 - The inventory height is kept at grid + slot rows if another mod changes it.

@@ -420,8 +420,9 @@ namespace MordasGearhold.Core
         }
 
         /// <summary>
-        /// Items in a hidden cell that is no Gearhold slot (old weapon / ranged slot) go to a free grid
-        /// cell. Without a free cell they simply stay where they are: still in the inventory, nothing is lost.
+        /// Items in a hidden cell that is no Gearhold slot (old ranged slot, rows below the slot rows) or that does
+        /// not fit the slot it lies in (e.g. left there by another mod's equipment rows, like Path of Valheiman's)
+        /// go to a free grid cell. Without a free cell they simply stay where they are: nothing is lost.
         /// </summary>
         private static void MoveOrphansToGrid(Player player)
         {
@@ -429,18 +430,19 @@ namespace MordasGearhold.Core
             int grid = Topology.GridRows(player);
             foreach (ItemDrop.ItemData item in inventory.GetAllItems().ToList())
             {
-                if (item.m_gridPos.y < grid || Topology.SlotAt(player, item.m_gridPos) != null)
+                GearSlot? slot = item.m_gridPos.y < grid ? null : Topology.SlotAt(player, item.m_gridPos);
+                if (item.m_gridPos.y < grid || (slot.HasValue && Topology.Accepts(slot.Value, item)))
                 {
                     continue;
                 }
                 Vector2i free = Topology.FindFreeGridCell(player);
                 if (free.x < 0)
                 {
-                    player.Message(MessageHud.MessageType.Center, $"Gearhold: no room to move {item.m_shared.m_name} out of a removed slot");
+                    player.Message(MessageHud.MessageType.Center, $"Gearhold: no room to move {item.m_shared.m_name} into the inventory");
                     return;
                 }
                 item.m_gridPos = free;
-                Plugin.Log.LogInfo($"Moved {item.m_shared.m_name} from a retired Gearhold slot into the inventory.");
+                Plugin.Log.LogInfo($"Moved {item.m_shared.m_name} out of a hidden cell it does not belong in, into the inventory.");
             }
             Access.Changed(inventory);
         }

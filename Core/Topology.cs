@@ -122,6 +122,17 @@ namespace MordasGearhold.Core
 
         internal static bool IsTrinketSlot(GearSlot slot) => slot == GearSlot.Trinket || IsExtraTrinketSlot(slot);
 
+        /// <summary>Whether an item may lie in a Gearhold slot (quickslots take anything).</summary>
+        internal static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
+        {
+            if (slot >= GearSlot.Quick1) return true;
+            if (slot == GearSlot.Coins) return IsCoins(item);
+            if (IsTrinketSlot(slot)) return item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket;
+            if (IsUtilitySlot(slot)) return item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility;
+            if (IsAmmoSlot(slot)) return item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo;
+            return SlotFor(item) == slot;
+        }
+
         /// <summary>The Gearhold slot a live cell belongs to, or null for grid cells.</summary>
         internal static GearSlot? SlotAt(Player player, Vector2i pos)
         {

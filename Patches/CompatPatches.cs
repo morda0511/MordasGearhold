@@ -119,3 +119,60 @@ namespace MordasGearhold.Patches
         }
     }
 }
+
+namespace MordasGearhold.Patches
+{
+    /// <summary>
+    /// With its equipment system off, Path of Valheiman still attaches its old rows once on load when the character
+    /// was saved with them ("the save still holds equipment cells"), and rearranges the rows under the grid until it
+    /// has handed them back. Under Gearhold those rows are the set slots, so that never happens: Path of Valheiman
+    /// is told the save holds none of its rows, and Gearhold's own load check (SetSwitcher.MoveOrphansToGrid) moves
+    /// anything that does not belong into a slot into the inventory instead.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class PathOfValheiman_HoldsOurRows_Patch
+    {
+        private static MethodBase Target() =>
+            AccessTools.Method(AccessTools.TypeByName("PassiveTree.Gear.EquipRows"), "HoldsOurRows");
+
+        private static bool Prepare() => PathOfValheiman.Present && Target() != null;
+
+        private static MethodBase TargetMethod() => Target();
+
+        private static bool Prefix(ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
+}
+
+namespace MordasGearhold.Patches
+{
+    /// <summary>
+    /// Path of Valheiman's own prefix on Player.SetInventorySize (EquipRows.GameRows) rebuilds and shifts the rows
+    /// under the grid on load, even with its equipment system off when the save still remembers its rows. Under
+    /// Gearhold it is skipped and SetInventorySize runs as without Path of Valheiman (Gearhold's own patch keeps the
+    /// layout). The HoldsOurRows patch above covers the same case; this one also holds if the JIT inlined it.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class PathOfValheiman_GameRows_Patch
+    {
+        private static MethodBase Target()
+        {
+            Type rows = AccessTools.TypeByName("PassiveTree.Gear.EquipRows");
+            Type gameRows = rows != null ? AccessTools.Inner(rows, "GameRows") : null;
+            return gameRows != null ? AccessTools.Method(gameRows, "Prefix") : null;
+        }
+
+        private static bool Prepare() => PathOfValheiman.Present && Target() != null;
+
+        private static MethodBase TargetMethod() => Target();
+
+        private static bool Prefix(ref bool __result)
+        {
+            __result = true; // "run the original SetInventorySize"
+            return false;
+        }
+    }
+}
