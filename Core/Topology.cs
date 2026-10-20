@@ -12,7 +12,8 @@ namespace MordasGearhold.Core
         // 0.18.0: it belongs to no set (all sets share it), and anything but coins found there goes into the grid.
         Helmet, Chest, Legs, Shoulder, Utility, Trinket, Coins, Shield,  // hidden row 0
         Ammo = 9, Ammo2, Ammo3, Trinket2, Trinket3, Utility2, Utility3,  // hidden row 1 (full)
-        Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8 // hidden row 2
+        Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8, // hidden row 2
+        Food1 = 24, Food2, Food3, Mead1, Mead2, Mead3                      // hidden row 3 (since 1.2.0), 30-31 free
     }
 
     /// <summary>
@@ -29,7 +30,7 @@ namespace MordasGearhold.Core
         internal const int VanillaRows = 4;
         internal const int DefaultExtraRows = 3;
         internal const int MaxExtraRows = 5;
-        internal const int HiddenRows = 3;
+        internal const int HiddenRows = 4;
         internal const int QuickslotCount = 8;
 
         /// <summary>Stored sets keep slot cells at y = 200 + row, independent of the grid height.</summary>
@@ -122,9 +123,27 @@ namespace MordasGearhold.Core
 
         internal static bool IsTrinketSlot(GearSlot slot) => slot == GearSlot.Trinket || IsExtraTrinketSlot(slot);
 
+        internal const int FoodSlotCount = 3;
+        internal const int MeadSlotCount = 3;
+
+        internal static bool IsFoodSlot(GearSlot slot) => slot >= GearSlot.Food1 && slot <= GearSlot.Food3;
+
+        internal static bool IsMeadSlot(GearSlot slot) => slot >= GearSlot.Mead1 && slot <= GearSlot.Mead3;
+
+        /// <summary>Food: a consumable that fills a food slot (health, stamina or eitr).</summary>
+        internal static bool IsFood(ItemDrop.ItemData item) =>
+            item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Consumable
+            && (item.m_shared.m_food > 0f || item.m_shared.m_foodStamina > 0f || item.m_shared.m_foodEitr > 0f);
+
+        /// <summary>Mead / potion: a consumable that only gives a status effect.</summary>
+        internal static bool IsMead(ItemDrop.ItemData item) =>
+            item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Consumable && !IsFood(item) && item.m_shared.m_consumeStatusEffect != null;
+
         /// <summary>Whether an item may lie in a Gearhold slot (quickslots take anything).</summary>
         internal static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
         {
+            if (IsFoodSlot(slot)) return IsFood(item);
+            if (IsMeadSlot(slot)) return IsMead(item);
             if (slot >= GearSlot.Quick1) return true;
             if (slot == GearSlot.Coins) return IsCoins(item);
             if (IsTrinketSlot(slot)) return item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket;

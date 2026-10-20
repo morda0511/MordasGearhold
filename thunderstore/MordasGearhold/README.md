@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.1.1
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.2.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -32,7 +32,9 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 - **Weapons and bows stay in your hotbar.** The inventory grid, hotbar included, is shared by all sets. A set switch never touches it.
 - **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
   - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
+- **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Right-click a slot to eat or drink. Food slots take food only, mead slots meads and potions.
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
+  - **Move it:** the **HUD BAR** button next to the quickslots opens a small window with two sliders (left/right, up/down). While it is open the panel steps aside and the bar shows on screen, so you see every move at once. RESET puts it back to the default spot at the very bottom.
 - **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. Holding Alt keeps the vanilla hotbar from also using item 1–3.
 - **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`; by default only the vanilla slot is shown):
   - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
@@ -46,9 +48,10 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
   - **TRINKETS** (only with active trinkets): total max adrenaline, and each effect with the game's own description,
     e.g. what happens at full adrenaline,
   - **RESISTANCES** (e.g. Frost: Resistant, Spirit: Immune), including effects active right now.
+  - **ENCHANTMENTS** (with Path of Valheiman): the enchantments of your worn armour, shield, utility items and trinkets, added up (two "+5% Fire damage" become "+10% Fire damage"). The drawn weapon lists its own enchantments under WEAPON.
 
   Health, stamina and eitr are left out because the vanilla HUD already shows them.
-- **Coin slot** (top right of the panel, next to the title): coins you pick up go in there on their own and **weigh nothing**. It is shared by all three sets. It holds one full stack of coins; anything beyond stays in the inventory and weighs as usual. Turn the automatic moving off with `AutoStoreCoins`.
+- **Coin slot** (top right of the panel, next to the title): coins you pick up go in there on their own and **weigh nothing**. It is shared by all three sets and has **no limit**: one full stack lies in the slot, everything beyond is kept in a purse with your character, and the slot shows the total. Traders see and take the whole amount. Coins in the purse stay with you when you die; the stack in the slot goes into the grave as usual. Turn the automatic moving off with `AutoStoreCoins`.
 - **Auto-equip:** new armour, shields, trinkets and ammo you pick up or craft go into an **empty** slot only. Gear you already wear is never replaced. A new trinket goes into Trinket 2 or 3 when Trinket 1 is taken.
 - **Auto-shield:**
   - Equip a one-handed weapon from the hotbar, and the set's shield comes along.
@@ -105,7 +108,7 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 | Key button under a quickslot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
 | SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
 
-Slots: Head, Chest, Legs, Cape, Utility 1–3 (left); Shield, Ammo 1–3, Trinket 1–3 (right); Quickslot 1–8. YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
+Slots: Head, Chest, Legs, Cape, Utility 1–3 (left); Shield, Ammo 1–3, Trinket 1–3 (right); Food 1–3 and Mead 1–3 (above the quickslots); Quickslot 1–8; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
 Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 1).
 
 **Key conflicts:**

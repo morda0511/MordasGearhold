@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.1.1";
+        public const string ModVersion = "1.2.0";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -46,6 +46,8 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> ShowPanel;
         internal static ConfigEntry<bool> ShowQuickslotBar;
         internal static ConfigEntry<float> QuickslotBarScale;
+        internal static ConfigEntry<float> QuickslotBarX;
+        internal static ConfigEntry<float> QuickslotBarY;
 
         private Harmony _harmony;
 
@@ -108,6 +110,12 @@ namespace MordasGearhold
                 "Show the occupied quickslots of the active set with their hotkeys at the bottom centre of the screen.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
                 new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(0.4f, 1.2f)));
+            QuickslotBarX = Config.Bind("4 - UI", "QuickslotBarX", 0f,
+                new ConfigDescription("Left/right position of the quickslot bar (0 = centre). Easiest set with the HUD BAR button in the panel.",
+                    new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
+            QuickslotBarY = Config.Bind("4 - UI", "QuickslotBarY", 14f,
+                new ConfigDescription("Height of the quickslot bar above the bottom edge. Easiest set with the HUD BAR button in the panel.",
+                    new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 

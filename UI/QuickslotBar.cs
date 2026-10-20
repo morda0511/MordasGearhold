@@ -49,11 +49,13 @@ namespace MordasGearhold.UI
                 {
                     return;
                 }
-                bool show = Plugin.ShowQuickslotBar.Value && player != null && GearholdState.IsReady(player)
-                    && hud.m_rootObject.activeInHierarchy && !InventoryGui.IsVisible();
+                // while its position window is open the bar shows on top of the inventory screen, all slots
+                bool preview = QuickslotBarEditor.IsOpen;
+                bool show = player != null && GearholdState.IsReady(player) && hud.m_rootObject.activeInHierarchy
+                    && (preview || (Plugin.ShowQuickslotBar.Value && !InventoryGui.IsVisible()));
                 if (show)
                 {
-                    show = Refresh(player) > 0;
+                    show = Refresh(player, preview) > 0;
                 }
                 if (s_root.gameObject.activeSelf != show)
                 {
@@ -126,28 +128,32 @@ namespace MordasGearhold.UI
             s_root.gameObject.SetActive(false);
         }
 
-        /// <summary>Lays out the occupied slots centred; returns how many there are.</summary>
-        private static int Refresh(Player player)
+        /// <summary>
+        /// Lays out the occupied slots centred at the configured position; returns how many there are. In the
+        /// position window (preview) all eight slots show, empty ones without an item, so the bar is always visible.
+        /// </summary>
+        private static int Refresh(Player player, bool preview)
         {
             s_root.localScale = Vector3.one * Plugin.QuickslotBarScale.Value;
-            int occupied = 0;
+            s_root.anchoredPosition = new Vector2(Plugin.QuickslotBarX.Value, Plugin.QuickslotBarY.Value);
+            int shown = 0;
             for (int i = 0; i < s_elements.Length; i++)
             {
-                if (Equipment.ItemIn(player, Topology.QuickSlot(i)) != null)
+                if (preview || Equipment.ItemIn(player, Topology.QuickSlot(i)) != null)
                 {
-                    occupied++;
+                    shown++;
                 }
             }
-            if (occupied == 0)
+            if (shown == 0)
             {
                 return 0;
             }
-            float x = -(occupied - 1) * s_spacing / 2f;
+            float x = -(shown - 1) * s_spacing / 2f;
             for (int i = 0; i < s_elements.Length; i++)
             {
                 Element e = s_elements[i];
                 ItemDrop.ItemData item = Equipment.ItemIn(player, Topology.QuickSlot(i));
-                if (item == null)
+                if (item == null && !preview)
                 {
                     if (e.Go.activeSelf) e.Go.SetActive(false);
                     continue;
@@ -159,30 +165,30 @@ namespace MordasGearhold.UI
                 rect.anchoredPosition = new Vector2(x, 0f) - rect.rect.center;
                 x += s_spacing;
 
+                e.Key.text = Plugin.KeyLabel(i);
                 if (e.Icon != null)
                 {
-                    e.Icon.gameObject.SetActive(true);
-                    e.Icon.sprite = item.GetIcon();
+                    e.Icon.gameObject.SetActive(item != null);
+                    if (item != null) e.Icon.sprite = item.GetIcon();
                 }
-                e.Key.text = Plugin.KeyLabel(i);
                 if (e.Amount != null)
                 {
-                    bool stack = item.m_shared.m_maxStackSize > 1;
+                    bool stack = item != null && item.m_shared.m_maxStackSize > 1;
                     e.Amount.gameObject.SetActive(stack);
                     if (stack) e.Amount.text = item.m_stack.ToString();
                 }
                 if (e.Equipped != null)
                 {
-                    e.Equipped.SetActive(item.m_equipped);
+                    e.Equipped.SetActive(item != null && item.m_equipped);
                 }
                 if (e.Durability != null)
                 {
-                    bool worn = item.m_shared.m_useDurability && item.m_durability < item.GetMaxDurability();
+                    bool worn = item != null && item.m_shared.m_useDurability && item.m_durability < item.GetMaxDurability();
                     e.Durability.gameObject.SetActive(worn);
                     if (worn) e.Durability.SetValue(item.m_durability <= 0f ? 1f : item.GetDurabilityPercentage());
                 }
             }
-            return occupied;
+            return shown;
         }
     }
 }

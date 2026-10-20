@@ -47,6 +47,7 @@ namespace MordasGearhold.UI
             AppendShield(sb, player);
             AppendTrinkets(sb, player);
             AppendUtilities(sb, player);
+            AppendEnchantments(sb, player);
 
             // armour + status effects, the same values the game uses when you are hit; "normal" ones are left out
             HitData.DamageModifiers mods = player.GetDamageModifiers();
@@ -116,6 +117,82 @@ namespace MordasGearhold.UI
             if (weapon.m_shared.m_useDurability)
             {
                 Row(sb, "Durability", weapon.m_durability.ToString("0") + " / " + weapon.GetMaxDurability().ToString("0"));
+            }
+            // the weapon's own enchantments (Path of Valheiman), each as the game words it
+            foreach ((string text, bool _) in PathOfValheiman.Affixes(weapon))
+            {
+                sb.Append("<color=").Append(Magic).Append('>').Append(Clip(s_tags.Replace(text, "").Trim(), 34)).Append("</color>\n");
+            }
+        }
+
+        private const string Magic = "#8fb8ff";
+        private static readonly Regex s_number = new Regex(@"[+-]?\d+(?:[.,]\d+)?");
+
+        /// <summary>
+        /// ENCHANTMENTS: the enchantments (Path of Valheiman affixes) of the worn armour, shield, utility items and
+        /// trinkets that work on the character, added up: the same line with other numbers ("+5% Fire damage",
+        /// "+7% Fire damage") becomes one line with the sums. Enchantments that only change the item itself (e.g.
+        /// its armour) are already in the values above and are left out.
+        /// </summary>
+        private static void AppendEnchantments(StringBuilder sb, Player player)
+        {
+            List<ItemDrop.ItemData> worn = new List<ItemDrop.ItemData>
+            {
+                Access.HelmetItem(player), Access.ChestItem(player), Access.LegItem(player), Access.ShoulderItem(player),
+                Access.UtilityItem(player), Access.TrinketItem(player),
+            };
+            ItemDrop.ItemData left = Access.LeftItem(player);
+            if (left != null && left.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield)
+            {
+                worn.Add(left);
+            }
+            worn.AddRange(Trinkets.ActiveExtras(player));
+
+            List<string> order = new List<string>();
+            Dictionary<string, (double[] sums, bool[] signed, int[] decimals)> lines = new Dictionary<string, (double[], bool[], int[])>();
+            foreach (ItemDrop.ItemData item in worn)
+            {
+                foreach ((string raw, bool local) in PathOfValheiman.Affixes(item))
+                {
+                    if (local)
+                    {
+                        continue;
+                    }
+                    string text = s_tags.Replace(raw, "").Trim();
+                    MatchCollection numbers = s_number.Matches(text);
+                    string template = s_number.Replace(text, "{#}");
+                    if (!lines.TryGetValue(template, out var entry))
+                    {
+                        entry = (new double[numbers.Count], new bool[numbers.Count], new int[numbers.Count]);
+                        lines[template] = entry;
+                        order.Add(template);
+                    }
+                    for (int i = 0; i < numbers.Count && i < entry.sums.Length; i++)
+                    {
+                        string n = numbers[i].Value;
+                        entry.sums[i] += double.Parse(n.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture);
+                        entry.signed[i] |= n.StartsWith("+");
+                        int dot = n.IndexOfAny(new[] { '.', ',' });
+                        entry.decimals[i] = System.Math.Max(entry.decimals[i], dot < 0 ? 0 : n.Length - dot - 1);
+                    }
+                }
+            }
+            if (order.Count == 0)
+            {
+                return;
+            }
+            Header(sb, "ENCHANTMENTS");
+            foreach (string template in order)
+            {
+                var (sums, signed, decimals) = lines[template];
+                int index = 0;
+                string line = Regex.Replace(template, @"\{#\}", _ =>
+                {
+                    int i = index++;
+                    string value = sums[i].ToString("F" + decimals[i], System.Globalization.CultureInfo.InvariantCulture);
+                    return signed[i] && sums[i] >= 0 ? "+" + value : value;
+                });
+                sb.Append("<color=").Append(Magic).Append('>').Append(Clip(line, 34)).Append("</color>\n");
             }
         }
 

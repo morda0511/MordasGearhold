@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+- 3 food and 3 mead slots per set, right above the quickslots (right-click to eat or drink).
+- YOUR VIKING: ENCHANTMENTS section with the added-up enchantments of worn gear (Path of Valheiman); the drawn weapon lists its own.
+- Coin slot without the 999 limit: everything beyond one stack is kept in a purse, shown as one total and usable at traders.
+- Quickslot bar lower by default (it overlapped the stamina bar) and movable: HUD BAR button with left/right and up/down sliders.
+
 ## 1.1.1
 - Path of Valheiman: its equipment rows are never rebuilt on load any more, even when the character was saved with them (that moved items into its slots although its equipment system was off).
 - On load, items lying in a Gearhold slot they do not belong in are moved into the inventory.

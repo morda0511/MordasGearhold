@@ -93,6 +93,58 @@ namespace MordasGearhold.Patches
 
         internal static bool Present => BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(Guid);
 
+        private static bool s_affixesResolved;
+        private static MethodInfo s_affixes;
+        private static PropertyInfo s_affixText;
+        private static PropertyInfo s_affixLocal;
+
+        /// <summary>
+        /// The enchantments (affixes) of an item as Path of Valheiman shows them: its text and whether it works on
+        /// the item itself (local) or on the character. Empty without Path of Valheiman or for unidentified items.
+        /// Read through Valheiman.Api.Items.Affixes, so nothing of Path of Valheiman is changed.
+        /// </summary>
+        internal static List<(string text, bool local)> Affixes(ItemDrop.ItemData item)
+        {
+            List<(string, bool)> result = new List<(string, bool)>();
+            if (item == null || !Present)
+            {
+                return result;
+            }
+            if (!s_affixesResolved)
+            {
+                s_affixesResolved = true;
+                Type items = AccessTools.TypeByName("Valheiman.Api.Items");
+                Type info = AccessTools.TypeByName("Valheiman.Api.AffixInfo");
+                s_affixes = items != null ? AccessTools.Method(items, "Affixes", new[] { typeof(ItemDrop.ItemData) }) : null;
+                s_affixText = info != null ? AccessTools.Property(info, "Text") : null;
+                s_affixLocal = info != null ? AccessTools.Property(info, "Local") : null;
+            }
+            if (s_affixes == null || s_affixText == null)
+            {
+                return result;
+            }
+            try
+            {
+                if (s_affixes.Invoke(null, new object[] { item }) is System.Collections.IEnumerable list)
+                {
+                    foreach (object affix in list)
+                    {
+                        string text = s_affixText.GetValue(affix) as string;
+                        bool local = s_affixLocal != null && s_affixLocal.GetValue(affix) is bool l && l;
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            result.Add((text, local));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogDebug("Path of Valheiman affixes unavailable: " + ex.Message);
+            }
+            return result;
+        }
+
         internal static void TakeOverEquipment()
         {
             if (!Present)

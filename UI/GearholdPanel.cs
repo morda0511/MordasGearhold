@@ -19,7 +19,7 @@ namespace MordasGearhold.UI
     internal static class GearholdPanel
     {
         private const float DesignWidth = 460f;
-        private const float DesignHeight = 930f;
+        private const float DesignHeight = 1022f;
         private const float SlotTop = 178f;
         private const float SlotStep = 88f;
         private const float CompactHeight = 140f;
@@ -49,6 +49,7 @@ namespace MordasGearhold.UI
         internal static void Tick()
         {
             SkinMenu.Tick();
+            QuickslotBarEditor.Tick();
             InventoryGui gui = InventoryGui.instance;
             Player player = Player.m_localPlayer;
             if (gui == null || s_failed)
@@ -74,7 +75,9 @@ namespace MordasGearhold.UI
                     return;
                 }
             }
-            bool visible = Plugin.ShowPanel.Value && InventoryGui.IsVisible() && player != null && GearholdState.IsReady(player);
+            // the panel steps aside while the quickslot bar is being moved, so the bar is not hidden behind it
+            bool visible = Plugin.ShowPanel.Value && InventoryGui.IsVisible() && player != null && GearholdState.IsReady(player)
+                && !QuickslotBarEditor.IsOpen;
             if (s_root.gameObject.activeSelf != visible)
             {
                 s_root.gameObject.SetActive(visible);
@@ -205,10 +208,44 @@ namespace MordasGearhold.UI
             UiKit.Place(viking.rectTransform, DesignWidth / 2f, 160f, 230f, 28f);
             s_stats = BuildScrollingSheet(gui, body, DesignWidth / 2f, 180f, 232f, sheetBottom - 8f);
 
-            float quickTop = sheetBottom + 30f;
+            // food and meads of the active set, right above the quickslots (right-click eats / drinks)
+            float provisionsTop = sheetBottom + 30f;
+            UiKit.Divider(s_body, braid, DesignWidth / 2f, provisionsTop, DesignWidth - 40f);
+            float foodX = DesignWidth / 2f - 110f, meadX = DesignWidth / 2f + 110f;
+            TMP_Text foodTitle = UiKit.Text(s_body, header, "FOOD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
+            UiKit.Place(foodTitle.rectTransform, foodX, provisionsTop + 18f, 160f, 22f);
+            TMP_Text meadTitle = UiKit.Text(s_body, header, "MEAD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
+            UiKit.Place(meadTitle.rectTransform, meadX, provisionsTop + 18f, 160f, 22f);
+            for (int n = 0; n < Topology.FoodSlotCount; n++)
+            {
+                Slot food = AddSlot(gui, GearSlot.Food1 + n, null, foodX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
+                food.Label = "Food " + (n + 1);
+            }
+            for (int n = 0; n < Topology.MeadSlotCount; n++)
+            {
+                Slot mead = AddSlot(gui, GearSlot.Mead1 + n, null, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
+                mead.Label = "Mead " + (n + 1);
+            }
+
+            float quickTop = provisionsTop + 92f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, quickTop, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
             UiKit.Place(quickTitle.rectTransform, DesignWidth / 2f, quickTop + 18f, DesignWidth - 50f, 22f);
+            // opens the window that moves the quickslot bar on the HUD
+            Button barButton = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
+            barButton.gameObject.name = "QuickslotBarPosition";
+            barButton.gameObject.SetActive(true);
+            barButton.interactable = true;
+            barButton.onClick = new Button.ButtonClickedEvent();
+            barButton.onClick.AddListener(QuickslotBarEditor.Open);
+            UiKit.Place((RectTransform)barButton.transform, DesignWidth - 75f, quickTop + 18f, 100f, 24f);
+            TMP_Text barLabel = barButton.GetComponentInChildren<TMP_Text>(true);
+            if (barLabel != null)
+            {
+                barLabel.text = "HUD BAR";
+                barLabel.enableAutoSizing = false;
+                barLabel.fontSize = 13f;
+            }
             for (int x = 0; x < Topology.QuickslotCount; x++)
             {
                 float slotX = DesignWidth / 2f + (x - 3.5f) * (QuickSize + 6f);
@@ -479,7 +516,9 @@ namespace MordasGearhold.UI
             e.m_equiped.enabled = item.m_equipped;
             bool stack = item.m_shared.m_maxStackSize > 1;
             e.m_amount.enabled = stack;
-            if (stack) e.m_amount.text = item.m_stack + "/" + item.m_shared.m_maxStackSize;
+            if (stack) e.m_amount.text = slot.Kind == GearSlot.Coins
+                ? Patches.Coins.Total(player).ToString() // slot + purse, no limit
+                : item.m_stack + "/" + item.m_shared.m_maxStackSize;
             if (e.m_quality != null)
             {
                 e.m_quality.enabled = item.m_shared.m_maxQuality > 1;
