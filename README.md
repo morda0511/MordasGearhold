@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.0
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.1
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -64,7 +64,7 @@ Change how your gear **looks** without changing the gear itself.
   - Or click one of your unlocked looks of the same kind.
   - Looks are saved **per set**, so each set can have its own outfit.
 - **SAVE and BACK:** every choice shows on your character right away, but only **SAVE** (under the character) keeps it. **< BACK** (top left), Esc or closing the inventory throws the changes away.
-- **Weapons and bows:** `Alt` + right-click the weapon in the inventory. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
+- **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
 - **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory.
@@ -89,7 +89,7 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
 |---|---|
 | Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
 | Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item is picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
-| Right-click a slot | Head, Chest, Legs, Cape, Shield: open the look menu. Other slots: use the item (eat, drink, use this ammo). |
+| Right-click a slot | Head, Chest, Legs, Cape, Shield, or a weapon in a quickslot: open the look menu. Other slots: use the item (eat, drink, use this ammo). |
 | Key button under a quickslot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
 | SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
 

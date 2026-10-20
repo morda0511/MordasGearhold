@@ -594,6 +594,12 @@ namespace MordasGearhold.UI
                 SkinMenu.OpenForPiece(player, piece.Value);
                 return;
             }
+            if (item != null && Transmog.IsWeapon(item))
+            {
+                // a weapon in a quickslot: its look menu, not equip/unequip (its hotkey draws it)
+                SkinMenu.OpenForWeapon(player, item);
+                return;
+            }
             if (item != null)
             {
                 player.UseItem(null, item, true);
