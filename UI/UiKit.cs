@@ -32,13 +32,17 @@ namespace MordasGearhold.UI
 
         internal static TMP_Text Text(Transform parent, TMP_Text template, string value, float size, Color color, TextAlignmentOptions align)
         {
+            // TMP's Awake loads its default font (LiberationSans SDF, which Valheim does not ship) when no font is
+            // set yet, and logs a warning. Inactive objects run Awake only once activated, so the font goes in first.
             RectTransform rect = Rect("Text", parent);
+            rect.gameObject.SetActive(false);
             TextMeshProUGUI text = rect.gameObject.AddComponent<TextMeshProUGUI>();
             if (template != null)
             {
                 text.font = template.font;
                 text.fontSharedMaterial = template.fontSharedMaterial;
             }
+            rect.gameObject.SetActive(true);
             text.fontSize = size;
             text.color = color;
             text.alignment = align;

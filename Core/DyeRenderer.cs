@@ -35,7 +35,6 @@ namespace MordasGearhold.Core
         private static readonly int s_legsTex = Shader.PropertyToID("_LegsTex");
 
         private static readonly MaterialPropertyBlock s_block = new MaterialPropertyBlock();
-        private static readonly HashSet<string> s_loggedMeshes = new HashSet<string>();
 
         /// <summary>The texture that shows a piece's colours (for the colour swatches): painted body texture or model texture.</summary>
         internal static Texture BaseTexture(Player player, Transmog.Piece piece)
@@ -144,11 +143,6 @@ namespace MordasGearhold.Core
                         renderer.SetPropertyBlock(null, i);
                         continue;
                     }
-                    if (s_loggedMeshes.Add(go.name + "/" + renderer.name + "/" + material.name))
-                    {
-                        Texture main = material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
-                        Plugin.Log.LogInfo($"[Dye] mesh {go.name}/{renderer.name}: material {material.name}, texture {(main != null ? main.name : "-")}");
-                    }
                     renderer.GetPropertyBlock(s_block, i);
                     s_block.SetFloat(s_hue, Scale(material.shader, "_Hue", dye.Hue / 180f, hue: true));
                     s_block.SetFloat(s_saturation, Scale(material.shader, "_Saturation", dye.Saturation / 100f, hue: false));
@@ -199,7 +193,6 @@ namespace MordasGearhold.Core
         private const int CacheSize = 8;
         private static readonly List<(Texture source, string dye, Texture2D copy)> s_cache = new List<(Texture, string, Texture2D)>();
         private static readonly Dictionary<Texture, Vector3> s_dominant = new Dictionary<Texture, Vector3>();
-        private static readonly HashSet<string> s_logged = new HashSet<string>();
 
         internal static Texture Get(Texture source, DyeValue dye)
         {
@@ -243,7 +236,6 @@ namespace MordasGearhold.Core
             Texture2D copy = ReadBack(source, MaxSize, true);
             copy.name = source.name + "_gearhold_dye";
             Color32[] pixels = copy.GetPixels32();
-            LogAlpha(source, pixels);
             float hueShift = dye.Hue / 360f;
             float sat = dye.Saturation / 100f;
             float val = dye.Brightness / 100f;
@@ -266,26 +258,6 @@ namespace MordasGearhold.Core
             copy.SetPixels32(pixels);
             copy.Apply(true, true); // mipmaps, then free the CPU copy
             return copy;
-        }
-
-        /// <summary>Diagnostics for the skin question: how much of the texture is armour (alpha) vs. skin.</summary>
-        private static void LogAlpha(Texture source, Color32[] pixels)
-        {
-            if (!s_logged.Add(source.name))
-            {
-                return;
-            }
-            int clear = 0, partial = 0, solid = 0;
-            foreach (Color32 p in pixels)
-            {
-                if (p.a < 13) clear++;
-                else if (p.a > 242) solid++;
-                else partial++;
-            }
-            float n = Mathf.Max(1, pixels.Length) / 100f;
-            string format = source is Texture2D t2 ? t2.format.ToString() : source.GetType().Name;
-            Plugin.Log.LogInfo($"[Dye] body texture {source.name} ({format} {source.width}x{source.height}): " +
-                $"skin/clear {clear / n:0}%, partial {partial / n:0}%, armour {solid / n:0}%");
         }
 
         /// <summary>
