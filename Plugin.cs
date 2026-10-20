@@ -15,11 +15,14 @@ namespace MordasGearhold
     [BepInIncompatibility("Azumatt.AzuExtendedPlayerInventory")]
     // Loaded first when present so its player-inventory sort can be made Gearhold-aware (Patches/CompatPatches.cs).
     [BepInDependency("com.morda.storeandcraft", BepInDependency.DependencyFlags.SoftDependency)]
+    // Loaded first when present: its own equipment rows sit where Gearhold keeps its slots, so Gearhold turns that
+    // system off through Path of Valheiman's API before a character loads (Patches/CompatPatches.cs).
+    [BepInDependency(Patches.PathOfValheiman.Guid, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.0.2";
+        public const string ModVersion = "1.1.0";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -108,6 +111,8 @@ namespace MordasGearhold
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 
+            Patches.PathOfValheiman.TakeOverEquipment();
+
             _harmony = new Harmony(ModGuid);
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
             Logger.LogInfo(ModName + " v" + ModVersion + " loaded.");
@@ -127,6 +132,7 @@ namespace MordasGearhold
             Patches.Equipment.LateShieldCheck(player);
             Patches.Trinkets.Tick(player);
             Patches.Coins.Tick(player);
+            Topology.KeepHeight(player);
             Patches.AutoEat.Tick(player);
             Transmog.Tick(player);
             if (InputBlocked())

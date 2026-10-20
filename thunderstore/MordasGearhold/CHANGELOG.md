@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+- Works with Path of Valheiman: Gearhold turns its own equipment system off through Path of Valheiman's API, because both mods used the same inventory rows (set switches failed, gear landed in the wrong slots). The rest of Path of Valheiman keeps working.
+- The inventory height is kept at grid + slot rows if another mod changes it.
+
 ## 1.0.2
 - A set switch no longer fails as a whole because one item cannot go back into its slot: that item goes into a free inventory cell (or stays stored with the set), and the rest of the set is switched.
 - When a switch does fail, the message names the reason.

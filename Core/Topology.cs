@@ -213,6 +213,39 @@ namespace MordasGearhold.Core
             }
         }
 
+        private static float s_nextHeightCheck;
+
+        /// <summary>
+        /// Once a second: another mod may have changed the inventory height (Path of Valheiman does so once when it
+        /// hands its old equipment rows back). The grid plus the hidden slot rows are put back; nothing moves.
+        /// </summary>
+        internal static void KeepHeight(Player player)
+        {
+            if (UnityEngine.Time.unscaledTime < s_nextHeightCheck)
+            {
+                return;
+            }
+            s_nextHeightCheck = UnityEngine.Time.unscaledTime + 1f;
+            GearholdState.State state = GearholdState.ReadState(player);
+            Inventory inventory = player.GetInventory();
+            int total = state.GridRows + HiddenRows;
+            if (state.GridRows <= 0 || inventory.GetHeight() == total)
+            {
+                return;
+            }
+            if (inventory.GetAllItems().Any(i => i.m_gridPos.y >= total))
+            {
+                return; // never shrink over items: they would become unreachable
+            }
+            Plugin.Log.LogInfo($"Inventory height was changed to {inventory.GetHeight()} by another mod; Gearhold sets it back to {total}.");
+            inventory.SetHeight(total);
+            Access.Changed(inventory);
+            if (InventoryGui.instance != null)
+            {
+                InventoryGui.instance.SetInventorySize(state.GridRows);
+            }
+        }
+
         private static bool TryResize(Player player, ref GearholdState.State state, int newGrid, out string reason)
         {
             reason = null;

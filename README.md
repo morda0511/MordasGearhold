@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.0.2
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.1.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -133,6 +133,8 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 ## Installation
 - **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
 - **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
+- **Path of Valheiman:** works together. Gearhold switches Path of Valheiman's own equipment system (its slots beside the crafting window, purse and tool bar) off through Path of Valheiman's API, because both would use the same inventory rows. Its passive tree, loot and everything else keep working. Items still lying in its old slots are moved back into your inventory once.
+- **Not compatible:** ExtraSlots and AzuExtendedPlayerInventory (they take over the same inventory rows).
 
 Source and issues: https://github.com/morda0511/MordasGearhold
 

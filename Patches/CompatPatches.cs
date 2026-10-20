@@ -75,3 +75,47 @@ namespace MordasGearhold.Patches
         }
     }
 }
+
+namespace MordasGearhold.Patches
+{
+    /// <summary>
+    /// Path of Valheiman (treextr) has its own equipment system ("5. Controls / Equipment system": slots beside the
+    /// crafting window, purse, tool bar, transmog). It keeps those slots in rows directly under the inventory grid,
+    /// the same rows Gearhold uses for its sets, so the two would overwrite each other's cells. Path of Valheiman
+    /// offers an API for exactly this case, Valheiman.Api.Equipment.TurnOff(owner): its equipment system stays off
+    /// (like the config switch), never drops items, and moves anything still lying in its old cells back into the
+    /// backpack once. Everything else of Path of Valheiman (passive tree, loot, crafting ...) keeps working.
+    /// Called from Plugin.Awake, before any character loads; Path of Valheiman is loaded first (soft dependency).
+    /// </summary>
+    internal static class PathOfValheiman
+    {
+        internal const string Guid = "treextr.pathofvalheiman";
+
+        internal static bool Present => BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(Guid);
+
+        internal static void TakeOverEquipment()
+        {
+            if (!Present)
+            {
+                return;
+            }
+            try
+            {
+                Type api = AccessTools.TypeByName("Valheiman.Api.Equipment");
+                MethodInfo turnOff = api != null ? AccessTools.Method(api, "TurnOff", new[] { typeof(string) }) : null;
+                if (turnOff == null)
+                {
+                    Plugin.Log.LogWarning("Path of Valheiman found, but without its equipment API: turn its \"Equipment system\" " +
+                        "off in its config (5. Controls), or both mods use the same inventory rows.");
+                    return;
+                }
+                turnOff.Invoke(null, new object[] { Plugin.ModName });
+                Plugin.Log.LogInfo("Path of Valheiman found: its equipment system is turned off, Gearhold keeps the equipment slots.");
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogWarning("Could not turn off Path of Valheiman's equipment system: " + ex.Message);
+            }
+        }
+    }
+}
