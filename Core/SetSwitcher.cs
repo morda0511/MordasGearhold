@@ -144,7 +144,17 @@ namespace MordasGearhold.Core
                 foreach (Placement placement in toPlace)
                 {
                     Vector2i pos = placement.Cell;
-                    ItemDrop.ItemData item = ItemRecords.Instantiate(placement.Record);
+                    ItemDrop.ItemData item;
+                    try
+                    {
+                        item = ItemRecords.Instantiate(placement.Record);
+                    }
+                    catch (Exception rebuild)
+                    {
+                        // e.g. another mod's patch on Inventory.Load throwing for one modded item
+                        Plugin.Log.LogWarning($"Set {target + 1}: rebuilding a stored item threw: {rebuild}");
+                        item = null;
+                    }
                     if (item == null)
                     {
                         // one record that cannot be rebuilt must not block the whole set: it stays stored
