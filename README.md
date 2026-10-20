@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.1
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.2
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -67,7 +67,7 @@ Change how your gear **looks** without changing the gear itself.
 - **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
-- **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory.
+- **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory and in quickslots.
 - **Visibility:** other players see your looks too, because the game shares visible gear. A look only shows while real gear is worn in that slot.
 - **Character selection:** the character on the selection screen already wears the looks and colours of its active set.
 

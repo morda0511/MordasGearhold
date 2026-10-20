@@ -452,6 +452,10 @@ namespace MordasGearhold.UI
             {
                 marker = Transmog.GetLook(player, piece.Value) ?? (Dye.Get(player, piece.Value).IsNeutral ? null : "dye");
             }
+            else if (item != null && Transmog.IsWeapon(item))
+            {
+                marker = Transmog.GetItemLook(item); // a weapon in a quickslot carries its own look
+            }
             LookBadge.Show(e.transform, marker);
             if (item == null)
             {
