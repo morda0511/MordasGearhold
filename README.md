@@ -21,9 +21,9 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 
 ![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Gearhold%20Menu.png)
 
-**The look menu** – pick a look, hide a piece or dye it, with a 3D preview of your character:
+**The look menu** – tabs for every piece, pick a look, hide it or dye it, with a 3D preview of your character and SAVE:
 
-![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Transmog%20Menu.png)
+![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/coloring%20menu.png)
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
