@@ -147,15 +147,24 @@ namespace MordasGearhold.Core
                     ItemDrop.ItemData item = ItemRecords.Instantiate(placement.Record);
                     if (item == null)
                     {
-                        throw new InvalidOperationException("record could not be rebuilt");
+                        // one record that cannot be rebuilt must not block the whole set: it stays stored
+                        Plugin.Log.LogWarning($"Set {target + 1}: a stored item could not be rebuilt and stays stored with the set.");
+                        targetRemainder.Records.Add(placement.Record.Raw);
+                        continue;
                     }
-                    if (inventory.GetItemAt(pos.x, pos.y) != null)
+                    if (inventory.GetItemAt(pos.x, pos.y) != null || !Access.AddItemAt(inventory, item, item.m_stack, pos.x, pos.y))
                     {
-                        throw new InvalidOperationException("target cell occupied");
-                    }
-                    if (!Access.AddItemAt(inventory, item, item.m_stack, pos.x, pos.y))
-                    {
-                        throw new InvalidOperationException("could not place " + item.m_shared.m_name);
+                        // its cell is taken (or refused it): a free grid cell instead, else it stays stored
+                        Vector2i free = Topology.FindFreeGridCell(player);
+                        Plugin.Log.LogWarning($"Set {target + 1}: {item.m_shared.m_name} could not go to {pos} (" +
+                            (inventory.GetItemAt(pos.x, pos.y)?.m_shared.m_name ?? "refused") + "), " + (free.x >= 0 ? "put into the inventory" : "stays stored"));
+                        if (free.x < 0 || !Access.AddItemAt(inventory, item, item.m_stack, free.x, free.y))
+                        {
+                            targetRemainder.Records.Add(placement.Record.Raw);
+                            continue;
+                        }
+                        pos = free;
+                        intoGrid++;
                     }
                     placed.Add(inventory.GetItemAt(pos.x, pos.y));
                 }
@@ -179,7 +188,7 @@ namespace MordasGearhold.Core
                         player.EquipItem(item, false);
                     }
                 }
-                return Fail(player, "Set switch failed – your gear was restored");
+                return Fail(player, "Set switch failed (" + ex.Message + ") – your gear was restored");
             }
 
             // ---- 3. re-equip, like Player.EquipInventoryItems does after a load
@@ -208,8 +217,8 @@ namespace MordasGearhold.Core
             Transmog.Refresh(player); // looks are chosen per set
             if (intoGrid > 0)
             {
-                // sets from 0.1.0/0.2.0 also stored inventory rows; those items now simply join the inventory
-                player.Message(MessageHud.MessageType.Center, $"{intoGrid} items stored with set {target + 1} by an older version were put into your inventory");
+                // items that could not go back into their slot (or old inventory rows of 0.1.0/0.2.0) join the inventory
+                player.Message(MessageHud.MessageType.Center, $"{intoGrid} items of set {target + 1} did not fit their slot and were put into your inventory");
             }
             if (targetRemainder.Records.Count > 0)
             {
