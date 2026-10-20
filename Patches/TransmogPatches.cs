@@ -65,6 +65,7 @@ namespace MordasGearhold.Patches
             if (player != null && Humanoid_SetupVisEquipment_Patch.ShowsLooks(player))
             {
                 DyeRenderer.ApplyTo(player, __instance);
+                GlowRenderer.ApplyTo(player, __instance);
             }
         }
     }
@@ -89,7 +90,7 @@ namespace MordasGearhold.Patches
             for (int i = 0; i < elements.Count; i++)
             {
                 ItemDrop.ItemData item = inventory.GetItemAt(i % width, i / width);
-                string look = item != null && Transmog.IsWeapon(item) ? Transmog.GetItemLook(item) : null;
+                string look = item != null && Transmog.IsWeapon(item) ? Transmog.ItemMarker(item) : null;
                 LookBadge.Show(elements[i].transform, look);
             }
         }

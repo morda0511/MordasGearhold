@@ -19,7 +19,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "0.16.2";
+        public const string ModVersion = "0.17.0";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -42,6 +42,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> ShowPanel;
         internal static ConfigEntry<bool> ShowQuickslotBar;
         internal static ConfigEntry<float> QuickslotBarScale;
+        internal static ConfigEntry<bool> LogGlowDiagnostics;
 
         private Harmony _harmony;
 
@@ -102,6 +103,9 @@ namespace MordasGearhold
                 "Show the occupied quickslots of the active set with their hotkeys at the bottom centre of the screen.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
                 new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(0.4f, 1.2f)));
+            LogGlowDiagnostics = Config.Bind("9 - Diagnostics", "LogGlowDiagnostics", true,
+                "Temporary (test build): log what the glow effects of the weapons you draw are made of, " +
+                "for the planned weapon glow colours. Changes nothing.");
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 

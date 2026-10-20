@@ -454,7 +454,7 @@ namespace MordasGearhold.UI
             }
             else if (item != null && Transmog.IsWeapon(item))
             {
-                marker = Transmog.GetItemLook(item); // a weapon in a quickslot carries its own look
+                marker = Transmog.ItemMarker(item); // a weapon in a quickslot carries its own look and glow
             }
             LookBadge.Show(e.transform, marker);
             if (item == null)

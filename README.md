@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.16.2
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 0.17.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -83,6 +83,17 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
   - Helmet, cape, shield and the chest/leg models: the game's own colour controls (`_Hue`, `_Saturation`, `_Value`).
   - Armour painted onto the body: a recoloured copy of its texture, made once per change.
 - **Multiplayer:** for now only you see your colours. Showing them to other Gearhold players is planned.
+
+## Weapon glow
+Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu.
+
+- **Colour swatches:** every coloured glow part takes the chosen colour: particles, lights, glowing materials and the swing trail. **White** makes them white.
+- Brightness and strength stay, so fire still flickers like fire.
+- Smoke, white shimmer and the hit effects keep their own colours.
+- **RESET** gives the weapon its own colours back.
+- The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
+- Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
+- **Multiplayer:** for now only you see the colour.
 
 ## Panel controls
 | Action | Result |

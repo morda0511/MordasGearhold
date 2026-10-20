@@ -33,6 +33,8 @@ namespace MordasGearhold.Core
         internal static readonly AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> UtilityItem = Slot("m_utilityItem");
         internal static readonly AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> TrinketItem = Slot("m_trinketItem");
         internal static readonly AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> AmmoItem = Slot("m_ammoItem");
+        internal static readonly AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> HiddenRightItem = Slot("m_hiddenRightItem");
+        internal static readonly AccessTools.FieldRef<Humanoid, ItemDrop.ItemData> HiddenLeftItem = Slot("m_hiddenLeftItem");
 
         internal static readonly AccessTools.FieldRef<Player, List<Player.MinorActionData>> ActionQueue =
             AccessTools.FieldRefAccess<Player, List<Player.MinorActionData>>("m_actionQueue");
