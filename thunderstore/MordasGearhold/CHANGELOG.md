@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- Each HUD bar (quickslots, food, mead) can be a row or a column: ROW / COLUMN in the HUD BAR window.
+
 ## 1.3.0
 - Food and mead slots get their own hotkeys, set with a button under each slot (unbound at first).
 - Food and mead get their own HUD bars: food next to the food boxes at the bottom left, meads right of the quickslots.

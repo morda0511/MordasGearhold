@@ -20,11 +20,11 @@ namespace MordasGearhold.UI
         private const float KeyHeight = 20f;
 
         internal static readonly QuickslotBar Quick = new QuickslotBar("Quickslots", GearSlot.Quick1, Topology.QuickslotCount,
-            () => Plugin.QuickslotBarX, () => Plugin.QuickslotBarY);
+            () => Plugin.QuickslotBarX, () => Plugin.QuickslotBarY, () => Plugin.QuickslotBarVertical);
         internal static readonly QuickslotBar Food = new QuickslotBar("Food", GearSlot.Food1, Topology.FoodSlotCount,
-            () => Plugin.FoodBarX, () => Plugin.FoodBarY);
+            () => Plugin.FoodBarX, () => Plugin.FoodBarY, () => Plugin.FoodBarVertical);
         internal static readonly QuickslotBar Mead = new QuickslotBar("Mead", GearSlot.Mead1, Topology.MeadSlotCount,
-            () => Plugin.MeadBarX, () => Plugin.MeadBarY);
+            () => Plugin.MeadBarX, () => Plugin.MeadBarY, () => Plugin.MeadBarVertical);
 
         internal static readonly QuickslotBar[] All = { Quick, Food, Mead };
 
@@ -43,22 +43,26 @@ namespace MordasGearhold.UI
         private readonly Element[] m_elements;
         private readonly Func<ConfigEntry<float>> m_x;
         private readonly Func<ConfigEntry<float>> m_y;
+        private readonly Func<ConfigEntry<bool>> m_vertical;
         private Hud m_hud;
         private RectTransform m_root;
         private float m_spacing = 70f;
         private bool m_failed;
 
-        private QuickslotBar(string name, GearSlot first, int count, Func<ConfigEntry<float>> x, Func<ConfigEntry<float>> y)
+        private QuickslotBar(string name, GearSlot first, int count, Func<ConfigEntry<float>> x, Func<ConfigEntry<float>> y,
+            Func<ConfigEntry<bool>> vertical)
         {
             Name = name;
             m_first = first;
             m_elements = new Element[count];
             m_x = x;
             m_y = y;
+            m_vertical = vertical;
         }
 
         internal ConfigEntry<float> X => m_x();
         internal ConfigEntry<float> Y => m_y();
+        internal ConfigEntry<bool> Vertical => m_vertical();
 
         internal static void TickAll(Hud hud, Player player)
         {
@@ -182,7 +186,11 @@ namespace MordasGearhold.UI
             {
                 return 0;
             }
-            float x = -(shown - 1) * m_spacing / 2f;
+            // a row (left to right) or a column (top to bottom); in a column each slot also needs room for its key above it
+            bool vertical = Vertical.Value;
+            float step = vertical ? m_spacing + KeyHeight : m_spacing;
+            m_root.sizeDelta = vertical ? new Vector2(m_spacing + 10f, step * shown) : new Vector2(m_spacing * shown, m_spacing + KeyHeight);
+            float x = -(shown - 1) * step / 2f;
             for (int i = 0; i < m_elements.Length; i++)
             {
                 Element e = m_elements[i];
@@ -197,8 +205,8 @@ namespace MordasGearhold.UI
                 RectTransform rect = (RectTransform)e.Go.transform;
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 // the vanilla element's pivot is not its centre: place it by its visual centre
-                rect.anchoredPosition = new Vector2(x, 0f) - rect.rect.center;
-                x += m_spacing;
+                rect.anchoredPosition = (vertical ? new Vector2(0f, -x - KeyHeight / 2f) : new Vector2(x, 0f)) - rect.rect.center;
+                x += step;
 
                 e.Key.text = Plugin.KeyLabel(slot);
                 if (e.Icon != null)

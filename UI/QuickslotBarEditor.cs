@@ -16,7 +16,7 @@ namespace MordasGearhold.UI
         internal const float RangeX = 900f;
         internal const float RangeY = 900f;
         private const float Width = 460f;
-        private const float Height = 254f;
+        private const float Height = 294f;
 
         private static InventoryGui s_gui;
         private static RectTransform s_window;
@@ -56,6 +56,17 @@ namespace MordasGearhold.UI
             s_x.SetValueWithoutNotify(s_bar.X.Value);
             s_y.SetValueWithoutNotify(s_bar.Y.Value);
             ShowValues();
+            ShowOrientation();
+        }
+
+        private static Button s_row;
+        private static Button s_column;
+
+        /// <summary>ROW / COLUMN like tabs: the chosen layout of the selected bar looks pressed.</summary>
+        private static void ShowOrientation()
+        {
+            s_row.interactable = s_bar.Vertical.Value;
+            s_column.interactable = !s_bar.Vertical.Value;
         }
 
         internal static void Close()
@@ -121,10 +132,26 @@ namespace MordasGearhold.UI
                 ShowValues();
             });
 
+            // horizontal (a row) or vertical (a column), per bar
+            TMP_Text layout = UiKit.Text(s_window, gui.m_recipeDecription, "Layout", 16f, UiKit.Parchment, TextAlignmentOptions.Left);
+            UiKit.Place(layout.rectTransform, 85f, 200f, 120f, 24f);
+            s_row = AddButton(gui, "ROW", 225f, 200f, 120f, () =>
+            {
+                s_bar.Vertical.Value = false;
+                ShowOrientation();
+            });
+            s_column = AddButton(gui, "COLUMN", 355f, 200f, 120f, () =>
+            {
+                s_bar.Vertical.Value = true;
+                ShowOrientation();
+            });
+
             AddButton(gui, "RESET", Width / 2f - 80f, Height - 36f, 130f, () =>
             {
                 s_bar.X.Value = (float)s_bar.X.DefaultValue;
                 s_bar.Y.Value = (float)s_bar.Y.DefaultValue;
+                s_bar.Vertical.Value = false;
+                ShowOrientation();
                 s_x.SetValueWithoutNotify(s_bar.X.Value);
                 s_y.SetValueWithoutNotify(s_bar.Y.Value);
                 ShowValues();

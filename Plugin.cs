@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.3.0";
+        public const string ModVersion = "1.3.1";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -42,6 +42,9 @@ namespace MordasGearhold
         internal static ConfigEntry<float> FoodBarY;
         internal static ConfigEntry<float> MeadBarX;
         internal static ConfigEntry<float> MeadBarY;
+        internal static ConfigEntry<bool> QuickslotBarVertical;
+        internal static ConfigEntry<bool> FoodBarVertical;
+        internal static ConfigEntry<bool> MeadBarVertical;
         internal static ConfigEntry<bool> AutoEquip;
         internal static ConfigEntry<bool> AutoShield;
         internal static ConfigEntry<bool> SharedFirstForCrafting;
@@ -141,6 +144,9 @@ namespace MordasGearhold
                 new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
             MeadBarY = Config.Bind("4 - UI", "MeadBarY", 14f, new ConfigDescription("Height of the mead bar above the bottom edge.",
                 new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
+            QuickslotBarVertical = Config.Bind("4 - UI", "QuickslotBarVertical", false, "Show the quickslot bar as a column instead of a row.");
+            FoodBarVertical = Config.Bind("4 - UI", "FoodBarVertical", false, "Show the food bar as a column instead of a row.");
+            MeadBarVertical = Config.Bind("4 - UI", "MeadBarVertical", false, "Show the mead bar as a column instead of a row.");
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 
