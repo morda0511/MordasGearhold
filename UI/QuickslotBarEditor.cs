@@ -13,8 +13,8 @@ namespace MordasGearhold.UI
     /// </summary>
     internal static class QuickslotBarEditor
     {
-        internal const float RangeX = 900f;
-        internal const float RangeY = 900f;
+        internal const float RangeX = 4000f; // config limits; the sliders use the real HUD size (ScreenRange)
+        internal const float RangeY = 4000f;
         private const float Width = 460f;
         private const float Height = 294f;
 
@@ -53,10 +53,28 @@ namespace MordasGearhold.UI
             {
                 s_tabs[i].interactable = QuickslotBar.All[i] != bar; // like the vanilla tabs: the chosen one looks pressed
             }
+            // the sliders reach the real screen edges: half the HUD width to each side, the full height upwards
+            Rect hud = ScreenRect();
+            s_x.minValue = -Mathf.Ceil(hud.width / 2f);
+            s_x.maxValue = Mathf.Ceil(hud.width / 2f);
+            s_y.maxValue = Mathf.Ceil(hud.height);
             s_x.SetValueWithoutNotify(s_bar.X.Value);
             s_y.SetValueWithoutNotify(s_bar.Y.Value);
             ShowValues();
             ShowOrientation();
+        }
+
+        /// <summary>The HUD area the bars live in (canvas units), so the slider range fits any screen width.</summary>
+        private static Rect ScreenRect()
+        {
+            RectTransform root = Hud.instance != null && Hud.instance.m_rootObject != null
+                ? Hud.instance.m_rootObject.transform as RectTransform : null;
+            Rect rect = root != null ? root.rect : new Rect(0f, 0f, 1920f, 1080f);
+            if (rect.width < 100f || rect.height < 100f)
+            {
+                rect = new Rect(0f, 0f, 1920f, 1080f);
+            }
+            return rect;
         }
 
         private static Button s_row;

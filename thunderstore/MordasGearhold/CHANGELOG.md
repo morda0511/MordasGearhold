@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.4
+- The HUD BAR sliders reach the real screen edges on any screen width (they stopped at 900 before).
+
 ## 1.3.3
 - Gearhold slots show the same item tooltip as inventory cells, so tooltip mods like Path of Valheiman (enchantments, sockets, compare) work on them too.
 
