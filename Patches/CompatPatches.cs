@@ -275,3 +275,42 @@ namespace MordasGearhold.Patches
         }
     }
 }
+
+namespace MordasGearhold.Patches
+{
+    /// <summary>
+    /// StoreAndCraft's dump (hotkey, hover-store, auto-stack) protects only cells outside the inventory size.
+    /// Gearhold's slots (armour, quickslots, food, meads, ammo, the coin slot) are hidden rows inside it, so they
+    /// would be dumped into chests. Every item in those rows counts as dump-protected; the grid is unchanged.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class StoreAndCraft_DumpProtected_Patch
+    {
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            MethodBase protectedCheck = AccessTools.Method(AccessTools.TypeByName("StoreAndCraft.PlayerBag"), "IsDumpProtected");
+            MethodBase shouldDump = AccessTools.Method(AccessTools.TypeByName("StoreAndCraft.InventoryDump"), "ShouldDump");
+            if (protectedCheck != null) yield return protectedCheck;
+            if (shouldDump != null) yield return shouldDump;
+        }
+
+        private static bool Prepare() => AccessTools.TypeByName("StoreAndCraft.PlayerBag") != null;
+
+        private static void Postfix(ItemDrop.ItemData item, ref bool __result, MethodBase __originalMethod)
+        {
+            if (!InGearholdSlot(item))
+            {
+                return;
+            }
+            // IsDumpProtected: true = keep it; ShouldDump: false = keep it
+            __result = __originalMethod.Name == "IsDumpProtected";
+        }
+
+        internal static bool InGearholdSlot(ItemDrop.ItemData item)
+        {
+            Player player = Player.m_localPlayer;
+            return item != null && player != null && GearholdState.IsReady(player)
+                && player.GetInventory().ContainsItem(item) && item.m_gridPos.y >= Topology.GridRows(player);
+        }
+    }
+}

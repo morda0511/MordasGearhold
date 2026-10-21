@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.7
+- Food slots are eaten from automatically when one of your three food buffs runs out (config AutoEatFoodSlots, on by default).
+- StoreAndCraft: dumping (hotkey, hover-store, auto-stack) never takes items out of the Gearhold slots.
+
 ## 1.3.6
 - Gearhold hotkeys only work while you play in the world: not in menus or the build menu, and never while typing into a text field (typing U into the build search no longer uses quickslot U).
 

@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.3.6";
+        public const string ModVersion = "1.3.7";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -52,6 +52,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> SharedFirstForCrafting;
         internal static ConfigEntry<bool> QuickslotsUseOnTarget;
         internal static ConfigEntry<bool> AutoEat;
+        internal static ConfigEntry<bool> AutoEatFoodSlots;
         internal static ConfigEntry<bool> AutoEatEarly;
         internal static ConfigEntry<bool> AutoStoreCoins;
         internal static ConfigEntry<bool> ShowPanel;
@@ -121,6 +122,8 @@ namespace MordasGearhold
                 "Off (default): quickslot keys only eat, drink or equip and never give an item away.");
             AutoEat = Config.Bind("3 - Behaviour", "AutoEat", false,
                 "Eat food from the active set's quickslots automatically when one of your three food slots is empty.");
+            AutoEatFoodSlots = Config.Bind("3 - Behaviour", "AutoEatFoodSlots", true,
+                "Eat from the active set's food slots automatically when one of your three food slots is empty (food slots first, then quickslots with AutoEat).");
             AutoEatEarly = Config.Bind("3 - Behaviour", "AutoEatEarly", false,
                 "With AutoEat: also eat as soon as the game lets you eat a food again (at half its time), so no food slot runs empty.");
             AutoStoreCoins = Config.Bind("3 - Behaviour", "AutoStoreCoins", true,

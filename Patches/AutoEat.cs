@@ -1,10 +1,12 @@
+using System.Collections.Generic;
 using MordasGearhold.Core;
 using UnityEngine;
 
 namespace MordasGearhold.Patches
 {
     /// <summary>
-    /// Optional auto-eat (config AutoEat, default off): eats food from the active set's quickslots.
+    /// Auto-eat from the active set: the food slots (config AutoEatFoodSlots, default on) first, then the
+    /// quickslots (config AutoEat, default off).
     ///  - always when one of the three food slots is empty
     ///  - with AutoEatEarly also as soon as vanilla allows eating a food again (Food.CanEatAgain, half its time)
     /// Eligibility is asked with Player.CanEat(item, showMessages: false), so nothing is spammed, and eating
@@ -17,7 +19,7 @@ namespace MordasGearhold.Patches
 
         internal static void Tick(Player player)
         {
-            if (!Plugin.AutoEat.Value || Time.time < s_next)
+            if ((!Plugin.AutoEat.Value && !Plugin.AutoEatFoodSlots.Value) || Time.time < s_next)
             {
                 return;
             }
@@ -31,14 +33,26 @@ namespace MordasGearhold.Patches
             {
                 return;
             }
-            for (int i = 0; i < Topology.QuickslotCount; i++)
+            foreach (GearSlot slot in Sources())
             {
-                ItemDrop.ItemData item = Equipment.ItemIn(player, Topology.QuickSlot(i));
-                if (IsFood(item) && player.CanEat(item, false) && player.CanConsumeItem(item, true))
+                ItemDrop.ItemData item = Equipment.ItemIn(player, slot);
+                if (item != null && Topology.IsFood(item) && player.CanEat(item, false) && player.CanConsumeItem(item, true))
                 {
                     player.UseItem(null, item, true);
                     return; // one bite per tick, like a player pressing the key
                 }
+            }
+        }
+
+        private static IEnumerable<GearSlot> Sources()
+        {
+            if (Plugin.AutoEatFoodSlots.Value)
+            {
+                for (int i = 0; i < Topology.FoodSlotCount; i++) yield return GearSlot.Food1 + i;
+            }
+            if (Plugin.AutoEat.Value)
+            {
+                for (int i = 0; i < Topology.QuickslotCount; i++) yield return Topology.QuickSlot(i);
             }
         }
 
@@ -61,12 +75,6 @@ namespace MordasGearhold.Patches
                 }
             }
             return false;
-        }
-
-        private static bool IsFood(ItemDrop.ItemData item)
-        {
-            return item != null && item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Consumable
-                && (item.m_shared.m_food > 0f || item.m_shared.m_foodStamina > 0f || item.m_shared.m_foodEitr > 0f);
         }
     }
 }
