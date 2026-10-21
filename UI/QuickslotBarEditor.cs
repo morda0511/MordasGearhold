@@ -15,8 +15,10 @@ namespace MordasGearhold.UI
     {
         internal const float RangeX = 4000f; // config limits; the sliders use the real HUD size (ScreenRange)
         internal const float RangeY = 4000f;
+        internal const float MinScale = 0.3f;
+        internal const float MaxScale = 2f;
         private const float Width = 460f;
-        private const float Height = 294f;
+        private const float Height = 336f;
 
         private static InventoryGui s_gui;
         private static RectTransform s_window;
@@ -24,6 +26,8 @@ namespace MordasGearhold.UI
         private static Slider s_y;
         private static TMP_Text s_xValue;
         private static TMP_Text s_yValue;
+        private static Slider s_size;
+        private static TMP_Text s_sizeValue;
         private static QuickslotBar s_bar = QuickslotBar.Quick;
         private static readonly Button[] s_tabs = new Button[3];
 
@@ -60,6 +64,7 @@ namespace MordasGearhold.UI
             s_y.maxValue = Mathf.Ceil(hud.height);
             s_x.SetValueWithoutNotify(s_bar.X.Value);
             s_y.SetValueWithoutNotify(s_bar.Y.Value);
+            if (s_size != null) s_size.SetValueWithoutNotify(s_bar.Scale.Value * 100f);
             ShowValues();
             ShowOrientation();
         }
@@ -108,6 +113,7 @@ namespace MordasGearhold.UI
         {
             s_xValue.text = Mathf.RoundToInt(s_bar.X.Value).ToString();
             s_yValue.text = Mathf.RoundToInt(s_bar.Y.Value).ToString();
+            if (s_sizeValue != null) s_sizeValue.text = Mathf.RoundToInt(s_bar.Scale.Value * 100f) + "%";
         }
 
         private static void Build(InventoryGui gui)
@@ -149,16 +155,22 @@ namespace MordasGearhold.UI
                 s_bar.Y.Value = Mathf.Round(v);
                 ShowValues();
             });
+            // size in percent of the vanilla hotbar, per bar
+            s_size = AddSlider(gui, "Size", 200f, MinScale * 100f, MaxScale * 100f, out s_sizeValue, v =>
+            {
+                s_bar.Scale.Value = Mathf.Round(v) / 100f;
+                ShowValues();
+            });
 
             // horizontal (a row) or vertical (a column), per bar
             TMP_Text layout = UiKit.Text(s_window, gui.m_recipeDecription, "Layout", 16f, UiKit.Parchment, TextAlignmentOptions.Left);
-            UiKit.Place(layout.rectTransform, 85f, 200f, 120f, 24f);
-            s_row = AddButton(gui, "ROW", 225f, 200f, 120f, () =>
+            UiKit.Place(layout.rectTransform, 85f, 242f, 120f, 24f);
+            s_row = AddButton(gui, "ROW", 225f, 242f, 120f, () =>
             {
                 s_bar.Vertical.Value = false;
                 ShowOrientation();
             });
-            s_column = AddButton(gui, "COLUMN", 355f, 200f, 120f, () =>
+            s_column = AddButton(gui, "COLUMN", 355f, 242f, 120f, () =>
             {
                 s_bar.Vertical.Value = true;
                 ShowOrientation();
@@ -168,10 +180,12 @@ namespace MordasGearhold.UI
             {
                 s_bar.X.Value = (float)s_bar.X.DefaultValue;
                 s_bar.Y.Value = (float)s_bar.Y.DefaultValue;
+                s_bar.Scale.Value = (float)s_bar.Scale.DefaultValue;
                 s_bar.Vertical.Value = false;
                 ShowOrientation();
                 s_x.SetValueWithoutNotify(s_bar.X.Value);
                 s_y.SetValueWithoutNotify(s_bar.Y.Value);
+                s_size.SetValueWithoutNotify(s_bar.Scale.Value * 100f);
                 ShowValues();
             });
             AddButton(gui, "DONE", Width / 2f + 80f, Height - 36f, 130f, Close);

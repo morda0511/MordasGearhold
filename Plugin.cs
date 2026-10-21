@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.3.4";
+        public const string ModVersion = "1.3.5";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -45,6 +45,8 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> QuickslotBarVertical;
         internal static ConfigEntry<bool> FoodBarVertical;
         internal static ConfigEntry<bool> MeadBarVertical;
+        internal static ConfigEntry<float> FoodBarScale;
+        internal static ConfigEntry<float> MeadBarScale;
         internal static ConfigEntry<bool> AutoEquip;
         internal static ConfigEntry<bool> AutoShield;
         internal static ConfigEntry<bool> SharedFirstForCrafting;
@@ -128,7 +130,7 @@ namespace MordasGearhold
             ShowQuickslotBar = Config.Bind("4 - UI", "ShowQuickslotBar", true,
                 "Show the occupied quickslots of the active set with their hotkeys at the bottom centre of the screen.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
-                new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(0.4f, 1.2f)));
+                new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
             QuickslotBarX = Config.Bind("4 - UI", "QuickslotBarX", 0f,
                 new ConfigDescription("Left/right position of the quickslot bar (0 = centre). Easiest set with the HUD BAR button in the panel.",
                     new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
@@ -147,6 +149,10 @@ namespace MordasGearhold
             QuickslotBarVertical = Config.Bind("4 - UI", "QuickslotBarVertical", false, "Show the quickslot bar as a column instead of a row.");
             FoodBarVertical = Config.Bind("4 - UI", "FoodBarVertical", false, "Show the food bar as a column instead of a row.");
             MeadBarVertical = Config.Bind("4 - UI", "MeadBarVertical", false, "Show the mead bar as a column instead of a row.");
+            FoodBarScale = Config.Bind("4 - UI", "FoodBarScale", 0.75f, new ConfigDescription("Size of the food bar on the HUD (1 = size of the vanilla hotbar).",
+                new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
+            MeadBarScale = Config.Bind("4 - UI", "MeadBarScale", 0.75f, new ConfigDescription("Size of the mead bar on the HUD (1 = size of the vanilla hotbar).",
+                new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
 
             ExtraRows.SettingChanged += (_, __) => Topology.Apply(Player.m_localPlayer);
 

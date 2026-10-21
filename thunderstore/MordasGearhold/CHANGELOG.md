@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.5
+- Size slider in the HUD BAR window: each bar (quickslots, food, mead) has its own size, 30 % to 200 %.
+
 ## 1.3.4
 - The HUD BAR sliders reach the real screen edges on any screen width (they stopped at 900 before).
 

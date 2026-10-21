@@ -20,11 +20,11 @@ namespace MordasGearhold.UI
         private const float KeyHeight = 20f;
 
         internal static readonly QuickslotBar Quick = new QuickslotBar("Quickslots", GearSlot.Quick1, Topology.QuickslotCount,
-            () => Plugin.QuickslotBarX, () => Plugin.QuickslotBarY, () => Plugin.QuickslotBarVertical);
+            () => Plugin.QuickslotBarX, () => Plugin.QuickslotBarY, () => Plugin.QuickslotBarVertical, () => Plugin.QuickslotBarScale);
         internal static readonly QuickslotBar Food = new QuickslotBar("Food", GearSlot.Food1, Topology.FoodSlotCount,
-            () => Plugin.FoodBarX, () => Plugin.FoodBarY, () => Plugin.FoodBarVertical);
+            () => Plugin.FoodBarX, () => Plugin.FoodBarY, () => Plugin.FoodBarVertical, () => Plugin.FoodBarScale);
         internal static readonly QuickslotBar Mead = new QuickslotBar("Mead", GearSlot.Mead1, Topology.MeadSlotCount,
-            () => Plugin.MeadBarX, () => Plugin.MeadBarY, () => Plugin.MeadBarVertical);
+            () => Plugin.MeadBarX, () => Plugin.MeadBarY, () => Plugin.MeadBarVertical, () => Plugin.MeadBarScale);
 
         internal static readonly QuickslotBar[] All = { Quick, Food, Mead };
 
@@ -44,13 +44,14 @@ namespace MordasGearhold.UI
         private readonly Func<ConfigEntry<float>> m_x;
         private readonly Func<ConfigEntry<float>> m_y;
         private readonly Func<ConfigEntry<bool>> m_vertical;
+        private readonly Func<ConfigEntry<float>> m_scale;
         private Hud m_hud;
         private RectTransform m_root;
         private float m_spacing = 70f;
         private bool m_failed;
 
         private QuickslotBar(string name, GearSlot first, int count, Func<ConfigEntry<float>> x, Func<ConfigEntry<float>> y,
-            Func<ConfigEntry<bool>> vertical)
+            Func<ConfigEntry<bool>> vertical, Func<ConfigEntry<float>> scale)
         {
             Name = name;
             m_first = first;
@@ -58,11 +59,13 @@ namespace MordasGearhold.UI
             m_x = x;
             m_y = y;
             m_vertical = vertical;
+            m_scale = scale;
         }
 
         internal ConfigEntry<float> X => m_x();
         internal ConfigEntry<float> Y => m_y();
         internal ConfigEntry<bool> Vertical => m_vertical();
+        internal ConfigEntry<float> Scale => m_scale();
 
         internal static void TickAll(Hud hud, Player player)
         {
@@ -172,7 +175,7 @@ namespace MordasGearhold.UI
         /// </summary>
         private int Refresh(Player player, bool preview)
         {
-            m_root.localScale = Vector3.one * Plugin.QuickslotBarScale.Value;
+            m_root.localScale = Vector3.one * Scale.Value;
             m_root.anchoredPosition = new Vector2(X.Value, Y.Value);
             int shown = 0;
             for (int i = 0; i < m_elements.Length; i++)
