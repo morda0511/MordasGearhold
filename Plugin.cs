@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.3.5";
+        public const string ModVersion = "1.3.6";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -321,10 +321,48 @@ namespace MordasGearhold
             GearholdHud.Tick();
         }
 
+        // protected bool Player.TakeInput(): false in every menu (inventory, chat, console, map, trader, text input,
+        // the build menu's search field ...), the vanilla rule for "the player may act now"
+        private static readonly System.Func<Player, bool> s_takeInput =
+            AccessTools.MethodDelegate<System.Func<Player, bool>>(AccessTools.Method(typeof(Player), "TakeInput"));
+
+        /// <summary>
+        /// Gearhold hotkeys only work while you actually play in the world: not in any menu, not while the build
+        /// piece selection is open, and never while a text field has the keyboard (search boxes of the game or of
+        /// other mods), so typing "U" in a search never uses quickslot U.
+        /// </summary>
         private static bool InputBlocked()
         {
-            return (Chat.instance != null && Chat.instance.HasFocus()) || Console.IsVisible() || TextInput.IsVisible()
-                || Menu.IsVisible() || Minimap.IsOpen() || StoreGui.IsVisible();
+            Player player = Player.m_localPlayer;
+            if (player == null || !s_takeInput(player))
+            {
+                return true;
+            }
+            if ((Chat.instance != null && Chat.instance.HasFocus()) || Console.IsVisible() || TextInput.IsVisible()
+                || Menu.IsVisible() || Minimap.IsOpen() || StoreGui.IsVisible() || InventoryGui.IsVisible()
+                || Hud.IsPieceSelectionVisible())
+            {
+                return true;
+            }
+            return TextFieldFocused();
+        }
+
+        /// <summary>True while any input field (Unity or TextMeshPro, any mod) is being typed into.</summary>
+        private static bool TextFieldFocused()
+        {
+            GameObject selected = UnityEngine.EventSystems.EventSystem.current != null
+                ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+            if (selected == null)
+            {
+                return false;
+            }
+            TMPro.TMP_InputField tmp = selected.GetComponent<TMPro.TMP_InputField>();
+            if (tmp != null && tmp.isFocused)
+            {
+                return true;
+            }
+            UnityEngine.UI.InputField legacy = selected.GetComponent<UnityEngine.UI.InputField>();
+            return legacy != null && legacy.isFocused;
         }
 
         private static bool Pressed(KeyboardShortcut shortcut)

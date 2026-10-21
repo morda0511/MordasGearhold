@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.5
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.6
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -32,6 +32,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 - **Weapons and bows stay in your hotbar.** The inventory grid, hotbar included, is shared by all sets. A set switch never touches it.
 - **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
   - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
+  - All Gearhold hotkeys only work while you play in the world: not in menus, not in the build menu and never while you type into a text field (e.g. a search box).
 - **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Food slots take food only, mead slots meads and potions. Each has its own hotkey (set with the button under the slot, like the quickslots; unbound at first); right-click eats or drinks too. On the HUD they get their own bars: food next to the food boxes at the bottom left, meads right of the quickslots.
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
   - **Move the bars:** the **HUD BAR** button next to the quickslots opens a small window. Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the panel steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.

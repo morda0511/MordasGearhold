@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.6
+- Gearhold hotkeys only work while you play in the world: not in menus or the build menu, and never while typing into a text field (typing U into the build search no longer uses quickslot U).
+
 ## 1.3.5
 - Size slider in the HUD BAR window: each bar (quickslots, food, mead) has its own size, 30 % to 200 %.
 
