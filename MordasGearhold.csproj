@@ -9,7 +9,7 @@
     <AssemblyName>MordasGearhold</AssemblyName>
     <RootNamespace>MordasGearhold</RootNamespace>
     <Product>Morda's Gearhold</Product>
-    <Version>1.3.7</Version>
+    <Version>1.3.8</Version>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DebugType>portable</DebugType>
   </PropertyGroup>
@@ -28,6 +28,11 @@
     <Reference Include="UnityEngine.UIModule"><HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="UnityEngine.TextRenderingModule"><HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="Unity.TextMeshPro"><HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath><Private>False</Private></Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- panel icons as raw 128x128 alpha bytes (Assets/*.png is the editable source), loaded with UiKit.EmbeddedSprite -->
+    <EmbeddedResource Include="Assets\transmog-icon.alpha" LogicalName="MordasGearhold.transmog-icon.alpha" />
   </ItemGroup>
 
   <!-- Copies the plugin into the Thunderstore profile used for testing (same convention as the sibling mods). -->

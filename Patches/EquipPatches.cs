@@ -165,6 +165,11 @@ namespace MordasGearhold.Patches
 
         internal static void ScheduleShieldCheck() => s_shieldCheckFrame = Time.frameCount;
 
+        /// <summary>AutoShield applies to this weapon: one-handers, axes only with AutoShieldWithAxes.</summary>
+        internal static bool WantsShield(ItemDrop.ItemData item) =>
+            Plugin.AutoShield.Value && item != null && item.m_shared.m_itemType == ItemType.OneHandedWeapon
+            && (Plugin.AutoShieldWithAxes.Value || item.m_shared.m_skillType != Skills.SkillType.Axes);
+
         internal static void LateShieldCheck(Player player)
         {
             if (s_shieldCheckFrame < 0 || Time.frameCount == s_shieldCheckFrame)
@@ -241,7 +246,7 @@ namespace MordasGearhold.Patches
             {
                 FileIntoSlot(player, item);
             }
-            if (Plugin.AutoShield.Value && item.m_equipped && item.m_shared.m_itemType == ItemType.OneHandedWeapon && Access.LeftItem(player) == null)
+            if (item.m_equipped && WantsShield(item) && Access.LeftItem(player) == null)
             {
                 ItemDrop.ItemData shield = SetShield(player);
                 if (shield != null && !shield.m_equipped)
@@ -265,7 +270,7 @@ namespace MordasGearhold.Patches
             Equipment.FileIntoSlot(player, item);
 
             // one-handed weapon in hand and the shield hand empty: take the set's shield
-            if (Plugin.AutoShield.Value && item.m_shared.m_itemType == ItemType.OneHandedWeapon && Access.LeftItem(player) == null)
+            if (Equipment.WantsShield(item) && Access.LeftItem(player) == null)
             {
                 ItemDrop.ItemData shield = Equipment.SetShield(player);
                 if (shield != null && !shield.m_equipped)

@@ -13,7 +13,8 @@ namespace MordasGearhold.Core
         Helmet, Chest, Legs, Shoulder, Utility, Trinket, Coins, Shield,  // hidden row 0
         Ammo = 9, Ammo2, Ammo3, Trinket2, Trinket3, Utility2, Utility3,  // hidden row 1 (full)
         Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8, // hidden row 2
-        Food1 = 24, Food2, Food3, Mead1, Mead2, Mead3                      // hidden row 3 (since 1.2.0), 30-31 free
+        Food1 = 24, Food2, Food3, Mead1, Mead2, Mead3,                     // hidden row 3 (since 1.2.0)
+        Holster = 30                                                       // hidden row 3 (since 1.3.8): second weapon, R swaps; 31 free
     }
 
     /// <summary>
@@ -115,6 +116,7 @@ namespace MordasGearhold.Core
                 case GearSlot.Trinket3: return Plugin.TrinketSlots.Value >= 3;
                 case GearSlot.Utility2: return Plugin.UtilitySlots.Value >= 2;
                 case GearSlot.Utility3: return Plugin.UtilitySlots.Value >= 3;
+                case GearSlot.Holster: return Plugin.EnableWeapon2.Value;
                 default: return true;
             }
         }
@@ -139,9 +141,25 @@ namespace MordasGearhold.Core
         internal static bool IsMead(ItemDrop.ItemData item) =>
             item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Consumable && !IsFood(item) && item.m_shared.m_consumeStatusEffect != null;
 
+        /// <summary>A weapon the holster slot takes: melee one- and two-handers, bows and crossbows (no tools, no torches).</summary>
+        internal static bool IsHolsterWeapon(ItemDrop.ItemData item)
+        {
+            switch (item?.m_shared?.m_itemType)
+            {
+                case ItemDrop.ItemData.ItemType.OneHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
+                case ItemDrop.ItemData.ItemType.Bow:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         /// <summary>Whether an item may lie in a Gearhold slot (quickslots take anything).</summary>
         internal static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
         {
+            if (slot == GearSlot.Holster) return Plugin.EnableWeapon2.Value && IsHolsterWeapon(item);
             if (IsFoodSlot(slot)) return IsFood(item);
             if (IsMeadSlot(slot)) return IsMead(item);
             if (slot >= GearSlot.Quick1) return true;

@@ -22,7 +22,7 @@ namespace MordasGearhold
     {
         public const string ModGuid = "com.morda.gearhold";
         public const string ModName = "Morda's Gearhold";
-        public const string ModVersion = "1.3.7";
+        public const string ModVersion = "1.3.8";
 
         internal static Plugin Instance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -31,6 +31,7 @@ namespace MordasGearhold
         internal static ConfigEntry<int> TrinketSlots;
         internal static ConfigEntry<int> UtilitySlots;
         internal static ConfigEntry<KeyboardShortcut> KeySet1;
+        internal static ConfigEntry<KeyboardShortcut> Weapon2SwapKey;
         internal static ConfigEntry<KeyboardShortcut> KeySet2;
         internal static ConfigEntry<KeyboardShortcut> KeySet3;
         internal static ConfigEntry<KeyboardShortcut> KeyNextSet;
@@ -49,6 +50,9 @@ namespace MordasGearhold
         internal static ConfigEntry<float> MeadBarScale;
         internal static ConfigEntry<bool> AutoEquip;
         internal static ConfigEntry<bool> AutoShield;
+        internal static ConfigEntry<bool> EnableWeapon2;
+        internal static ConfigEntry<bool> ShowWeapon2OnBody;
+        internal static ConfigEntry<bool> AutoShieldWithAxes;
         internal static ConfigEntry<bool> SharedFirstForCrafting;
         internal static ConfigEntry<bool> QuickslotsUseOnTarget;
         internal static ConfigEntry<bool> AutoEat;
@@ -57,6 +61,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> AutoStoreCoins;
         internal static ConfigEntry<bool> ShowPanel;
         internal static ConfigEntry<bool> ShowQuickslotBar;
+        internal static ConfigEntry<bool> ShowBowAmmo;
         internal static ConfigEntry<float> QuickslotBarScale;
         internal static ConfigEntry<float> QuickslotBarX;
         internal static ConfigEntry<float> QuickslotBarY;
@@ -83,6 +88,8 @@ namespace MordasGearhold
                     new AcceptableValueRange<int>(1, 3)));
 
             KeySet1 = Config.Bind("2 - Hotkeys", "Set1", KeyboardShortcut.Empty, "Switch to equipment set 1.");
+            Weapon2SwapKey = Config.Bind("2 - Hotkeys", "Weapon2Swap", KeyboardShortcut.Empty,
+                "Swaps the weapon in hand with the Weapon 2 slot. Empty: the vanilla hide key (R) swaps. Set: only this key swaps and R is vanilla again.");
             KeySet2 = Config.Bind("2 - Hotkeys", "Set2", KeyboardShortcut.Empty, "Switch to equipment set 2.");
             KeySet3 = Config.Bind("2 - Hotkeys", "Set3", KeyboardShortcut.Empty, "Switch to equipment set 3.");
             KeyNextSet = Config.Bind("2 - Hotkeys", "NextSet", KeyboardShortcut.Empty, "Cycle to the next equipment set.");
@@ -115,6 +122,12 @@ namespace MordasGearhold
                 "Equip newly picked-up or crafted gear when the matching slot of the active set is empty. Never replaces equipped gear.");
             AutoShield = Config.Bind("3 - Behaviour", "AutoShield", true,
                 "Equip the active set's shield (shield cell) together with a one-handed weapon.");
+            AutoShieldWithAxes = Config.Bind("3 - Behaviour", "AutoShieldWithAxes", true,
+                "AutoShield also takes the shield for one-handed axes. Off: an axe stays alone in hand (other one-handers still get the shield).");
+            EnableWeapon2 = Config.Bind("3 - Behaviour", "EnableWeapon2", true,
+                "Weapon 2 slot between food and mead; the hide key (R) swaps it with the weapon in hand. Off: no slot, R is vanilla again (a weapon still lying in the slot goes back into the inventory).");
+            ShowWeapon2OnBody = Config.Bind("3 - Behaviour", "ShowWeapon2OnBody", true,
+                "Wear the weapon of the Weapon 2 slot on the body (hip or back, the mounts vanilla uses for a weapon put away with R). Other players see it too.");
             SharedFirstForCrafting = Config.Bind("3 - Behaviour", "SharedFirstForCrafting", true,
                 "Crafting and building take resources from the inventory grid before touching the Gearhold slots (e.g. quickslot food).");
             QuickslotsUseOnTarget = Config.Bind("3 - Behaviour", "QuickslotsUseOnTarget", false,
@@ -132,13 +145,15 @@ namespace MordasGearhold
             ShowPanel = Config.Bind("4 - UI", "ShowPanel", true, "Show the Gearhold panel in the middle of the inventory screen.");
             ShowQuickslotBar = Config.Bind("4 - UI", "ShowQuickslotBar", true,
                 "Show the occupied quickslots of the active set with their hotkeys at the bottom centre of the screen.");
+            ShowBowAmmo = Config.Bind("4 - UI", "ShowBowAmmo", true,
+                "Under a bow in the hotbar, show the fitting arrows of the Gearhold ammo slots with their amount; the ammo in use is highlighted.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
                 new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
             QuickslotBarX = Config.Bind("4 - UI", "QuickslotBarX", 0f,
-                new ConfigDescription("Left/right position of the quickslot bar (0 = centre). Easiest set with the HUD BAR button in the panel.",
+                new ConfigDescription("Left/right position of the quickslot bar (0 = centre). Easiest set with the settings gear in the panel (bottom right).",
                     new AcceptableValueRange<float>(-QuickslotBarEditor.RangeX, QuickslotBarEditor.RangeX)));
             QuickslotBarY = Config.Bind("4 - UI", "QuickslotBarY", 14f,
-                new ConfigDescription("Height of the quickslot bar above the bottom edge. Easiest set with the HUD BAR button in the panel.",
+                new ConfigDescription("Height of the quickslot bar above the bottom edge. Easiest set with the settings gear in the panel (bottom right).",
                     new AcceptableValueRange<float>(0f, QuickslotBarEditor.RangeY)));
             // food: next to the vanilla food boxes at the bottom left; meads: right of the quickslots
             FoodBarX = Config.Bind("4 - UI", "FoodBarX", -700f, new ConfigDescription("Left/right position of the food bar on the HUD (0 = centre).",
@@ -182,6 +197,8 @@ namespace MordasGearhold
             Patches.Coins.Tick(player);
             Topology.KeepHeight(player);
             Patches.AutoEat.Tick(player);
+            Patches.Holster.Tick(player);
+            Patches.HolsterVisual.Tick(player);
             Transmog.Tick(player);
             if (InputBlocked())
             {
@@ -194,6 +211,11 @@ namespace MordasGearhold
                     Patches.Equipment.SelectAmmo(player, i);
                     return;
                 }
+            }
+            if (Patches.Holster.HasOwnKey && Pressed(Weapon2SwapKey.Value))
+            {
+                Patches.Holster.SwapByKey(player);
+                return;
             }
             if (Pressed(KeySet1.Value)) SetSwitcher.TrySwitch(player, 0);
             else if (Pressed(KeySet2.Value)) SetSwitcher.TrySwitch(player, 1);
@@ -278,6 +300,24 @@ namespace MordasGearhold
                 case KeyCode.LeftAlt: case KeyCode.RightAlt: return "Alt";
                 case KeyCode.LeftShift: case KeyCode.RightShift: return "Shift";
                 case KeyCode.LeftControl: case KeyCode.RightControl: return "Ctrl";
+                // short symbols so the key fits on the small key buttons
+                case KeyCode.LeftBracket: return "[";
+                case KeyCode.RightBracket: return "]";
+                case KeyCode.Semicolon: return ";";
+                case KeyCode.Quote: return "'";
+                case KeyCode.Comma: return ",";
+                case KeyCode.Period: return ".";
+                case KeyCode.Slash: return "/";
+                case KeyCode.Backslash: return "\\";
+                case KeyCode.Minus: return "-";
+                case KeyCode.Equals: return "=";
+                case KeyCode.BackQuote: return "`";
+                case KeyCode.KeypadPlus: return "Num+";
+                case KeyCode.KeypadMinus: return "Num-";
+                case KeyCode.KeypadMultiply: return "Num*";
+                case KeyCode.KeypadDivide: return "Num/";
+                case KeyCode.Mouse3: return "M4";
+                case KeyCode.Mouse4: return "M5";
                 default: return key.ToString();
             }
         }
@@ -316,6 +356,7 @@ namespace MordasGearhold
             yield return KeySet2;
             yield return KeySet3;
             yield return KeyNextSet;
+            yield return Weapon2SwapKey;
         }
 
         private void LateUpdate()

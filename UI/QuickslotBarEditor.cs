@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace MordasGearhold.UI
 {
     /// <summary>
-    /// Small window (HUD BAR button in the panel) with two sliders that move the quickslot bar on the HUD:
+    /// Small window (settings gear in the bottom right corner of the panel) with two sliders that move the quickslot bar on the HUD:
     /// left/right and up/down. While it is open the Gearhold panel steps aside and the bar shows all eight slots
     /// on top of the inventory screen, so every move is visible at once. The values are the config entries
     /// QuickslotBarX / QuickslotBarY, so they are saved right away.

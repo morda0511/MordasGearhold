@@ -32,12 +32,15 @@ namespace MordasGearhold.UI
             public InventoryElement Element;
             public TMP_Text Binding;
             public TMP_Text KeyButton;
+            public BepInEx.Configuration.ConfigEntry<BepInEx.Configuration.KeyboardShortcut> KeyEntry; // the hotkey its KeyButton shows
             public TMP_Text Caption;
             public ItemDrop.ItemData Item;
             public string Label;
         }
 
         private static InventoryGui s_gui;
+        private static GameObject s_holsterTitle;
+        private static GameObject s_holsterKey;
         private static RectTransform s_root;
         private static RectTransform s_body;
         private static readonly List<Slot> s_slots = new List<Slot>();
@@ -181,18 +184,11 @@ namespace MordasGearhold.UI
             for (int n = 0; n < Topology.AmmoSlotCount; n++)
             {
                 Slot ammo = AddSlot(gui, Topology.AmmoSlot(n), "Ammo " + (n + 1), rightX, Row(1 + n));
-                // the caption shows the ammo hotkey; clicking it lets you press a new one (like the quickslot buttons)
-                // (a GameObject holds only one Graphic, so the click area is a child of the caption text, not on it)
-                int number = n;
-                RectTransform area = UiKit.Rect("KeyClickArea", ammo.Caption.transform);
-                area.anchorMin = Vector2.zero;
-                area.anchorMax = Vector2.one;
-                area.offsetMin = area.offsetMax = Vector2.zero;
-                Image hit = area.gameObject.AddComponent<Image>();
-                hit.color = new Color(0f, 0f, 0f, 0.001f);
-                Button rebind = area.gameObject.AddComponent<Button>();
-                rebind.transition = Selectable.Transition.None;
-                rebind.onClick.AddListener(() => KeyRebinder.Begin(Plugin.KeyAmmo[number]));
+                // under the slot only the hotkey button, centred like the food / mead keys (click = press a new key)
+                UnityEngine.Object.Destroy(ammo.Caption.gameObject);
+                ammo.Caption = null;
+                ammo.KeyEntry = Plugin.KeyAmmo[n];
+                ammo.KeyButton = AddKeyButton(gui, ammo.KeyEntry, ammo.Label, rightX, Row(1 + n) + SlotSize / 2f + 13f, 58f, 22f);
             }
             // the dark box vanilla puts behind a recipe description, behind the character sheet
             float sheetTop = 146f, sheetBottom = Row(6) + 42f;
@@ -229,25 +225,22 @@ namespace MordasGearhold.UI
                 mead.KeyButton = AddKeyButton(gui, mead.Kind, mead.Label, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 94f);
             }
 
+            // holster between food and mead: the second weapon, the vanilla hide key (R) swaps it into the hand
+            float holsterX = DesignWidth / 2f;
+            TMP_Text holsterTitle = UiKit.Text(s_body, header, "WEAPON 2", 13f, UiKit.Gold, TextAlignmentOptions.Center);
+            UiKit.Place(holsterTitle.rectTransform, holsterX, provisionsTop + 18f, 66f, 22f);
+            s_holsterTitle = holsterTitle.gameObject;
+            Slot holster = AddSlot(gui, GearSlot.Holster, null, holsterX, provisionsTop + 56f, QuickSize);
+            holster.Label = "Weapon 2";
+            // its own swap key (config Weapon2Swap); unset = the vanilla hide key swaps, shown greyed in the box
+            holster.KeyEntry = Plugin.Weapon2SwapKey;
+            holster.KeyButton = AddKeyButton(gui, holster.KeyEntry, holster.Label, holsterX, provisionsTop + 94f, QuickSize + 2f, 24f);
+            s_holsterKey = holster.KeyButton.GetComponentInParent<Button>()?.gameObject;
+
             float quickTop = provisionsTop + 124f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, quickTop, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
             UiKit.Place(quickTitle.rectTransform, DesignWidth / 2f, quickTop + 18f, DesignWidth - 50f, 22f);
-            // opens the window that moves the quickslot bar on the HUD
-            Button barButton = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
-            barButton.gameObject.name = "QuickslotBarPosition";
-            barButton.gameObject.SetActive(true);
-            barButton.interactable = true;
-            barButton.onClick = new Button.ButtonClickedEvent();
-            barButton.onClick.AddListener(QuickslotBarEditor.Open);
-            UiKit.Place((RectTransform)barButton.transform, DesignWidth - 75f, quickTop + 18f, 100f, 24f);
-            TMP_Text barLabel = barButton.GetComponentInChildren<TMP_Text>(true);
-            if (barLabel != null)
-            {
-                barLabel.text = "HUD BAR";
-                barLabel.enableAutoSizing = false;
-                barLabel.fontSize = 13f;
-            }
             for (int x = 0; x < Topology.QuickslotCount; x++)
             {
                 float slotX = DesignWidth / 2f + (x - 3.5f) * (QuickSize + 6f);
@@ -256,7 +249,13 @@ namespace MordasGearhold.UI
                 quick.KeyButton = AddKeyButton(gui, quick.Kind, quick.Label, slotX, quickTop + 96f);
             }
             s_footer = UiKit.Text(s_body, body, "", 12f, UiKit.Dim, TextAlignmentOptions.Center);
-            UiKit.Place(s_footer.rectTransform, DesignWidth / 2f, quickTop + 124f, DesignWidth - 30f, 18f);
+            UiKit.Place(s_footer.rectTransform, DesignWidth / 2f, quickTop + 124f, DesignWidth - 90f, 18f);
+
+            // settings gear in the bottom right corner: the window that moves and sizes the HUD bars
+            Button gear = UiKit.IconButton(s_body, "Settings", UiKit.GearIcon, DesignWidth - 26f, quickTop + 122f, 24f, QuickslotBarEditor.Open);
+            AddTooltip(gui, gear.gameObject, "HUD bars", "Move, resize and turn the quickslot, food and mead bars on your screen.");
+
+            AddTransmogButton(gui);
 
             s_root.gameObject.SetActive(false);
         }
@@ -307,16 +306,76 @@ namespace MordasGearhold.UI
             return text;
         }
 
-        /// <summary>Small vanilla-style button under a quickslot: shows the key, a click lets you press a new one.</summary>
-        private static TMP_Text AddKeyButton(InventoryGui gui, GearSlot slot, string name, float x, float y)
+        /// <summary>
+        /// Transmog button in the top left corner, the twin of the coin slot in the top right one: a vanilla inventory
+        /// slot box (same frame, hover and click feel) with the transmog logo in gold. A click opens the looks &amp;
+        /// colours menu.
+        /// </summary>
+        private static void AddTransmogButton(InventoryGui gui)
         {
+            // the vanilla tab button (like SET 1 / CRAFT) with the logo instead of a label
             Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
-            button.gameObject.name = "Key" + slot;
+            button.gameObject.name = "TransmogButton";
             button.gameObject.SetActive(true);
             button.interactable = true;
             button.onClick = new Button.ButtonClickedEvent();
-            button.onClick.AddListener(() => KeyRebinder.Begin(Plugin.KeyFor(slot)));
-            UiKit.Place((RectTransform)button.transform, x, y, QuickSize + 2f, 24f);
+            button.onClick.AddListener(() =>
+            {
+                Player player = Player.m_localPlayer;
+                if (player != null && Access.DragItem(s_gui) == null)
+                {
+                    SkinMenu.OpenForPiece(player, Transmog.Piece.Helmet);
+                }
+            });
+            UiKit.Place((RectTransform)button.transform, 46f, 48f, 60f, 50f);
+            foreach (TMP_Text label in button.GetComponentsInChildren<TMP_Text>(true))
+            {
+                label.gameObject.SetActive(false);
+            }
+            RectTransform icon = UiKit.Rect("Icon", button.transform);
+            icon.anchorMin = Vector2.zero;
+            icon.anchorMax = Vector2.one;
+            icon.offsetMin = new Vector2(8f, 6f);
+            icon.offsetMax = new Vector2(-8f, -6f);
+            Image image = icon.gameObject.AddComponent<Image>();
+            image.sprite = UiKit.TransmogIcon;
+            image.preserveAspect = true;
+            image.color = UiKit.Gold;
+            image.raycastTarget = false;
+            AddTooltip(gui, button.gameObject, "Looks & colors", "Change how your armour and shield look and dye them.\n(Also: right-click an armour slot.)");
+        }
+
+        /// <summary>A vanilla hover tooltip on any panel element (the window prefab is borrowed from an inventory slot).</summary>
+        private static void AddTooltip(InventoryGui gui, GameObject target, string topic, string text)
+        {
+            GameObject prefab = gui.m_playerGrid.m_elementPrefab.GetComponent<InventoryElement>()?.m_tooltip?.m_tooltipPrefab;
+            if (prefab == null)
+            {
+                return;
+            }
+            UITooltip tooltip = target.GetComponent<UITooltip>() ?? target.AddComponent<UITooltip>();
+            tooltip.m_tooltipPrefab = prefab;
+            tooltip.m_topic = topic;
+            tooltip.m_text = text;
+        }
+
+        /// <summary>Small vanilla-style button under a quickslot: shows the key, a click lets you press a new one.</summary>
+        private static TMP_Text AddKeyButton(InventoryGui gui, GearSlot slot, string name, float x, float y)
+        {
+            return AddKeyButton(gui, Plugin.KeyFor(slot), name, x, y, QuickSize + 2f, 24f);
+        }
+
+        private static TMP_Text AddKeyButton(InventoryGui gui,
+            BepInEx.Configuration.ConfigEntry<BepInEx.Configuration.KeyboardShortcut> key, string name,
+            float x, float y, float width, float height)
+        {
+            Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
+            button.gameObject.name = "Key" + name;
+            button.gameObject.SetActive(true);
+            button.interactable = true;
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() => KeyRebinder.Begin(key));
+            UiKit.Place((RectTransform)button.transform, x, y, width, height);
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
             {
@@ -432,6 +491,12 @@ namespace MordasGearhold.UI
             {
                 // Trinket/Utility 2 and 3 can be switched off in the config (TrinketSlots, UtilitySlots)
                 bool enabled = Topology.IsEnabled(slot.Kind);
+                if (slot.Kind == GearSlot.Holster)
+                {
+                    // the Weapon 2 title and key box come and go with the slot (config EnableWeapon2)
+                    if (s_holsterTitle != null && s_holsterTitle.activeSelf != enabled) s_holsterTitle.SetActive(enabled);
+                    if (s_holsterKey != null && s_holsterKey.activeSelf != enabled) s_holsterKey.SetActive(enabled);
+                }
                 if (slot.Element.gameObject.activeSelf != enabled)
                 {
                     slot.Element.gameObject.SetActive(enabled);
@@ -448,17 +513,16 @@ namespace MordasGearhold.UI
                 Draw(player, slot, drag);
                 if (slot.KeyButton != null)
                 {
-                    string key = Plugin.KeyLabel(slot.Kind);
-                    slot.KeyButton.text = KeyRebinder.IsWaitingFor(Plugin.KeyFor(slot.Kind)) ? "<color=#ffc96e>...</color>" : (key.Length > 0 ? key : "–");
-                }
-                if (slot.Caption != null && Topology.IsAmmoSlot(slot.Kind))
-                {
-                    int number = slot.Kind - GearSlot.Ammo;
-                    string key = Plugin.AmmoKeyLabel(number);
-                    if (KeyRebinder.IsWaitingFor(Plugin.KeyAmmo[number]))
-                        slot.Caption.text = $"Ammo {number + 1} · <color=#ffc96e>press key</color>";
-                    else
-                        slot.Caption.text = key.Length > 0 ? $"Ammo {number + 1} · {key}" : $"Ammo {number + 1} · <color=#e0a040>set key</color>";
+                    var entry = slot.KeyEntry ?? Plugin.KeyFor(slot.Kind);
+                    string key = entry != null ? Plugin.FormatKey(entry.Value) : "";
+                    if (key.Length == 0 && slot.Kind == GearSlot.Holster)
+                    {
+                        string hide = Localization.instance.Localize("$KEY_Hide");
+                        key = "<color=#9a8c72>" + (hide.StartsWith("$") ? "R" : hide) + "</color>"; // no own key: the hide key swaps
+                    }
+                    slot.KeyButton.text = KeyRebinder.IsWaitingFor(entry) ? "<color=#ffc96e>...</color>" : (key.Length > 0 ? key : "–");
+                    if (slot.KeyButton.transform.parent.gameObject.activeSelf != enabled)
+                        slot.KeyButton.transform.parent.gameObject.SetActive(enabled);
                 }
             }
 

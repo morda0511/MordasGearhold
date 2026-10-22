@@ -1,15 +1,16 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.7
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.8
 
-Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
+Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
 ## At a glance
 | | |
 |---|---|
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-sets.png" width="80" alt="Sets"> | **3 equipment sets** – switch your whole loadout with one click or hotkey. The inventory stays shared. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-quickslots.png" width="80" alt="Quickslots"> | **8 quickslots** with your own hotkeys and a small bar on the HUD. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-slots.png" width="80" alt="Weapon 2"> | **Weapon 2** – a second weapon worn on your back or hip; **R** swaps it with the one in your hand. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-ammo.png" width="80" alt="Ammo"> | **3 ammo slots** – switch arrows instantly with Alt+1/2/3. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-trinkets.png" width="80" alt="Trinkets"> | **Up to 3 trinkets and 3 utility items** worn at once (configurable 1–3). |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-transmog.png" width="80" alt="Transmog"> | **Transmog** – wear the look of any armour you know, per set. |
@@ -17,13 +18,13 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
 
 ## In game
-**The Gearhold panel** – sets, equipment slots, the YOUR VIKING sheet and the quickslots with their hotkeys:
+**The Gearhold panel** – sets, equipment slots, the YOUR VIKING sheet, food, Weapon 2 and mead, and the quickslots with their hotkeys:
 
-![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Gearhold%20Menu.png)
+![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Gearhold%20menu%20New.png)
 
 **The look menu** – tabs for every piece, pick a look, hide it or dye it, with a 3D preview of your character and SAVE:
 
-![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/coloring%20menu.png)
+![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Transmog%20Menu.png)
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
@@ -35,8 +36,14 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
   - All Gearhold hotkeys only work while you play in the world: not in menus, not in the build menu and never while you type into a text field (e.g. a search box).
 - **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Food slots take food only, mead slots meads and potions. Each has its own hotkey (set with the button under the slot, like the quickslots; unbound at first); right-click eats or drinks too. When one of your three food buffs runs out, Gearhold eats from the food slots on its own (`AutoEatFoodSlots`, on by default; `AutoEatEarly` eats again as soon as the game allows). On the HUD they get their own bars: food next to the food boxes at the bottom left, meads right of the quickslots.
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
-  - **Move the bars:** the **HUD BAR** button next to the quickslots opens a small window. Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the panel steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
-- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. Holding Alt keeps the vanilla hotbar from also using item 1–3.
+  - **Move the bars:** the **settings gear** in the bottom right corner of the panel opens a small window. Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the panel steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
+- **Weapon 2** (between the food and mead slots, per set): put a second weapon there, melee, bow or crossbow.
+  - The hide key (**R**) swaps it with the weapon in your hand. Press it again to swap back. With an empty slot, or no weapon in hand, R works like vanilla.
+  - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
+  - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
+  - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
+- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
+  - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
 - **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`; by default only the vanilla slot is shown):
   - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
   - Right-click a trinket or utility item in the inventory: when slot 1 is taken, it goes into a free slot 2 or 3.
@@ -56,7 +63,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 - **Coin slot** (top right of the panel, next to the title): coins you pick up go in there on their own and **weigh nothing**. It is shared by all three sets and has **no limit**: one full stack lies in the slot, everything beyond is kept in a purse with your character, and the slot shows the total. Traders see and take the whole amount. Coins in the purse stay with you when you die; the stack in the slot goes into the grave as usual. Turn the automatic moving off with `AutoStoreCoins`.
 - **Auto-equip:** new armour, shields, trinkets and ammo you pick up or craft go into an **empty** slot only. Gear you already wear is never replaced. A new trinket goes into Trinket 2 or 3 when Trinket 1 is taken.
 - **Auto-shield:**
-  - Equip a one-handed weapon from the hotbar, and the set's shield comes along.
+  - Equip a one-handed weapon from the hotbar, and the set's shield comes along. One-handed axes too, unless `AutoShieldWithAxes` is off.
   - Put the weapon away, and the shield goes too. Swapping one weapon for another, or eating, keeps it.
   - With a bow or two-hander, the shield is put away but stays in the shield slot.
 
@@ -64,7 +71,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, 3 ammo
 Change how your gear **looks** without changing the gear itself.
 
 - **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well.
-- **Armour and shield** (Head, Chest, Legs, Cape, Shield): right-click one of these slots in the Gearhold panel. The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it.
+- **Armour and shield** (Head, Chest, Legs, Cape, Shield): right-click one of these slots in the Gearhold panel, or click the **transmog button** in its top left corner. The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it.
   - **OWN LOOK** shows the real item.
   - The first cell, **Hide** (a box with a red slash), makes the piece invisible. To take gear off, left-click the slot.
   - Or click one of your unlocked looks of the same kind.
@@ -101,16 +108,22 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
 - **Multiplayer:** for now only you see the colour.
 
+![The weapon look menu with the GLOW colours](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Weapon%20Transmog.png)
+
+**The HUD bars window** (settings gear in the bottom right corner of the panel) – move, resize and turn each of the quickslot, food and mead bars:
+
+![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/HUD%20Settings.png)
+
 ## Panel controls
 | Action | Result |
 |---|---|
 | Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
 | Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item or the coins are picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
 | Right-click a slot | Head, Chest, Legs, Cape, Shield, or a weapon in a quickslot: open the look menu. Other slots: use the item (eat, drink, use this ammo). |
-| Key button under a quickslot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
+| Key button under a quickslot, food, mead, ammo or Weapon 2 slot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
 | SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
 
-Slots: Head, Chest, Legs, Cape, Utility 1–3 (left); Shield, Ammo 1–3, Trinket 1–3 (right); Food 1–3 and Mead 1–3 (above the quickslots); Quickslot 1–8; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
+Slots: Head, Chest, Legs, Cape, Utility 1–3 (left); Shield, Ammo 1–3, Trinket 1–3 (right); Food 1–3, Weapon 2 and Mead 1–3 (above the quickslots); Quickslot 1–8; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
 Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 1).
 
 **Key conflicts:**
@@ -143,5 +156,17 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 - **Not compatible:** ExtraSlots and AzuExtendedPlayerInventory (they take over the same inventory rows).
 
 Source and issues: https://github.com/morda0511/MordasGearhold
+
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
+
+## More mods by Morda
+
+| Mod | What it does |
+|:---|:---|
+| **[StoreAndCraft](https://thunderstore.io/c/valheim/p/Morda/StoreAndCraft/)** | A base that works with you: auto-store, dump, craft and build from chests, storage displays, feed trough, F10 settings panel |
+| **[WorkbenchesPlus](https://thunderstore.io/c/valheim/p/Morda/WorkbenchesPlus/)** | Sort and filter crafting menus: craftable first, categories, armor and weapon sets by biome tier, search, favorites, dismantle |
+| **[Forager's Garden](https://thunderstore.io/c/valheim/p/Morda/ForagersGarden/)** | Berry bushes, wild herbs and mushrooms with the Cultivator, plus Ice, Royal Jelly and Crystal beehives |
+| **[Valheim Mannequins](https://thunderstore.io/c/valheim/p/Morda/ValheimMannequins/)** | Player-shaped mannequins: dress them with real gear, pose and name them, keep several gear sets |
+| **[ServerRates](https://thunderstore.io/c/valheim/p/Morda/ServerRates/)** | Server-side rates for dedicated servers (PC and console), live apply, presets. Joining players need no install |
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-footer.png)

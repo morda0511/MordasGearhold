@@ -9,6 +9,7 @@ namespace MordasGearhold.UI
             if (hud != null)
             {
                 QuickslotBar.TickAll(hud, Player.m_localPlayer);
+                BowAmmoOverlay.Tick(hud, Player.m_localPlayer);
             }
         }
     }

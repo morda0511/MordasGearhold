@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.8
+- Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.
+- Own swap key Weapon2Swap (click the box under Weapon 2): when set, only it swaps and R is vanilla again. Empty: R swaps. A swap key that uses the hide key with a modifier (e.g. Alt+R) only swaps and does not put the weapon away as well.
+- Config EnableWeapon2 (on by default): off removes the Weapon 2 slot and R works like vanilla again.
+- The Weapon 2 weapon is worn on the body: one-handers at the hip, two-handers, atgeirs and bows on the back (config ShowWeapon2OnBody, on by default). Other players see it too.
+- New config AutoShieldWithAxes (on by default): off keeps one-handed axes without the automatic shield.
+- Ammo hotkeys are shown as key buttons like food, mead and quickslots (click to set a new key).
+- Short key names on all key buttons: ] instead of RightBracket, M4 / M5 for mouse buttons.
+- Transmog button in the top left corner of the panel opens the looks & colours menu.
+- The HUD BAR button is gone: a settings gear in the bottom right corner opens the HUD bar window.
+- Above the bow in the hotbar while it is drawn: a small list of the fitting arrows in your Gearhold ammo slots, one line each with icon, name and amount; the ammo in use is gold (config ShowBowAmmo).
+
 ## 1.3.7
 - Food slots are eaten from automatically when one of your three food buffs runs out (config AutoEatFoodSlots, on by default).
 - StoreAndCraft: dumping (hotkey, hover-store, auto-stack) never takes items out of the Gearhold slots.
