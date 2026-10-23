@@ -144,6 +144,7 @@ namespace MordasGearhold.Core
                 if (!glow.IsSet && !shine.IsSet) return; // nothing to change, nothing to remember
                 keeper = instance.AddComponent<GlowKeeper>();
             }
+            keeper.Label = Localization.instance.Localize(item.m_shared.m_name);
             keeper.Set(glow, shine);
         }
     }
@@ -296,37 +297,130 @@ namespace MordasGearhold.Core
                     p.TrailOver = trails.colorOverTrail;
                 }
             }
+            CaptureLightSources();
             Report();
         }
 
         // trail and line renderers: their colour is a gradient
         private readonly List<(Renderer renderer, Gradient gradient, bool shine)> m_lines = new List<(Renderer, Gradient, bool)>();
 
-        /// <summary>One log line per weapon model: what kinds of effect parts it has, to find one that colours cannot reach.</summary>
+        /// <summary>The name shown in the log for this weapon (its item name; the model itself is always called "attach").</summary>
+        internal string Label;
+
+        private static string PathOf(Transform t, Transform root)
+        {
+            string path = t.name;
+            for (Transform p = t.parent; p != null && p != root && p != root.parent; p = p.parent) path = p.name + "/" + path;
+            return path;
+        }
+
+        private static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGBA(c);
+
+        private static string Describe(ParticleSystem.MinMaxGradient g)
+        {
+            switch (g.mode)
+            {
+                case ParticleSystemGradientMode.Color: return Hex(g.color);
+                case ParticleSystemGradientMode.TwoColors: return Hex(g.colorMin) + ".." + Hex(g.colorMax);
+                case ParticleSystemGradientMode.Gradient:
+                case ParticleSystemGradientMode.RandomColor:
+                    return g.gradient != null && g.gradient.colorKeys.Length > 0 ? "gradient " + Hex(g.gradient.colorKeys[0].color) + ".." + Hex(g.gradient.colorKeys[g.gradient.colorKeys.Length - 1].color) : "gradient";
+                case ParticleSystemGradientMode.TwoGradients: return "two gradients";
+                default: return g.mode.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Once per weapon, in the log: every effect part with its colour before the recolouring. A colour that
+        /// stays after GLOW or SHINE is on a part that is not in this list (or comes from outside the weapon).
+        /// </summary>
         private void Report()
         {
-            string name = gameObject.name.Replace("(Clone)", "");
+            string name = !string.IsNullOrEmpty(Label) ? Label : gameObject.name.Replace("(Clone)", "");
             if (!s_reported.Add(name)) return;
-            System.Text.StringBuilder others = new System.Text.StringBuilder();
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.Append("Gearhold effects of ").Append(name).Append(':');
+            foreach (Particles p in m_particles)
+            {
+                ParticleSystemRenderer renderer = p.System.GetComponent<ParticleSystemRenderer>();
+                Material material = renderer != null ? renderer.sharedMaterial : null;
+                ParticleSystem.LightsModule lights = p.System.lights;
+                sb.Append("\n  particles ").Append(PathOf(p.System.transform, transform)).Append(p.Shine ? " [shine]" : "")
+                  .Append(" start=").Append(Describe(p.Start))
+                  .Append(" shader=").Append(material != null && material.shader != null ? material.shader.name : "-")
+                  .Append(lights.enabled ? " particle-lights(" + (lights.light != null ? Hex(lights.light.color) : "none") + (lights.useParticleColor ? ", x particle colour" : "") + ")" : "");
+            }
+            foreach ((Light light, Color color, bool shine) in m_lights)
+            {
+                sb.Append("\n  light ").Append(PathOf(light.transform, transform)).Append(shine ? " [shine]" : "").Append(' ').Append(light.type)
+                  .Append(' ').Append(Hex(color)).Append(" intensity ").Append(light.intensity.ToString("0.##")).Append(" range ").Append(light.range.ToString("0.#"));
+            }
+            foreach ((Renderer renderer, Gradient gradient, bool shine) in m_lines)
+            {
+                sb.Append("\n  ").Append(renderer.GetType().Name).Append(' ').Append(PathOf(renderer.transform, transform));
+            }
             foreach ((Renderer renderer, bool shine) in m_renderers)
             {
-                if (renderer is ParticleSystemRenderer) continue;
+                if (renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer) continue;
                 foreach (Material material in renderer.sharedMaterials)
                 {
                     if (material != null && IsEffect(renderer, material))
                     {
-                        others.Append(renderer.GetType().Name).Append(':').Append(renderer.name).Append('=').Append(material.shader != null ? material.shader.name : "-").Append("; ");
+                        sb.Append("\n  effect mesh ").Append(PathOf(renderer.transform, transform)).Append(" shader=").Append(material.shader != null ? material.shader.name : "-");
                     }
                 }
             }
-            Plugin.Log.LogInfo($"Gearhold effects of {name}: {m_particles.Count} particle systems, {m_lights.Count} lights, {m_lines.Count} trail/line renderers, " +
-                $"{m_trails.Count} swing trails. Other effect parts: {(others.Length > 0 ? others.ToString() : "none")}");
+            sb.Append("\n  swing trails: ").Append(m_trails.Count);
+            Plugin.Log.LogInfo(sb.ToString());
         }
+
+        // Lights that particle systems create themselves copy a Light that lives outside this weapon (a shared
+        // prefab we must not change): such a system gets its own copy of that Light with the new colour.
+        private readonly List<(ParticleSystem system, Light original, Light copy, bool shine)> m_lightSources = new List<(ParticleSystem, Light, Light, bool)>();
+
+        private void CaptureLightSources()
+        {
+            foreach (Particles p in m_particles)
+            {
+                ParticleSystem.LightsModule lights = p.System.lights;
+                if (lights.enabled && lights.light != null && !lights.light.transform.IsChildOf(transform))
+                {
+                    m_lightSources.Add((p.System, lights.light, null, p.Shine));
+                }
+            }
+        }
+
+        private void RecolorLightSources()
+        {
+            for (int i = 0; i < m_lightSources.Count; i++)
+            {
+                (ParticleSystem system, Light original, Light copy, bool shine) = m_lightSources[i];
+                if (system == null || original == null) continue;
+                m_forShine = shine;
+                bool wanted = (shine ? m_shine : m_glow).IsSet;
+                ParticleSystem.LightsModule lights = system.lights;
+                if (wanted && copy == null)
+                {
+                    GameObject clone = Object.Instantiate(original.gameObject, transform);
+                    clone.SetActive(false); // only a template for the lights the particles create
+                    copy = clone.GetComponent<Light>();
+                    m_lightSources[i] = (system, original, copy, shine);
+                }
+                if (copy != null)
+                {
+                    copy.color = Tint(original.color);
+                    lights.light = wanted ? copy : original;
+                }
+            }
+            m_forShine = false;
+        }
+
 
         private static readonly HashSet<string> s_reported = new HashSet<string>();
 
         private void Recolor()
         {
+            RecolorLightSources();
             foreach (Particles p in m_particles)
             {
                 if (p.System == null) continue;
