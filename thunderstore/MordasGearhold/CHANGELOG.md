@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2
+- Fixed armour or helmet vanishing while recolouring: recoloured textures that were still on the character could be freed by the cache.
+- The look menu redraws as soon as the colour zones of the shown piece change, so the zone chips show up right away after switching the piece or the look.
+- A failure while dyeing is logged and can no longer disturb vanilla's gear update.
+
 ## 1.4.1
 - Colour zones: a zone dyed Red is red all over (before, the hue was only turned, so a teal accent in a brown zone turned green). Small accent colours get their own zone more often.
 

@@ -64,8 +64,16 @@ namespace MordasGearhold.Patches
             Player player = __instance.GetComponent<Player>();
             if (player != null && Humanoid_SetupVisEquipment_Patch.ShowsLooks(player))
             {
-                DyeRenderer.ApplyTo(player, __instance);
-                GlowRenderer.ApplyTo(player, __instance);
+                DyeRenderer.ApplyTo(player, __instance); // logs its own failures
+                try
+                {
+                    GlowRenderer.ApplyTo(player, __instance);
+                }
+                catch (System.Exception ex)
+                {
+                    // never let a colour effect stop vanilla from building the rest of the visuals
+                    Plugin.Log.LogError("Gearhold weapon glow failed: " + ex);
+                }
             }
         }
     }

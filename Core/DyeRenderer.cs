@@ -131,7 +131,34 @@ namespace MordasGearhold.Core
             return new Plan { Dyes = fitted, Zones = zones };
         }
 
+        private static float s_nextError;
+
+        /// <summary>
+        /// Dyes all visible pieces. Runs inside a postfix of vanilla's gear update, so a failure here is logged and
+        /// never passed on (an exception would stop vanilla from building the rest of the visuals).
+        /// </summary>
         internal static void ApplyTo(Player player, VisEquipment vis)
+        {
+            TextureDye.BeginPass();
+            try
+            {
+                ApplyAll(player, vis);
+            }
+            catch (System.Exception ex)
+            {
+                if (Time.unscaledTime >= s_nextError)
+                {
+                    s_nextError = Time.unscaledTime + 5f;
+                    Plugin.Log.LogError("Gearhold dye failed: " + ex);
+                }
+            }
+            finally
+            {
+                TextureDye.EndPass();
+            }
+        }
+
+        private static void ApplyAll(Player player, VisEquipment vis)
         {
             DyeObject(s_helmet(vis), PlanFor(player, Transmog.Piece.Helmet));
             Plan chest = PlanFor(player, Transmog.Piece.Chest);
@@ -353,17 +380,37 @@ namespace MordasGearhold.Core
             {
                 if (entry.source == source && entry.dye == key && entry.copy != null)
                 {
+                    s_pinned.Add(entry.copy);
                     return entry.copy;
                 }
             }
             Texture2D copy = MakeZoned(source, zones, dyes, coverage);
             s_cache.Add((source, key, copy));
-            if (s_cache.Count > CacheSize)
-            {
-                Object.Destroy(s_cache[0].copy);
-                s_cache.RemoveAt(0);
-            }
+            s_pinned.Add(copy);
             return copy;
+        }
+
+        // Textures that the current pass put on the character: never destroyed by the cache (a destroyed texture
+        // that is still on a renderer makes that piece vanish, e.g. the helmet while the legs are recoloured).
+        private static readonly HashSet<Texture> s_pinned = new HashSet<Texture>();
+
+        /// <summary>Called before all pieces are dyed again: from here on only what is requested counts as in use.</summary>
+        internal static void BeginPass() => s_pinned.Clear();
+
+        /// <summary>Called after the pass: the oldest copies that are not in use any more are destroyed.</summary>
+        internal static void EndPass()
+        {
+            int i = 0;
+            while (s_cache.Count > CacheSize && i < s_cache.Count)
+            {
+                if (s_pinned.Contains(s_cache[i].copy))
+                {
+                    i++;
+                    continue;
+                }
+                Object.Destroy(s_cache[i].copy);
+                s_cache.RemoveAt(i);
+            }
         }
 
         private static Texture2D MakeZoned(Texture source, ZoneSet zones, DyeValue[] dyes, bool coverage)
@@ -429,16 +476,13 @@ namespace MordasGearhold.Core
             {
                 if (entry.source == source && entry.dye == key && entry.copy != null)
                 {
+                    s_pinned.Add(entry.copy);
                     return entry.copy;
                 }
             }
             Texture2D copy = Make(source, dye);
             s_cache.Add((source, key, copy));
-            if (s_cache.Count > CacheSize)
-            {
-                Object.Destroy(s_cache[0].copy);
-                s_cache.RemoveAt(0);
-            }
+            s_pinned.Add(copy);
             return copy;
         }
 

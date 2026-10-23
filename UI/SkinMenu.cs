@@ -95,6 +95,7 @@ namespace MordasGearhold.UI
         {
             Action revert = s_revert;
             s_revert = null;
+            s_builtPiece = null;
             if (s_blocker != null)
             {
                 s_blocker.gameObject.SetActive(false);
@@ -124,6 +125,31 @@ namespace MordasGearhold.UI
             if (IsOpen)
             {
                 CharacterPreview.Tick();
+                RedrawIfZonesChanged();
+            }
+        }
+
+        private static Player s_builtPlayer;
+        private static Transmog.Piece? s_builtPiece;
+        private static int s_builtZoneId;
+        private static float s_nextZoneCheck;
+
+        /// <summary>
+        /// A new look or piece only shows on the character a moment later (vanilla builds the new model on its next
+        /// update), so the menu may have been drawn with the colour zones of the old one: redraw as soon as the
+        /// zones of what is shown now differ from what the menu was built with.
+        /// </summary>
+        private static void RedrawIfZonesChanged()
+        {
+            if (!s_builtPiece.HasValue || s_builtPlayer == null || Time.unscaledTime < s_nextZoneCheck)
+            {
+                return;
+            }
+            s_nextZoneCheck = Time.unscaledTime + 0.25f;
+            int id = DyeRenderer.ZonesOf(s_builtPlayer, s_builtPiece.Value)?.Id ?? 0;
+            if (id != s_builtZoneId)
+            {
+                OpenForPiece(s_builtPlayer, s_builtPiece.Value);
             }
         }
 
@@ -145,6 +171,7 @@ namespace MordasGearhold.UI
             }
 
             bool dyeable = dyePlayer != null && dyePiece.HasValue;
+            s_builtPiece = null; // set again below when this menu has a COLOR section
             int cells = looks.Count + 1; // the "Hide" cell first, then every unlocked look
             int rows = Mathf.Max(1, Mathf.CeilToInt((maxLooks + 1) / (float)Columns));
             float ox = Pad + PreviewWidth;               // left edge of the right-hand column
@@ -212,6 +239,9 @@ namespace MordasGearhold.UI
             if (dyeable)
             {
                 AddColorSection(gui, dyePlayer, dyePiece.Value, ox, columnWidth, gridTop + rows * Cell + 10f);
+                s_builtPlayer = dyePlayer;
+                s_builtPiece = dyePiece;
+                s_builtZoneId = DyeRenderer.ZonesOf(dyePlayer, dyePiece.Value)?.Id ?? 0;
             }
             if (glowable)
             {
