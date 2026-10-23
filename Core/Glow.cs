@@ -5,7 +5,10 @@ using UnityEngine;
 
 namespace MordasGearhold.Core
 {
-    /// <summary>Glow colour of a weapon: a hue for every coloured glow part, or white. Default = the weapon's own colours.</summary>
+    /// <summary>
+    /// Glow or shine colour of a weapon: a hue for every coloured part, or white. Default = the weapon's own colours.
+    /// GLOW is the fire, frost, lightning and glowing cores; SHINE is the white shimmer an upgraded weapon gets.
+    /// </summary>
     internal struct GlowValue
     {
         public bool IsSet;
@@ -34,20 +37,45 @@ namespace MordasGearhold.Core
             result.a = c.a;
             return result;
         }
+
+        /// <summary>
+        /// For the shimmer: it is white to begin with, so there is no hue to replace; the colour is set outright
+        /// (a clearly tinted version of its brightness), alpha stays.
+        /// </summary>
+        internal Color ApplyShine(Color c)
+        {
+            if (!IsSet || White) return c;
+            Color.RGBToHSV(c, out _, out float s, out float v);
+            Color result = Color.HSVToRGB(Hue / 360f, Mathf.Max(s, 0.8f), Mathf.Max(v, 0.9f), true);
+            result.a = c.a;
+            return result;
+        }
     }
 
-    /// <summary>Glow colours are stored on the weapon itself (like its look), so they follow it into every set.</summary>
+    /// <summary>Glow and shine colours are stored on the weapon itself (like its look), so they follow it into every set.</summary>
     internal static class Glow
     {
         internal const string ItemKey = "MordasGearhold.Glow";
+        internal const string ShineKey = "MordasGearhold.Shine";
+        internal const string ShineObject = "UpgraderGlow"; // the shimmer of upgraded weapons
 
         internal static GlowValue Get(ItemDrop.ItemData item) =>
             item != null && item.m_customData.TryGetValue(ItemKey, out string raw) ? GlowValue.Parse(raw) : default;
+
+        internal static GlowValue GetShine(ItemDrop.ItemData item) =>
+            item != null && item.m_customData.TryGetValue(ShineKey, out string raw) ? GlowValue.Parse(raw) : default;
 
         internal static void Set(Player player, ItemDrop.ItemData item, GlowValue glow)
         {
             if (!glow.IsSet) item.m_customData.Remove(ItemKey);
             else item.m_customData[ItemKey] = glow.ToString();
+            GlowRenderer.Apply(player);
+        }
+
+        internal static void SetShine(Player player, ItemDrop.ItemData item, GlowValue shine)
+        {
+            if (!shine.IsSet) item.m_customData.Remove(ShineKey);
+            else item.m_customData[ShineKey] = shine.ToString();
             GlowRenderer.Apply(player);
         }
 
@@ -57,12 +85,24 @@ namespace MordasGearhold.Core
             GameObject prefab = item?.m_dropPrefab;
             return prefab != null && (prefab.GetComponentInChildren<ParticleSystem>(true) != null || prefab.GetComponentInChildren<Light>(true) != null);
         }
+
+        /// <summary>True when the weapon has the upgrade shimmer.</summary>
+        internal static bool CanShine(ItemDrop.ItemData item)
+        {
+            GameObject prefab = item?.m_dropPrefab;
+            if (prefab == null) return false;
+            foreach (Transform t in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.IndexOf(ShineObject, System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
+        }
     }
 
     /// <summary>
-    /// Puts the glow colour on the weapon objects your character holds or carries on the back. Only these copies
-    /// change; the item and other players' copies keep their colours. Called after vanilla rebuilt the visible gear
-    /// and when a glow colour was chosen.
+    /// Puts the glow and shine colours on the weapon objects your character holds or carries on the back. Only these
+    /// copies change; the item and other players' copies keep their colours. Called after vanilla rebuilt the
+    /// visible gear and when a colour was chosen.
     /// </summary>
     internal static class GlowRenderer
     {
@@ -82,10 +122,12 @@ namespace MordasGearhold.Core
 
         internal static void ApplyTo(Player player, VisEquipment vis)
         {
+            // the holstered weapon (Weapon 2) hangs on a back mount without being a hidden hand item
+            ItemDrop.ItemData holster = MordasGearhold.Patches.Equipment.ItemIn(player, GearSlot.Holster);
             Put(s_right(vis), Access.RightItem(player));
             Put(s_left(vis), Access.LeftItem(player));
-            Put(s_rightBack(vis), Access.HiddenRightItem(player));
-            Put(s_leftBack(vis), Access.HiddenLeftItem(player));
+            Put(s_rightBack(vis), Access.HiddenRightItem(player) ?? holster);
+            Put(s_leftBack(vis), Access.HiddenLeftItem(player) ?? holster);
         }
 
         private static void Put(GameObject instance, ItemDrop.ItemData item)
@@ -95,19 +137,21 @@ namespace MordasGearhold.Core
                 return;
             }
             GlowValue glow = Glow.Get(item);
+            GlowValue shine = Glow.GetShine(item);
             GlowKeeper keeper = instance.GetComponent<GlowKeeper>();
             if (keeper == null)
             {
-                if (!glow.IsSet) return; // nothing to change, nothing to remember
+                if (!glow.IsSet && !shine.IsSet) return; // nothing to change, nothing to remember
                 keeper = instance.AddComponent<GlowKeeper>();
             }
-            keeper.Set(glow);
+            keeper.Set(glow, shine);
         }
     }
 
     /// <summary>
     /// Lives on one weapon object: remembers its original glow colours and recolours them. The originals are taken
-    /// one frame late, because vanilla's ParticleIntensityScaler sets the colours again in its Start.
+    /// a few frames late, because vanilla's ParticleIntensityScaler sets the colours again in its Start. Parts below
+    /// the upgrade shimmer object take the SHINE colour, everything else the GLOW colour.
     /// </summary>
     internal sealed class GlowKeeper : MonoBehaviour
     {
@@ -118,6 +162,7 @@ namespace MordasGearhold.Core
         private sealed class Particles
         {
             public ParticleSystem System;
+            public bool Shine;
             public ParticleSystem.MinMaxGradient Start;
             public ParticleSystem.MinMaxGradient Life;
             public ParticleSystem.MinMaxGradient Custom1;
@@ -126,17 +171,31 @@ namespace MordasGearhold.Core
         }
 
         private readonly List<Particles> m_particles = new List<Particles>();
-        private readonly List<(Light light, Color color)> m_lights = new List<(Light, Color)>();
+        private readonly List<(Light light, Color color, bool shine)> m_lights = new List<(Light, Color, bool)>();
         private readonly List<(MeleeWeaponTrail trail, Color[] colors)> m_trails = new List<(MeleeWeaponTrail, Color[])>();
-        private readonly List<Renderer> m_renderers = new List<Renderer>();
+        private readonly List<(Renderer renderer, bool shine)> m_renderers = new List<(Renderer, bool)>();
         private GlowValue m_glow;
+        private GlowValue m_shine;
+        private bool m_forShine; // which of the two the colour helpers below use right now
         private bool m_captured;
 
-        internal void Set(GlowValue glow)
+        internal void Set(GlowValue glow, GlowValue shine)
         {
             m_glow = glow;
+            m_shine = shine;
             if (m_captured) Recolor();
             else enabled = true;
+        }
+
+        private Color Tint(Color c) => m_forShine ? m_shine.ApplyShine(c) : m_glow.Apply(c);
+
+        private bool InShine(Transform t)
+        {
+            for (; t != null && t != transform; t = t.parent)
+            {
+                if (t.name.IndexOf(Glow.ShineObject, System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
         }
 
         private int m_frames;
@@ -158,7 +217,7 @@ namespace MordasGearhold.Core
             foreach (ParticleSystem ps in GetComponentsInChildren<ParticleSystem>(true))
             {
                 ParticleSystem.CustomDataModule custom = ps.customData;
-                Particles p = new Particles { System = ps, Start = ps.main.startColor, Life = ps.colorOverLifetime.color };
+                Particles p = new Particles { System = ps, Shine = InShine(ps.transform), Start = ps.main.startColor, Life = ps.colorOverLifetime.color };
                 if (custom.enabled && custom.GetMode(ParticleSystemCustomData.Custom1) == ParticleSystemCustomDataMode.Color)
                 {
                     p.HasCustom1 = true;
@@ -173,7 +232,7 @@ namespace MordasGearhold.Core
             }
             foreach (Light light in GetComponentsInChildren<Light>(true))
             {
-                m_lights.Add((light, light.color));
+                m_lights.Add((light, light.color, InShine(light.transform)));
             }
             if (s_trailColors != null)
             {
@@ -189,7 +248,7 @@ namespace MordasGearhold.Core
             {
                 if (renderer is ParticleSystemRenderer || renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
                 {
-                    m_renderers.Add(renderer);
+                    m_renderers.Add((renderer, InShine(renderer.transform)));
                 }
             }
         }
@@ -199,6 +258,7 @@ namespace MordasGearhold.Core
             foreach (Particles p in m_particles)
             {
                 if (p.System == null) continue;
+                m_forShine = p.Shine;
                 ParticleSystem.MainModule main = p.System.main;
                 main.startColor = Recolor(p.Start);
                 ParticleSystem.ColorOverLifetimeModule life = p.System.colorOverLifetime;
@@ -207,21 +267,24 @@ namespace MordasGearhold.Core
                 if (p.HasCustom1) custom.SetColor(ParticleSystemCustomData.Custom1, Recolor(p.Custom1));
                 if (p.HasCustom2) custom.SetColor(ParticleSystemCustomData.Custom2, Recolor(p.Custom2));
             }
-            foreach ((Light light, Color color) in m_lights)
+            foreach ((Light light, Color color, bool shine) in m_lights)
             {
-                if (light != null) light.color = m_glow.Apply(color);
+                m_forShine = shine;
+                if (light != null) light.color = Tint(color);
             }
+            m_forShine = false;
             foreach ((MeleeWeaponTrail trail, Color[] colors) in m_trails)
             {
                 if (trail == null) continue;
                 Color[] recolored = new Color[colors.Length];
-                for (int i = 0; i < colors.Length; i++) recolored[i] = m_glow.Apply(colors[i]);
+                for (int i = 0; i < colors.Length; i++) recolored[i] = Tint(colors[i]);
                 s_trailColors.SetValue(trail, recolored);
             }
             // material colours: particles get every colour, the weapon itself only its emission (glowing runes, cores)
-            foreach (Renderer renderer in m_renderers)
+            foreach ((Renderer renderer, bool shine) in m_renderers)
             {
                 if (renderer == null) continue;
+                m_forShine = shine;
                 bool particles = renderer is ParticleSystemRenderer;
                 Material[] materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
@@ -233,12 +296,13 @@ namespace MordasGearhold.Core
                     {
                         if ((particles || property == "_EmissionColor") && material.HasProperty(property))
                         {
-                            s_block.SetColor(property, m_glow.Apply(material.GetColor(property)));
+                            s_block.SetColor(property, Tint(material.GetColor(property)));
                         }
                     }
                     renderer.SetPropertyBlock(s_block, i);
                 }
             }
+            m_forShine = false;
         }
 
         private ParticleSystem.MinMaxGradient Recolor(ParticleSystem.MinMaxGradient g)
@@ -246,9 +310,9 @@ namespace MordasGearhold.Core
             switch (g.mode)
             {
                 case ParticleSystemGradientMode.Color:
-                    return new ParticleSystem.MinMaxGradient(m_glow.Apply(g.color));
+                    return new ParticleSystem.MinMaxGradient(Tint(g.color));
                 case ParticleSystemGradientMode.TwoColors:
-                    return new ParticleSystem.MinMaxGradient(m_glow.Apply(g.colorMin), m_glow.Apply(g.colorMax));
+                    return new ParticleSystem.MinMaxGradient(Tint(g.colorMin), Tint(g.colorMax));
                 case ParticleSystemGradientMode.Gradient:
                     return new ParticleSystem.MinMaxGradient(Recolor(g.gradient));
                 case ParticleSystemGradientMode.TwoGradients:
@@ -266,7 +330,7 @@ namespace MordasGearhold.Core
         {
             if (gradient == null) return null;
             GradientColorKey[] keys = gradient.colorKeys;
-            for (int i = 0; i < keys.Length; i++) keys[i].color = m_glow.Apply(keys[i].color);
+            for (int i = 0; i < keys.Length; i++) keys[i].color = Tint(keys[i].color);
             Gradient result = new Gradient { mode = gradient.mode };
             result.SetKeys(keys, gradient.alphaKeys);
             return result;

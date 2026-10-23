@@ -76,10 +76,12 @@ namespace MordasGearhold.UI
                 string look0 = Transmog.GetItemLook(weapon);
                 string dye0 = Dye.ReadItem(weapon);
                 GlowValue glow0 = Glow.Get(weapon);
+                GlowValue shine0 = Glow.GetShine(weapon);
                 s_revert = () =>
                 {
                     Transmog.SetItemLook(player, weapon, look0);
                     Glow.Set(player, weapon, glow0);
+                    Glow.SetShine(player, weapon, shine0);
                     Dye.WriteItem(player, weapon, dye0);
                 };
             }
@@ -90,7 +92,7 @@ namespace MordasGearhold.UI
             {
                 Transmog.SetItemLook(player, weapon, look);
                 OpenForWeapon(player, weapon);
-            }, WeaponTarget(player, weapon), glowPlayer: player, glowWeapon: Glow.CanGlow(weapon) ? weapon : null);
+            }, WeaponTarget(player, weapon), glowPlayer: player, glowWeapon: Glow.CanGlow(weapon) ? weapon : null, shineWeapon: Glow.CanShine(weapon) ? weapon : null);
         }
 
         /// <summary>Closes the menu. Without <paramref name="save"/>, every change made in it is undone.</summary>
@@ -189,7 +191,7 @@ namespace MordasGearhold.UI
         }
 
         private static void Open(string title, string current, List<GameObject> looks, int maxLooks, Action<string> choose,
-            DyeTarget dye = null, Transmog.Piece? tabsFor = null, Player tabPlayer = null, Player glowPlayer = null, ItemDrop.ItemData glowWeapon = null)
+            DyeTarget dye = null, Transmog.Piece? tabsFor = null, Player tabPlayer = null, Player glowPlayer = null, ItemDrop.ItemData glowWeapon = null, ItemDrop.ItemData shineWeapon = null)
         {
             InventoryGui gui = InventoryGui.instance;
             if (gui == null)
@@ -227,9 +229,15 @@ namespace MordasGearhold.UI
                 height += colorBlock;
             }
             bool glowable = glowPlayer != null && glowWeapon != null;
+            bool shinable = glowPlayer != null && shineWeapon != null;
+            float effectBlock = 10f + ColorHeader + SwatchRow + 40f; // GLOW and SHINE are one block each
             if (glowable)
             {
-                height += 10f + ColorHeader + SwatchRow + 40f;
+                height += effectBlock;
+            }
+            if (shinable)
+            {
+                height += effectBlock;
             }
             height = Mathf.Max(height, MinHeight);
             s_menu.sizeDelta = new Vector2(width, height);
@@ -287,6 +295,11 @@ namespace MordasGearhold.UI
             if (glowable)
             {
                 AddGlowSection(gui, glowPlayer, glowWeapon, ox, columnWidth, sectionTop);
+                sectionTop += effectBlock;
+            }
+            if (shinable)
+            {
+                AddGlowSection(gui, glowPlayer, shineWeapon, ox, columnWidth, sectionTop, shine: true);
             }
 
             // centred on the screen; scaled down when the screen is too small for it
@@ -509,13 +522,13 @@ namespace MordasGearhold.UI
         /// GLOW for a weapon with glow effects (fire, frost, lightning, glowing cores): a swatch replaces the colour
         /// of every coloured glow part, White makes them white, RESET gives the weapon its own colours back.
         /// </summary>
-        private static void AddGlowSection(InventoryGui gui, Player player, ItemDrop.ItemData weapon, float ox, float columnWidth, float top)
+        private static void AddGlowSection(InventoryGui gui, Player player, ItemDrop.ItemData weapon, float ox, float columnWidth, float top, bool shine = false)
         {
             float cx = ox + columnWidth / 2f;
             float inner = columnWidth - Pad * 2f;
             Image braid = UiKit.Named(gui.m_crafting, "BraidLineHorisontalMedium");
             UiKit.Divider(s_content, braid, cx, top, inner);
-            TMP_Text title = UiKit.Text(s_content, gui.m_craftingStationName, "GLOW", 18f, UiKit.Gold, TextAlignmentOptions.Center);
+            TMP_Text title = UiKit.Text(s_content, gui.m_craftingStationName, shine ? "SHINE" : "GLOW", 18f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(title.rectTransform, cx, top + 18f, inner, 24f);
 
             int count = s_hues.Length + 1;
@@ -529,16 +542,22 @@ namespace MordasGearhold.UI
                 {
                     int hue = Mathf.RoundToInt(s_hues[i].hue * 360f);
                     AddSwatch(x, swatchY, size, Color.HSVToRGB(s_hues[i].hue, 0.85f, 1f), s_hues[i].name,
-                        () => Glow.Set(player, weapon, new GlowValue { IsSet = true, Hue = hue }));
+                        () => SetEffect(player, weapon, shine, new GlowValue { IsSet = true, Hue = hue }));
                 }
                 else
                 {
                     AddSwatch(x, swatchY, size, new Color(0.95f, 0.95f, 0.95f), "White",
-                        () => Glow.Set(player, weapon, new GlowValue { IsSet = true, White = true }));
+                        () => SetEffect(player, weapon, shine, new GlowValue { IsSet = true, White = true }));
                 }
             }
             AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, top + ColorHeader + SwatchRow + 20f, 120f, false,
-                () => Glow.Set(player, weapon, default));
+                () => SetEffect(player, weapon, shine, default));
+        }
+
+        private static void SetEffect(Player player, ItemDrop.ItemData weapon, bool shine, GlowValue value)
+        {
+            if (shine) Glow.SetShine(player, weapon, value);
+            else Glow.Set(player, weapon, value);
         }
 
         private static void Nudge(ref DyeValue d, int channel, int delta)

@@ -110,6 +110,7 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 - **RESET** gives the weapon its own colours back.
 - The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
 - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
+- **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
 - **Multiplayer:** for now only you see the colour.
 
 ![The weapon look menu with the GLOW colours](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Weapon%20Transmog.png)

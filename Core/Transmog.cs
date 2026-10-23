@@ -227,7 +227,7 @@ namespace MordasGearhold.Core
 
         /// <summary>Non-null when a weapon has its own look or glow colour: it then gets the sparkle marker.</summary>
         internal static string ItemMarker(ItemDrop.ItemData item) =>
-            GetItemLook(item) ?? (Glow.Get(item).IsSet ? "glow" : (Dye.ItemDyed(item) ? "dye" : null));
+            GetItemLook(item) ?? (Glow.Get(item).IsSet || Glow.GetShine(item).IsSet ? "glow" : (Dye.ItemDyed(item) ? "dye" : null));
 
         internal static string GetItemLook(ItemDrop.ItemData item)
         {
