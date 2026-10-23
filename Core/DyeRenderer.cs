@@ -275,15 +275,14 @@ namespace MordasGearhold.Core
         internal static void ReleaseZoneData() => s_zoned.Clear();
 
         /// <summary>
-        /// A colour moved by a dye. Greyish colours have no hue of their own (it is noise), so they take the hue of
-        /// their zone first; then the hue is turned, and saturation and brightness are pushed like for any pixel.
+        /// A colour of a zone moved by the zone's dye. The zone is one material, so every pixel of it gets the same
+        /// hue: the zone's own hue turned by the dye (a zone dyed Red is red all over, also the odd accent colour
+        /// that fell into it, and grey pixels, whose own hue is only noise, follow too). Saturation and brightness
+        /// keep each pixel's own shading and are pushed like for any pixel.
         /// </summary>
         internal static Color ShiftHsv(float hue, float saturation, float value, DyeValue dye, float zoneHue)
         {
-            float own = Mathf.SmoothStep(0.04f, 0.22f, saturation); // 0 = grey: use the zone's hue
-            float delta = hue - zoneHue;
-            delta -= Mathf.Round(delta);
-            float h = zoneHue + delta * own + dye.Hue / 360f;
+            float h = zoneHue + dye.Hue / 360f;
             h -= Mathf.Floor(h);
             float sat = dye.Saturation / 100f, val = dye.Brightness / 100f;
             float s = sat >= 0f ? saturation + (1f - saturation) * sat : saturation * (1f + sat);

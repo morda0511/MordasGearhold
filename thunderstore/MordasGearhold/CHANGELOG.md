@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.1
+- Colour zones: a zone dyed Red is red all over (before, the hue was only turned, so a teal accent in a brown zone turned green). Small accent colours get their own zone more often.
+
 ## 1.4.0
 - Colour zones: a piece is split into up to four zones by the colours of its texture (metal, leather, cloth ...). In the COLOR section pick a zone chip (ring = original colour, middle = colour now) and dye just that zone; ALL still colours the whole piece. Greyish zones now take the colour you pick instead of a noisy tint.
 

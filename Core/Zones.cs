@@ -37,7 +37,8 @@ namespace MordasGearhold.Core
     {
         internal const int MaxZones = 4;
         private const int SampleSize = 96;
-        private const float MinShare = 0.06f;    // smaller zones are merged into their neighbour
+        private const float MinShare = 0.025f;   // smaller zones are merged into their neighbour
+        private const int StartClusters = 6;
         private const float MergeDistance = 0.20f; // zones this close in colour are one zone
         private const float BrightnessWeight = 0.6f;
 
@@ -101,50 +102,51 @@ namespace MordasGearhold.Core
                 return new ZoneSet(new[] { Feature(0f, 0f, 0.5f) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f });
             }
 
-            Vector3[] centers = KMeans(features, Mathf.Min(MaxZones, 4));
+            // start with more clusters than zones, so a small accent colour (teal stripes on brown leather) gets
+            // its own cluster, then merge down: tiny ones into their neighbour, close ones together, and the closest
+            // pairs until at most MaxZones are left
+            Vector3[] centers = KMeans(features, StartClusters);
             int[] assign = new int[features.Count];
             float[] counts = new float[centers.Length];
             Assign(features, centers, assign, counts);
-
-            // merge zones that are too small or too close to another one
-            bool changed = true;
-            while (changed && centers.Length > 1)
+            while (centers.Length > 1)
             {
-                changed = false;
                 int smallest = 0;
                 for (int i = 1; i < centers.Length; i++)
                 {
                     if (counts[i] < counts[smallest]) smallest = i;
                 }
-                int nearest = NearestOther(centers, smallest);
-                bool tiny = counts[smallest] / features.Count < MinShare;
-                bool close = Vector3.Distance(centers[smallest], centers[nearest]) < MergeDistance;
-                if (!tiny && !close)
+                int from = -1, into = -1;
+                if (counts[smallest] / features.Count < MinShare)
                 {
-                    // the smallest one is fine; look for any other close pair
-                    for (int i = 0; i < centers.Length && !changed; i++)
-                    {
-                        for (int j = i + 1; j < centers.Length; j++)
-                        {
-                            if (Vector3.Distance(centers[i], centers[j]) < MergeDistance)
-                            {
-                                smallest = counts[i] < counts[j] ? i : j;
-                                nearest = smallest == i ? j : i;
-                                changed = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!changed) break;
+                    from = smallest;
+                    into = NearestOther(centers, smallest);
                 }
                 else
                 {
-                    changed = true;
+                    float closest = float.MaxValue;
+                    for (int i = 0; i < centers.Length; i++)
+                    {
+                        for (int j = i + 1; j < centers.Length; j++)
+                        {
+                            float d = Vector3.Distance(centers[i], centers[j]);
+                            if (d < closest)
+                            {
+                                closest = d;
+                                from = counts[i] < counts[j] ? i : j;
+                                into = from == i ? j : i;
+                            }
+                        }
+                    }
+                    if (closest >= MergeDistance && centers.Length <= MaxZones)
+                    {
+                        break; // every zone is its own colour and there are few enough
+                    }
                 }
-                float total = counts[smallest] + counts[nearest];
-                centers[nearest] = total > 0f ? (centers[nearest] * counts[nearest] + centers[smallest] * counts[smallest]) / total : centers[nearest];
+                float total = counts[from] + counts[into];
+                centers[into] = total > 0f ? (centers[into] * counts[into] + centers[from] * counts[from]) / total : centers[into];
                 List<Vector3> remaining = new List<Vector3>(centers);
-                remaining.RemoveAt(smallest);
+                remaining.RemoveAt(from);
                 centers = remaining.ToArray();
                 counts = new float[centers.Length];
                 Assign(features, centers, assign, counts);
