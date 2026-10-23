@@ -62,7 +62,7 @@ namespace MordasGearhold.Patches
         private static void Postfix(VisEquipment __instance)
         {
             Player player = __instance.GetComponent<Player>();
-            if (player != null && Humanoid_SetupVisEquipment_Patch.ShowsLooks(player))
+            if (player != null && (Humanoid_SetupVisEquipment_Patch.ShowsLooks(player) || ColorSync.TryGet(player, out _)))
             {
                 DyeRenderer.ApplyTo(player, __instance); // logs its own failures
                 try

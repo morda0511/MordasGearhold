@@ -13,6 +13,7 @@
 - Weapons with the white upgrade shimmer get a SHINE section in their look menu: colour that shimmer separately from the GLOW (it shows on upgraded weapons).
 - Pieces whose shader has no colour controls (many shields, some armour) are dyed by recolouring a copy of their texture, so more pieces react to a colour. A shield that is put away can be dyed as well.
 - The log names a dyed piece whose colour changed nothing, with its shaders.
+- Multiplayer: other players with Gearhold see your dyes (all zones), weapon dyes and GLOW / SHINE colours, also on the Weapon 2 weapon on your body. Players without Gearhold see the normal colours; the server needs nothing. Config `ShowOthersColors` (UI) switches seeing others' colours off.
 
 ## 1.3.8
 - Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.

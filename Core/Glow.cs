@@ -122,6 +122,14 @@ namespace MordasGearhold.Core
 
         internal static void ApplyTo(Player player, VisEquipment vis)
         {
+            if (ColorSync.TryGet(player, out ColorSync.Record record))
+            {
+                Put(s_right(vis), record.Weapon(ColorSync.Right));
+                Put(s_left(vis), record.Weapon(ColorSync.Left));
+                Put(s_rightBack(vis), record.Weapon(ColorSync.RightBack));
+                Put(s_leftBack(vis), record.Weapon(ColorSync.LeftBack));
+                return;
+            }
             // the holstered weapon (Weapon 2) hangs on a back mount without being a hidden hand item
             ItemDrop.ItemData holster = MordasGearhold.Patches.Equipment.ItemIn(player, GearSlot.Holster);
             Put(s_right(vis), Access.RightItem(player));
@@ -136,15 +144,26 @@ namespace MordasGearhold.Core
             {
                 return;
             }
-            GlowValue glow = Glow.Get(item);
-            GlowValue shine = Glow.GetShine(item);
+            Put(instance, Glow.Get(item), Glow.GetShine(item), Localization.instance.Localize(item.m_shared.m_name));
+        }
+
+        private static void Put(GameObject instance, ColorSync.WeaponColors colors)
+        {
+            if (instance != null)
+            {
+                Put(instance, colors.Glow, colors.Shine, instance.name);
+            }
+        }
+
+        private static void Put(GameObject instance, GlowValue glow, GlowValue shine, string label)
+        {
             GlowKeeper keeper = instance.GetComponent<GlowKeeper>();
             if (keeper == null)
             {
                 if (!glow.IsSet && !shine.IsSet) return; // nothing to change, nothing to remember
                 keeper = instance.AddComponent<GlowKeeper>();
             }
-            keeper.Label = Localization.instance.Localize(item.m_shared.m_name);
+            keeper.Label = label;
             keeper.Set(glow, shine);
         }
     }

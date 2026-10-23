@@ -190,7 +190,7 @@ namespace MordasGearhold.Core
         /// </summary>
         internal static void ApplyTo(Player player, VisEquipment vis)
         {
-            TextureDye.BeginPass();
+            TextureDye.BeginPass(player.GetInstanceID());
             try
             {
                 ApplyAll(player, vis);
@@ -226,6 +226,16 @@ namespace MordasGearhold.Core
                 Material body = vis.m_bodyModel.material; // vanilla already works on this per-character copy
                 DyeBody(body, s_chestTex, s_chestHash(vis), chest);
                 DyeBody(body, s_legsTex, s_legHash(vis), legs);
+            }
+
+            if (ColorSync.TryGet(player, out ColorSync.Record record))
+            {
+                // another player: the weapon colours come from what their game sent
+                DyeWeaponCore(s_right(vis), record.Weapon(ColorSync.Right).Dyes, null);
+                DyeWeaponCore(s_left(vis), record.Weapon(ColorSync.Left).Dyes, null);
+                DyeWeaponCore(s_rightBack(vis), record.Weapon(ColorSync.RightBack).Dyes, null);
+                DyeWeaponCore(s_leftBack(vis), record.Weapon(ColorSync.LeftBack).Dyes, null);
+                return;
             }
 
             // weapons carry their own dye: in the hands, and the holstered ones on the body
@@ -359,13 +369,19 @@ namespace MordasGearhold.Core
         {
             if (go == null || item == null || !Transmog.IsWeapon(item)) return;
             DyeValue[] dyes = Dye.GetItemZones(item);
+            DyeWeaponCore(go, dyes, Dye.ItemDyed(item) ? WeaponZones(item) : null);
+        }
+
+        /// <summary>The weapon texture way of DyeWeapon; <paramref name="baseZones"/> null = zones found from the model's own texture.</summary>
+        private static void DyeWeaponCore(GameObject go, DyeValue[] dyes, ZoneSet baseZones)
+        {
+            if (go == null) return;
             bool dyed = false;
             foreach (DyeValue d in dyes)
             {
                 if (!d.IsNeutral) dyed = true;
             }
             s_textured.RemoveWhere(r => r == null);
-            ZoneSet baseZones = dyed ? WeaponZones(item) : null;
             foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
             {
                 if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue;
@@ -438,7 +454,7 @@ namespace MordasGearhold.Core
     internal static class TextureDye
     {
         private const int MaxSize = 1024;
-        private const int CacheSize = 16;
+        private const int CacheSize = 32;
         private static readonly List<(Texture source, string dye, Texture2D copy)> s_cache = new List<(Texture, string, Texture2D)>();
         private static readonly Dictionary<Texture, Vector3> s_dominant = new Dictionary<Texture, Vector3>();
 
@@ -549,10 +565,31 @@ namespace MordasGearhold.Core
 
         // Textures that the current pass put on the character: never destroyed by the cache (a destroyed texture
         // that is still on a renderer makes that piece vanish, e.g. the helmet while the legs are recoloured).
-        private static readonly HashSet<Texture> s_pinned = new HashSet<Texture>();
+        // one set per character (yours and the other players'), so a pass for one never frees another one's textures
+        private static readonly Dictionary<int, HashSet<Texture>> s_pins = new Dictionary<int, HashSet<Texture>>();
+        private static HashSet<Texture> s_pinned = new HashSet<Texture>();
 
-        /// <summary>Called before all pieces are dyed again: from here on only what is requested counts as in use.</summary>
-        internal static void BeginPass() => s_pinned.Clear();
+        /// <summary>Called before all pieces of one character are dyed again: from here on only what is requested counts as in use.</summary>
+        internal static void BeginPass(int owner = 0)
+        {
+            if (!s_pins.TryGetValue(owner, out s_pinned))
+            {
+                s_pinned = s_pins[owner] = new HashSet<Texture>();
+            }
+            s_pinned.Clear();
+        }
+
+        /// <summary>A character is gone: its textures may be freed.</summary>
+        internal static void Forget(int owner) => s_pins.Remove(owner);
+
+        private static bool Pinned(Texture texture)
+        {
+            foreach (HashSet<Texture> set in s_pins.Values)
+            {
+                if (set.Contains(texture)) return true;
+            }
+            return false;
+        }
 
         /// <summary>Called after the pass: the oldest copies that are not in use any more are destroyed.</summary>
         internal static void EndPass()
@@ -560,7 +597,7 @@ namespace MordasGearhold.Core
             int i = 0;
             while (s_cache.Count > CacheSize && i < s_cache.Count)
             {
-                if (s_pinned.Contains(s_cache[i].copy))
+                if (Pinned(s_cache[i].copy))
                 {
                     i++;
                     continue;

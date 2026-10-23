@@ -59,6 +59,10 @@ namespace MordasGearhold.Core
         /// <summary>One value per zone (at least one). All values equal = the whole piece has one colour.</summary>
         internal static DyeValue[] GetZones(Player player, Transmog.Piece piece)
         {
+            if (ColorSync.TryGet(player, out ColorSync.Record record))
+            {
+                return record.Piece(piece); // another player: what their game sent
+            }
             return Read(player).TryGetValue(piece.ToString(), out DyeValue[] zones) && zones.Length > 0 ? zones : new DyeValue[1];
         }
 

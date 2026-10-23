@@ -62,6 +62,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> ShowPanel;
         internal static ConfigEntry<bool> ShowQuickslotBar;
         internal static ConfigEntry<bool> ShowBowAmmo;
+        internal static ConfigEntry<bool> ShowOthersColors;
         internal static ConfigEntry<float> QuickslotBarScale;
         internal static ConfigEntry<float> QuickslotBarX;
         internal static ConfigEntry<float> QuickslotBarY;
@@ -147,6 +148,8 @@ namespace MordasGearhold
                 "Show the occupied quickslots of the active set with their hotkeys at the bottom centre of the screen.");
             ShowBowAmmo = Config.Bind("4 - UI", "ShowBowAmmo", true,
                 "Under a bow in the hotbar, show the fitting arrows of the Gearhold ammo slots with their amount; the ammo in use is highlighted.");
+            ShowOthersColors = Config.Bind("4 - UI", "ShowOthersColors", true,
+                "See the dyes and weapon glow colours other players with Gearhold chose for their gear. Your own colours are sent to them regardless.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
                 new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
             QuickslotBarX = Config.Bind("4 - UI", "QuickslotBarX", 0f,
@@ -200,6 +203,7 @@ namespace MordasGearhold
             Patches.Holster.Tick(player);
             Patches.HolsterVisual.Tick(player);
             Transmog.Tick(player);
+            ColorSync.Tick(player);
             if (InputBlocked())
             {
                 return;

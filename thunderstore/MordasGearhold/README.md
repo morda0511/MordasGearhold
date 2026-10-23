@@ -175,3 +175,6 @@ Source and issues: https://github.com/morda0511/MordasGearhold
 | **[ServerRates](https://thunderstore.io/c/valheim/p/Morda/ServerRates/)** | Server-side rates for dedicated servers (PC and console), live apply, presets. Joining players need no install |
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-footer.png)
+
+## Multiplayer colours
+Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (UI) turns off seeing other players' colours.
