@@ -554,7 +554,7 @@ namespace MordasGearhold.UI
             string marker = null;
             if (piece.HasValue)
             {
-                marker = Transmog.GetLook(player, piece.Value) ?? (Dye.Get(player, piece.Value).IsNeutral ? null : "dye");
+                marker = Transmog.GetLook(player, piece.Value) ?? (Dye.IsDyed(player, piece.Value) ? "dye" : null);
             }
             else if (item != null && Transmog.IsWeapon(item))
             {

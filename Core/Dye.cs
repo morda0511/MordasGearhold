@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using UnityEngine;
 
 namespace MordasGearhold.Core
 {
@@ -44,24 +45,58 @@ namespace MordasGearhold.Core
         }
     }
 
+    /// <summary>
+    /// The dyes of every piece of the active set. A piece has one DyeValue per colour zone (see Zones): stored as
+    /// "Piece=h,s,b|h,s,b|..." in m_customData. A single value (also what 0.12–1.3 stored) colours the whole piece.
+    /// </summary>
     internal static class Dye
     {
         private static string Key(int set) => GearholdState.KeyPrefix + "Dye." + set;
 
-        internal static DyeValue Get(Player player, Transmog.Piece piece)
+        /// <summary>The whole-piece dye, or the one of the first zone when the zones differ.</summary>
+        internal static DyeValue Get(Player player, Transmog.Piece piece) => GetZones(player, piece)[0];
+
+        /// <summary>One value per zone (at least one). All values equal = the whole piece has one colour.</summary>
+        internal static DyeValue[] GetZones(Player player, Transmog.Piece piece)
         {
-            return Read(player).TryGetValue(piece.ToString(), out DyeValue dye) ? dye : default;
+            return Read(player).TryGetValue(piece.ToString(), out DyeValue[] zones) && zones.Length > 0 ? zones : new DyeValue[1];
         }
 
-        internal static void Set(Player player, Transmog.Piece piece, DyeValue dye)
+        internal static bool IsDyed(Player player, Transmog.Piece piece)
         {
-            Dictionary<string, DyeValue> all = Read(player);
-            dye = dye.Clamped();
-            if (dye.IsNeutral) all.Remove(piece.ToString());
-            else all[piece.ToString()] = dye;
+            foreach (DyeValue zone in GetZones(player, piece))
+            {
+                if (!zone.IsNeutral) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Colours the whole piece (every zone) the same.</summary>
+        internal static void Set(Player player, Transmog.Piece piece, DyeValue dye) => Write(player, piece, new[] { dye });
+
+        /// <summary>Colours one zone of <paramref name="zoneCount"/>; the other zones keep what they have.</summary>
+        internal static void SetZone(Player player, Transmog.Piece piece, int zone, int zoneCount, DyeValue dye)
+        {
+            DyeValue[] current = GetZones(player, piece);
+            DyeValue[] next = new DyeValue[Mathf.Max(zoneCount, zone + 1)];
+            for (int i = 0; i < next.Length; i++)
+            {
+                // a whole-piece value fills every zone; a zone list keeps its own values
+                next[i] = current.Length == 1 ? current[0] : (i < current.Length ? current[i] : default);
+            }
+            next[zone] = dye;
+            Write(player, piece, next);
+        }
+
+        private static void Write(Player player, Transmog.Piece piece, DyeValue[] zones)
+        {
+            Dictionary<string, DyeValue[]> all = Read(player);
+            DyeValue[] clamped = zones.Select(z => z.Clamped()).ToArray();
+            if (clamped.All(z => z.IsNeutral)) all.Remove(piece.ToString());
+            else all[piece.ToString()] = clamped;
             int set = GearholdState.ActiveSet(player);
             if (all.Count == 0) player.m_customData.Remove(Key(set));
-            else player.m_customData[Key(set)] = string.Join(";", all.Select(kv => kv.Key + "=" + kv.Value));
+            else player.m_customData[Key(set)] = string.Join(";", all.Select(kv => kv.Key + "=" + string.Join("|", kv.Value.Select(z => z.ToString()))));
             DyeRenderer.Apply(player);
         }
 
@@ -76,9 +111,9 @@ namespace MordasGearhold.Core
             DyeRenderer.Apply(player);
         }
 
-        private static Dictionary<string, DyeValue> Read(Player player)
+        private static Dictionary<string, DyeValue[]> Read(Player player)
         {
-            Dictionary<string, DyeValue> result = new Dictionary<string, DyeValue>();
+            Dictionary<string, DyeValue[]> result = new Dictionary<string, DyeValue[]>();
             if (player.m_customData.TryGetValue(Key(GearholdState.ActiveSet(player)), out string raw))
             {
                 foreach (string part in raw.Split(';'))
@@ -86,7 +121,7 @@ namespace MordasGearhold.Core
                     string[] kv = part.Split('=');
                     if (kv.Length == 2)
                     {
-                        result[kv[0]] = DyeValue.Parse(kv[1]);
+                        result[kv[0]] = kv[1].Split('|').Select(DyeValue.Parse).ToArray();
                     }
                 }
             }

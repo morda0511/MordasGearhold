@@ -85,6 +85,7 @@ namespace MordasGearhold.Core
             return armor != null ? armor.GetTexture(textureId) : null;
         }
 
+
         internal static void Apply(Player player)
         {
             VisEquipment vis = player != null ? s_vis(player) : null;
@@ -94,21 +95,59 @@ namespace MordasGearhold.Core
             }
         }
 
+        /// <summary>The colour zones of a piece, from the texture that shows its colours (null without one).</summary>
+        internal static ZoneSet ZonesOf(Player player, Transmog.Piece piece) => Zones.Of(BaseTexture(player, piece));
+
+        /// <summary>What to do for one piece: one colour for all of it, or a dye per colour zone.</summary>
+        private sealed class Plan
+        {
+            public DyeValue[] Dyes;
+            public ZoneSet Zones; // only when the zones are dyed differently
+            public bool Uniform => Zones == null;
+            public DyeValue First => Dyes[0];
+        }
+
+        private static Plan PlanFor(Player player, Transmog.Piece piece)
+        {
+            DyeValue[] dyes = Dye.GetZones(player, piece);
+            bool same = true;
+            for (int i = 1; i < dyes.Length; i++)
+            {
+                if (dyes[i].Hue != dyes[0].Hue || dyes[i].Saturation != dyes[0].Saturation || dyes[i].Brightness != dyes[0].Brightness)
+                {
+                    same = false;
+                }
+            }
+            ZoneSet zones = same ? null : ZonesOf(player, piece);
+            if (zones == null || zones.Count < 2)
+            {
+                return new Plan { Dyes = dyes }; // one colour for the whole piece
+            }
+            DyeValue[] fitted = new DyeValue[zones.Count]; // missing zones stay as they are, extra ones are dropped
+            for (int i = 0; i < fitted.Length; i++)
+            {
+                fitted[i] = i < dyes.Length ? dyes[i] : default;
+            }
+            return new Plan { Dyes = fitted, Zones = zones };
+        }
+
         internal static void ApplyTo(Player player, VisEquipment vis)
         {
-            DyeObject(s_helmet(vis), Dye.Get(player, Transmog.Piece.Helmet));
-            DyeObjects(s_chest(vis), Dye.Get(player, Transmog.Piece.Chest));
-            DyeObjects(s_legs(vis), Dye.Get(player, Transmog.Piece.Legs));
-            DyeObjects(s_shoulder(vis), Dye.Get(player, Transmog.Piece.Shoulder));
-            DyeValue shield = Dye.Get(player, Transmog.Piece.Shield);
+            DyeObject(s_helmet(vis), PlanFor(player, Transmog.Piece.Helmet));
+            Plan chest = PlanFor(player, Transmog.Piece.Chest);
+            DyeObjects(s_chest(vis), chest);
+            Plan legs = PlanFor(player, Transmog.Piece.Legs);
+            DyeObjects(s_legs(vis), legs);
+            DyeObjects(s_shoulder(vis), PlanFor(player, Transmog.Piece.Shoulder));
+            Plan shield = PlanFor(player, Transmog.Piece.Shield);
             if (IsShield(s_leftHash(vis))) DyeObject(s_left(vis), shield);
             if (IsShield(s_leftBackHash(vis))) DyeObject(s_leftBack(vis), shield);
 
             if (vis.m_bodyModel != null)
             {
                 Material body = vis.m_bodyModel.material; // vanilla already works on this per-character copy
-                DyeBody(body, s_chestTex, s_chestHash(vis), Dye.Get(player, Transmog.Piece.Chest));
-                DyeBody(body, s_legsTex, s_legHash(vis), Dye.Get(player, Transmog.Piece.Legs));
+                DyeBody(body, s_chestTex, s_chestHash(vis), chest);
+                DyeBody(body, s_legsTex, s_legHash(vis), legs);
             }
         }
 
@@ -121,15 +160,19 @@ namespace MordasGearhold.Core
 
         // ------------------------------------------------------------------ attached pieces
 
-        private static void DyeObjects(List<GameObject> objects, DyeValue dye)
+        // renderers that carry a recoloured main texture in their property block (cleared again when the dye is uniform)
+        private static readonly HashSet<Renderer> s_textured = new HashSet<Renderer>();
+
+        private static void DyeObjects(List<GameObject> objects, Plan plan)
         {
             if (objects == null) return;
-            foreach (GameObject go in objects) DyeObject(go, dye);
+            foreach (GameObject go in objects) DyeObject(go, plan);
         }
 
-        private static void DyeObject(GameObject go, DyeValue dye)
+        private static void DyeObject(GameObject go, Plan plan)
         {
             if (go == null) return;
+            s_textured.RemoveWhere(r => r == null);
             foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
             {
                 if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue; // no particles, flares, ...
@@ -138,15 +181,33 @@ namespace MordasGearhold.Core
                 {
                     Material material = materials[i];
                     if (material == null || !material.HasProperty(s_hue)) continue; // e.g. Standard shader: no HSV
-                    if (dye.IsNeutral)
+                    if (plan.Uniform && s_textured.Remove(renderer))
+                    {
+                        renderer.SetPropertyBlock(null, i); // back from zones: drop the recoloured texture
+                    }
+                    DyeValue dye = plan.First;
+                    if (plan.Uniform && dye.IsNeutral)
                     {
                         renderer.SetPropertyBlock(null, i);
                         continue;
                     }
                     renderer.GetPropertyBlock(s_block, i);
-                    s_block.SetFloat(s_hue, Scale(material.shader, "_Hue", dye.Hue / 180f, hue: true));
-                    s_block.SetFloat(s_saturation, Scale(material.shader, "_Saturation", dye.Saturation / 100f, hue: false));
-                    s_block.SetFloat(s_value, Scale(material.shader, "_Value", dye.Brightness / 100f, hue: false));
+                    Texture main = !plan.Uniform && material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
+                    if (main != null)
+                    {
+                        // colour zones: this model's own texture with every zone dyed; the shader HSV stays neutral
+                        s_block.SetTexture("_MainTex", TextureDye.GetZoned(main, plan.Zones, plan.Dyes, false));
+                        s_block.SetFloat(s_hue, 0f);
+                        s_block.SetFloat(s_saturation, 0f);
+                        s_block.SetFloat(s_value, 0f);
+                        s_textured.Add(renderer);
+                    }
+                    else
+                    {
+                        s_block.SetFloat(s_hue, Scale(material.shader, "_Hue", dye.Hue / 180f, hue: true));
+                        s_block.SetFloat(s_saturation, Scale(material.shader, "_Saturation", dye.Saturation / 100f, hue: false));
+                        s_block.SetFloat(s_value, Scale(material.shader, "_Value", dye.Brightness / 100f, hue: false));
+                    }
                     renderer.SetPropertyBlock(s_block, i);
                 }
             }
@@ -169,17 +230,20 @@ namespace MordasGearhold.Core
 
         // ------------------------------------------------------------------ painted chest / legs
 
-        private static void DyeBody(Material body, int textureId, int itemHash, DyeValue dye)
+        private static void DyeBody(Material body, int textureId, int itemHash, Plan plan)
         {
             Texture original = OriginalBody(textureId, itemHash);
             if (original == null) return;
-            Texture wanted = dye.IsNeutral ? original : TextureDye.Get(original, dye);
+            Texture wanted;
+            if (!plan.Uniform) wanted = TextureDye.GetZoned(original, plan.Zones, plan.Dyes, true);
+            else wanted = plan.First.IsNeutral ? original : TextureDye.Get(original, plan.First);
             if (body.GetTexture(textureId) != wanted)
             {
                 body.SetTexture(textureId, wanted);
             }
         }
     }
+
 
     /// <summary>
     /// Recoloured copies of textures, made on the GPU-to-CPU path (works for non-readable textures):
@@ -190,9 +254,174 @@ namespace MordasGearhold.Core
     internal static class TextureDye
     {
         private const int MaxSize = 1024;
-        private const int CacheSize = 8;
+        private const int CacheSize = 16;
         private static readonly List<(Texture source, string dye, Texture2D copy)> s_cache = new List<(Texture, string, Texture2D)>();
         private static readonly Dictionary<Texture, Vector3> s_dominant = new Dictionary<Texture, Vector3>();
+
+        // ------------------------------------------------------------------ colour zones
+
+        private sealed class ZonedPixels
+        {
+            public Color32[] Source;
+            public byte[] Weights; // per pixel one byte per zone, summing to about 255
+            public int Width, Height, Zones;
+        }
+
+        private const int ZonedCacheSize = 4;
+        private const float Softness = 0.03f; // how softly one zone fades into the next (squared colour distance)
+        private static readonly List<(Texture source, int zones, ZonedPixels data)> s_zoned = new List<(Texture, int, ZonedPixels)>();
+
+        /// <summary>Frees the pixel data kept for fast re-colouring (the look menu closed); the coloured copies stay.</summary>
+        internal static void ReleaseZoneData() => s_zoned.Clear();
+
+        /// <summary>
+        /// A colour moved by a dye. Greyish colours have no hue of their own (it is noise), so they take the hue of
+        /// their zone first; then the hue is turned, and saturation and brightness are pushed like for any pixel.
+        /// </summary>
+        internal static Color ShiftHsv(float hue, float saturation, float value, DyeValue dye, float zoneHue)
+        {
+            float own = Mathf.SmoothStep(0.04f, 0.22f, saturation); // 0 = grey: use the zone's hue
+            float delta = hue - zoneHue;
+            delta -= Mathf.Round(delta);
+            float h = zoneHue + delta * own + dye.Hue / 360f;
+            h -= Mathf.Floor(h);
+            float sat = dye.Saturation / 100f, val = dye.Brightness / 100f;
+            float s = sat >= 0f ? saturation + (1f - saturation) * sat : saturation * (1f + sat);
+            float v = val >= 0f ? value + (1f - value) * val : value * (1f + val);
+            return Color.HSVToRGB(h, s, v);
+        }
+
+        /// <summary>The result of a dye on one colour of a zone (for the preview chips in the menu).</summary>
+        internal static Color ShiftColor(Color colour, DyeValue dye)
+        {
+            Color.RGBToHSV(colour, out float h, out float s, out float v);
+            return dye.IsNeutral ? colour : ShiftHsv(h, s, v, dye, h);
+        }
+
+        private static ZonedPixels PixelsOf(Texture source, ZoneSet zones)
+        {
+            foreach (var entry in s_zoned)
+            {
+                if (entry.source == source && entry.zones == zones.Id)
+                {
+                    return entry.data;
+                }
+            }
+            Texture2D read = ReadBack(source, MaxSize, false);
+            ZonedPixels data = new ZonedPixels { Source = read.GetPixels32(), Width = read.width, Height = read.height, Zones = zones.Count };
+            Object.Destroy(read);
+            int n = data.Source.Length, z = zones.Count;
+            data.Weights = new byte[n * z];
+            float[] e = new float[z];
+            for (int i = 0; i < n; i++)
+            {
+                Color.RGBToHSV(data.Source[i], out float h, out float s, out float v);
+                Vector3 f = Zones.Feature(h, s, v);
+                float best = float.MaxValue;
+                for (int k = 0; k < z; k++)
+                {
+                    e[k] = (f - zones.Centers[k]).sqrMagnitude;
+                    if (e[k] < best) best = e[k];
+                }
+                float sum = 0f;
+                for (int k = 0; k < z; k++)
+                {
+                    e[k] = Mathf.Exp(-(e[k] - best) / Softness);
+                    sum += e[k];
+                }
+                for (int k = 0; k < z; k++)
+                {
+                    data.Weights[i * z + k] = (byte)Mathf.RoundToInt(e[k] / sum * 255f);
+                }
+            }
+            s_zoned.Add((source, zones.Id, data));
+            if (s_zoned.Count > ZonedCacheSize)
+            {
+                s_zoned.RemoveAt(0);
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// A copy of the texture with every colour zone dyed on its own: each pixel belongs softly to the zones
+        /// nearest in colour and takes the weighted mix of their results. <paramref name="coverage"/>: the alpha
+        /// channel is the armour's coverage on the body (skin shows through where it is 0), like in Make.
+        /// </summary>
+        internal static Texture GetZoned(Texture source, ZoneSet zones, DyeValue[] dyes, bool coverage)
+        {
+            string key = "z" + zones.Id + (coverage ? "b" : "m") + string.Join("|", System.Array.ConvertAll(dyes, d => d.ToString()));
+            foreach (var entry in s_cache)
+            {
+                if (entry.source == source && entry.dye == key && entry.copy != null)
+                {
+                    return entry.copy;
+                }
+            }
+            Texture2D copy = MakeZoned(source, zones, dyes, coverage);
+            s_cache.Add((source, key, copy));
+            if (s_cache.Count > CacheSize)
+            {
+                Object.Destroy(s_cache[0].copy);
+                s_cache.RemoveAt(0);
+            }
+            return copy;
+        }
+
+        private static Texture2D MakeZoned(Texture source, ZoneSet zones, DyeValue[] dyes, bool coverage)
+        {
+            ZonedPixels data = PixelsOf(source, zones);
+            int n = data.Source.Length, z = zones.Count;
+            float[] zoneHue = new float[z];
+            bool[] active = new bool[z];
+            for (int k = 0; k < z; k++)
+            {
+                Color.RGBToHSV(zones.Chips[k], out zoneHue[k], out float _, out float _);
+                active[k] = k < dyes.Length && !dyes[k].IsNeutral;
+            }
+            Color32[] result = new Color32[n];
+            for (int i = 0; i < n; i++)
+            {
+                Color32 p = data.Source[i];
+                if (coverage && p.a == 0)
+                {
+                    result[i] = p; // skin shows through here
+                    continue;
+                }
+                int touched = 0, sum = 0;
+                for (int k = 0; k < z; k++)
+                {
+                    int w = data.Weights[i * z + k];
+                    sum += w;
+                    if (active[k]) touched += w;
+                }
+                if (touched < 2 || sum == 0)
+                {
+                    result[i] = p; // this pixel belongs to zones that stay as they are
+                    continue;
+                }
+                Color.RGBToHSV(p, out float h, out float s, out float v);
+                float r = 0f, g = 0f, b = 0f;
+                for (int k = 0; k < z; k++)
+                {
+                    float w = data.Weights[i * z + k] / (float)sum;
+                    if (w <= 0f) continue;
+                    Color c = active[k] ? ShiftHsv(h, s, v, dyes[k], zoneHue[k]) : new Color(p.r / 255f, p.g / 255f, p.b / 255f);
+                    r += c.r * w;
+                    g += c.g * w;
+                    b += c.b * w;
+                }
+                Color32 mixed = new Color(r, g, b);
+                if (coverage)
+                {
+                    mixed = Color32.Lerp(p, mixed, p.a / 255f);
+                }
+                result[i] = new Color32(mixed.r, mixed.g, mixed.b, p.a);
+            }
+            Texture2D copy = new Texture2D(data.Width, data.Height, TextureFormat.RGBA32, true) { name = source.name + "_gearhold_zones" };
+            copy.SetPixels32(result);
+            copy.Apply(true, true); // mipmaps, then free the CPU copy
+            return copy;
+        }
 
         internal static Texture Get(Texture source, DyeValue dye)
         {
@@ -215,7 +444,7 @@ namespace MordasGearhold.Core
         }
 
         /// <summary>A CPU-readable copy of any texture, scaled to fit maxSize.</summary>
-        private static Texture2D ReadBack(Texture source, int maxSize, bool mipmaps)
+        internal static Texture2D ReadBack(Texture source, int maxSize, bool mipmaps)
         {
             float scale = Mathf.Min(1f, maxSize / (float)Mathf.Max(source.width, source.height));
             int w = Mathf.Max(1, Mathf.RoundToInt(source.width * scale));

@@ -1,7 +1,7 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
 # Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.3.8
+*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.4.0
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
 
@@ -87,13 +87,15 @@ Change how your gear **looks** without changing the gear itself.
 ## Dyes (colours)
 Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**.
 
+- **Colour zones:** a piece with several materials (metal, leather, cloth ...) is split into up to four zones by the colours in its texture. In the COLOR section every zone is a small chip: the ring is its original colour, the middle shows its colour now. Click a chip, then colour just that zone; **ALL** colours the whole piece the same, as before. Zones are found automatically and the same way every time, and soft edges keep the transitions smooth.
 - **Colour swatches** (Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink, Black, White, Grey): the piece's main colour is measured and shifted towards the swatch, so "Red" really ends up reddish.
 - **Fine controls:** **Color** turns the colour around the colour wheel (±15° per click), **Intensity** makes it stronger or greyer, **Brightness** lighter or darker (±10 % per click).
 - **RESET** goes back to the original colours of that piece.
 - Skin under and around the armour keeps its colour: the painted armour is only recoloured where it covers the body.
 - Colours are saved **per set** and work together with looks, so a borrowed look can be dyed as well.
 - **How it works:** only your character's copy is recoloured, never the item itself or other players' copies.
-  - Helmet, cape, shield and the chest/leg models: the game's own colour controls (`_Hue`, `_Saturation`, `_Value`).
+  - One colour for the whole piece: helmet, cape, shield and the chest/leg models use the game's own colour controls (`_Hue`, `_Saturation`, `_Value`).
+  - Several zones: a recoloured copy of the model's texture, made once per change.
   - Armour painted onto the body: a recoloured copy of its texture, made once per change.
 - **Multiplayer:** for now only you see your colours. Showing them to other Gearhold players is planned.
 

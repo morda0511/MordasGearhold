@@ -100,6 +100,7 @@ namespace MordasGearhold.UI
                 s_blocker.gameObject.SetActive(false);
             }
             CharacterPreview.End();
+            TextureDye.ReleaseZoneData(); // the pixel data kept for fast re-colouring is not needed outside the menu
             if (!save && revert != null && Player.m_localPlayer != null)
             {
                 try
@@ -158,7 +159,7 @@ namespace MordasGearhold.UI
             float height = gridTop + rows * Cell + Pad;
             if (dyeable)
             {
-                height += 10f + ColorHeader + SwatchRow + 3 * ColorRow + 40f;
+                height += 10f + ColorHeader + SwatchRow + 3 * ColorRow + 40f + (ZoneCount(dyePlayer, dyePiece.Value) > 1 ? ZoneRow : 0f);
             }
             bool glowable = glowPlayer != null && glowWeapon != null;
             if (glowable)
@@ -243,9 +244,24 @@ namespace MordasGearhold.UI
             ("Teal", 0.48f), ("Blue", 0.6f), ("Purple", 0.76f), ("Pink", 0.89f),
         };
 
+        private const float ZoneRow = 46f;
+
+        // which colour zone the COLOR controls act on: -1 = the whole piece, 0.. = one zone (reset on a new piece)
+        private static int s_zone = -1;
+        private static Transmog.Piece? s_zonePiece;
+
+        /// <summary>How many colour zones the piece shows in the menu (1 = no zone choice).</summary>
+        private static int ZoneCount(Player player, Transmog.Piece piece)
+        {
+            ZoneSet zones = DyeRenderer.ZonesOf(player, piece);
+            return zones != null ? zones.Count : 1;
+        }
+
         /// <summary>
-        /// COLOR for this piece in the active set: swatches that turn the piece's dominant colour into the chosen
-        /// one, Black / White / Grey, then fine controls (Color, Intensity, Brightness) and a small RESET.
+        /// COLOR for this piece in the active set. A piece with several colour zones (metal, leather, cloth ...)
+        /// first offers a chip per zone, ringed by its original colour, with its new colour in the middle;
+        /// ALL colours every zone the same. Then swatches that turn the zone's colour into the chosen one,
+        /// Black / White / Grey, the fine controls (Color, Intensity, Brightness) and a small RESET.
         /// Every click recolours the character at once; SAVE keeps it.
         /// </summary>
         private static void AddColorSection(InventoryGui gui, Player player, Transmog.Piece piece, float ox, float columnWidth, float top)
@@ -257,32 +273,76 @@ namespace MordasGearhold.UI
             TMP_Text title = UiKit.Text(s_content, gui.m_craftingStationName, "COLOR", 18f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(title.rectTransform, cx, top + 18f, inner, 24f);
 
+            ZoneSet zones = DyeRenderer.ZonesOf(player, piece);
+            int zoneCount = zones != null ? zones.Count : 1;
+            if (s_zonePiece != piece || s_zone >= zoneCount)
+            {
+                s_zone = -1; // a new piece (or a look with fewer zones): back to the whole piece
+                s_zonePiece = piece;
+            }
+            bool zoned = zoneCount > 1;
+            float belowZones = top + ColorHeader + (zoned ? ZoneRow : 0f);
+
+            Image[] chipCentres = new Image[zoneCount];
+            Button[] chipButtons = new Button[zoneCount + 1]; // [0] = ALL
+            DyeValue Current() => s_zone < 0 ? Dye.Get(player, piece) : Dye.GetZones(player, piece)[Mathf.Min(s_zone, Dye.GetZones(player, piece).Length - 1)];
+
             TMP_Text[] values = new TMP_Text[3];
             void Refresh()
             {
-                DyeValue d = Dye.Get(player, piece);
+                DyeValue d = Current();
                 values[0].text = (d.Hue > 0 ? "+" : "") + d.Hue + "°";
                 values[1].text = (d.Saturation > 0 ? "+" : "") + d.Saturation + "%";
                 values[2].text = (d.Brightness > 0 ? "+" : "") + d.Brightness + "%";
+                if (zoned)
+                {
+                    DyeValue[] all = Dye.GetZones(player, piece);
+                    for (int k = 0; k < zoneCount; k++)
+                    {
+                        DyeValue dye = all.Length == 1 ? all[0] : (k < all.Length ? all[k] : default);
+                        chipCentres[k].color = TextureDye.ShiftColor(zones.Chips[k], dye);
+                    }
+                    for (int k = 0; k <= zoneCount; k++)
+                    {
+                        chipButtons[k].interactable = k - 1 != s_zone; // the chosen one looks pressed
+                    }
+                }
             }
             void SetDye(DyeValue d)
             {
-                Dye.Set(player, piece, d);
+                if (s_zone < 0 || !zoned) Dye.Set(player, piece, d);
+                else Dye.SetZone(player, piece, s_zone, zoneCount, d);
                 Refresh();
+            }
+
+            // zone chips: ALL, then one per colour zone (ring = original colour, middle = colour now)
+            if (zoned)
+            {
+                float chipSize = 34f, gap = 12f;
+                float rowWidth = (zoneCount + 1) * chipSize + zoneCount * gap;
+                float x0 = cx - rowWidth / 2f + chipSize / 2f;
+                float chipY = top + ColorHeader + ZoneRow / 2f - 4f;
+                chipButtons[0] = AddChip(gui, "ALL", x0, chipY, chipSize, null, out Image _, () => { s_zone = -1; Refresh(); });
+                for (int k = 0; k < zoneCount; k++)
+                {
+                    int zone = k;
+                    float x = x0 + (k + 1) * (chipSize + gap);
+                    chipButtons[k + 1] = AddChip(gui, "Zone " + (k + 1), x, chipY, chipSize, zones.Chips[k], out chipCentres[k], () => { s_zone = zone; Refresh(); });
+                }
             }
 
             // swatches: 8 colours + black, white, grey
             int count = s_hues.Length + 3;
             float step = inner / count;
             float size = Mathf.Min(step - 6f, 34f);
-            float swatchY = top + ColorHeader + SwatchRow / 2f;
+            float swatchY = belowZones + SwatchRow / 2f;
             for (int i = 0; i < count; i++)
             {
                 float x = ox + Pad + step / 2f + i * step;
                 if (i < s_hues.Length)
                 {
                     float hue = s_hues[i].hue;
-                    AddSwatch(x, swatchY, size, Color.HSVToRGB(hue, 0.75f, 0.85f), s_hues[i].name, () => SetDye(TowardsHue(player, piece, hue)));
+                    AddSwatch(x, swatchY, size, Color.HSVToRGB(hue, 0.75f, 0.85f), s_hues[i].name, () => SetDye(TowardsHue(player, piece, zones, s_zone, hue)));
                 }
                 else if (i == s_hues.Length)
                 {
@@ -301,7 +361,7 @@ namespace MordasGearhold.UI
             // fine controls
             string[] names = { "Color", "Intensity", "Brightness" };
             int[] steps = { 15, 10, 10 };
-            float rowsTop = top + ColorHeader + SwatchRow;
+            float rowsTop = belowZones + SwatchRow;
             for (int row = 0; row < 3; row++)
             {
                 int channel = row;
@@ -310,7 +370,7 @@ namespace MordasGearhold.UI
                 UiKit.Place(label.rectTransform, ox + Pad + 60f, y, 120f, 24f);
                 AddButton(gui, "-", ox + columnWidth - Pad - 150f, y, 40f, false, () =>
                 {
-                    DyeValue d = Dye.Get(player, piece);
+                    DyeValue d = Current();
                     Nudge(ref d, channel, -steps[channel]);
                     SetDye(d);
                 });
@@ -318,14 +378,64 @@ namespace MordasGearhold.UI
                 UiKit.Place(values[row].rectTransform, ox + columnWidth - Pad - 90f, y, 70f, 24f);
                 AddButton(gui, "+", ox + columnWidth - Pad - 30f, y, 40f, false, () =>
                 {
-                    DyeValue d = Dye.Get(player, piece);
+                    DyeValue d = Current();
                     Nudge(ref d, channel, steps[channel]);
                     SetDye(d);
                 });
             }
             float resetY = rowsTop + 3 * ColorRow + 20f;
-            AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, resetY, 120f, false, () => SetDye(default));
+            AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, resetY, 120f, false, () =>
+            {
+                if (zoned && s_zone < 0) Dye.Set(player, piece, default); // ALL: every zone back to its own colours
+                else SetDye(default);
+                Refresh();
+            });
             Refresh();
+        }
+
+        /// <summary>
+        /// A square chip made of vanilla parts: a dark frame (a tab button), the zone's original colour as a ring and
+        /// its colour now in the middle. Without colours it is the ALL chip with a label.
+        /// </summary>
+        private static Button AddChip(InventoryGui gui, string name, float x, float y, float size, Color? original, out Image centre, Action onClick)
+        {
+            Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_content).GetComponent<Button>();
+            button.gameObject.name = "Chip " + name;
+            button.gameObject.SetActive(true);
+            button.interactable = true;
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() => onClick());
+            UiKit.Place((RectTransform)button.transform, x, y, size + 6f, size + 6f);
+            TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+            centre = null;
+            if (original.HasValue)
+            {
+                if (text != null) text.gameObject.SetActive(false);
+                RectTransform ring = UiKit.Rect("Ring", button.transform);
+                ring.anchorMin = Vector2.zero;
+                ring.anchorMax = Vector2.one;
+                ring.offsetMin = new Vector2(4f, 4f);
+                ring.offsetMax = new Vector2(-4f, -4f);
+                Image ringImage = ring.gameObject.AddComponent<Image>();
+                ringImage.color = original.Value;
+                ringImage.raycastTarget = false;
+                RectTransform middle = UiKit.Rect("Now", ring);
+                middle.anchorMin = Vector2.zero;
+                middle.anchorMax = Vector2.one;
+                middle.offsetMin = new Vector2(8f, 8f);
+                middle.offsetMax = new Vector2(-8f, -8f);
+                centre = middle.gameObject.AddComponent<Image>();
+                centre.color = original.Value;
+                centre.raycastTarget = false;
+            }
+            else if (text != null)
+            {
+                text.text = name;
+                text.enableAutoSizing = true;
+                text.fontSizeMin = 8f;
+                text.fontSizeMax = 13f;
+            }
+            return button;
         }
 
         /// <summary>
@@ -372,16 +482,27 @@ namespace MordasGearhold.UI
         }
 
         /// <summary>The shift that turns the piece's dominant colour into the target hue (greyish pieces get some colour added).</summary>
-        private static DyeValue TowardsHue(Player player, Transmog.Piece piece, float targetHue)
+        private static DyeValue TowardsHue(Player player, Transmog.Piece piece, ZoneSet zones, int zone, float targetHue)
         {
-            Texture texture = DyeRenderer.BaseTexture(player, piece);
-            Vector3 dominant = texture != null ? TextureDye.Dominant(texture) : new Vector3(0f, 0.5f, 0.5f);
-            float delta = targetHue - dominant.x;
+            float hue, saturation;
+            if (zones != null && zone >= 0 && zone < zones.Count)
+            {
+                // one zone: its own average colour
+                Color.RGBToHSV(zones.Chips[zone], out hue, out saturation, out float _);
+            }
+            else
+            {
+                Texture texture = DyeRenderer.BaseTexture(player, piece);
+                Vector3 dominant = texture != null ? TextureDye.Dominant(texture) : new Vector3(0f, 0.5f, 0.5f);
+                hue = dominant.x;
+                saturation = dominant.y;
+            }
+            float delta = targetHue - hue;
             delta -= Mathf.Round(delta); // shortest way around the colour wheel, -0.5..0.5
             return new DyeValue
             {
                 Hue = Mathf.RoundToInt(delta * 360f),
-                Saturation = dominant.y < 0.3f ? 50 : 10,
+                Saturation = saturation < 0.3f ? 50 : 10,
             };
         }
 

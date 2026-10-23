@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.0
+- Colour zones: a piece is split into up to four zones by the colours of its texture (metal, leather, cloth ...). In the COLOR section pick a zone chip (ring = original colour, middle = colour now) and dye just that zone; ALL still colours the whole piece. Greyish zones now take the colour you pick instead of a noisy tint.
+
 ## 1.3.8
 - Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.
 - Own swap key Weapon2Swap (click the box under Weapon 2): when set, only it swaps and R is vanilla again. Empty: R swaps. A swap key that uses the hide key with a modifier (e.g. Alt+R) only swaps and does not put the weapon away as well.
