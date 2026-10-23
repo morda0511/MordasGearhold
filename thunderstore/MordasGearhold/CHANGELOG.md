@@ -7,6 +7,7 @@
 - Fixed armour or helmet vanishing while recolouring: recoloured textures that were still on the character could be freed by the cache.
 - A failure while dyeing is logged and can no longer disturb vanilla gear update.
 - Weapons can be dyed too (their look menu has the COLOR section with zones); the dye follows the weapon into every set.
+- The Weapon 2 weapon on your body shows its chosen look (transmog) and colour, not the original model.
 - Pieces whose shader has no colour controls (many shields, some armour) are dyed by recolouring a copy of their texture, so more pieces react to a colour. A shield that is put away can be dyed as well.
 - The log names a dyed piece whose colour changed nothing, with its shaders.
 

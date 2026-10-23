@@ -254,6 +254,9 @@ namespace MordasGearhold.Core
 
         // ------------------------------------------------------------------ applying
 
+        /// <summary>The model hash of a weapon with its chosen look (0 = hidden): for weapons shown by other code, e.g. on the body.</summary>
+        internal static int WeaponHash(ItemDrop.ItemData weapon) => Hash(weapon, GetItemLook(weapon));
+
         /// <summary>Hash to show for a worn item: its look, 0 when hidden, or the item's own prefab.</summary>
         private static int Hash(ItemDrop.ItemData worn, string look)
         {

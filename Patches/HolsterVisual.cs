@@ -58,7 +58,13 @@ namespace MordasGearhold.Patches
                 {
                     return;
                 }
-                int hash = item.m_dropPrefab.name.GetStableHashCode();
+                // the weapon's chosen look (transmog) shows on the body too; "hidden" shows nothing
+                int hash = Transmog.WeaponHash(item);
+                if (hash == 0)
+                {
+                    return;
+                }
+                int variant = Transmog.GetItemLook(item) == null ? item.m_variant : 0;
                 bool leftFree = Access.HiddenLeftItem(player) == null;
                 bool rightFree = Access.HiddenRightItem(player) == null;
                 // bows are left-hand items (vanilla hides them on the left mount), everything else on the right one
@@ -66,7 +72,7 @@ namespace MordasGearhold.Patches
                     || item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft;
                 if (preferLeft ? leftFree : !rightFree && leftFree)
                 {
-                    visEq.SetLeftBackItem(hash, item.m_variant, item.m_quality);
+                    visEq.SetLeftBackItem(hash, variant, item.m_quality);
                 }
                 else if (rightFree)
                 {
