@@ -33,6 +33,8 @@ namespace MordasGearhold.UI
 
         private static readonly Strip[] s_strips = new Strip[8];
         private static bool s_failed;
+        private static Hud s_hudOwner;
+        private static HotkeyBar s_hudBar;
 
         internal static void Tick(Hud hud, Player player)
         {
@@ -57,7 +59,16 @@ namespace MordasGearhold.UI
 
         private static void Update(Hud hud, Player player)
         {
-            HotkeyBar bar = hud.GetComponentInChildren<HotkeyBar>(true);
+            if (!Plugin.ShowBowAmmo.Value && s_hudBar == null)
+            {
+                return; // switched off: nothing to look up
+            }
+            if (s_hudBar == null || s_hudOwner != hud)
+            {
+                s_hudOwner = hud;
+                s_hudBar = hud.GetComponentInChildren<HotkeyBar>(true); // searched once per HUD, not every frame
+            }
+            HotkeyBar bar = s_hudBar;
             IList elements = bar != null && s_elements != null ? s_elements.GetValue(bar) as IList : null;
             bool on = Plugin.ShowBowAmmo.Value && player != null && GearholdState.IsReady(player) && elements != null;
             Inventory inventory = on ? player.GetInventory() : null;
