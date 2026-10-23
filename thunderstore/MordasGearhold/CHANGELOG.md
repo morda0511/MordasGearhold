@@ -1,15 +1,11 @@
 # Changelog
 
-## 1.4.2
-- Fixed armour or helmet vanishing while recolouring: recoloured textures that were still on the character could be freed by the cache.
-- The look menu redraws as soon as the colour zones of the shown piece change, so the zone chips show up right away after switching the piece or the look.
-- A failure while dyeing is logged and can no longer disturb vanilla's gear update.
-
-## 1.4.1
-- Colour zones: a zone dyed Red is red all over (before, the hue was only turned, so a teal accent in a brown zone turned green). Small accent colours get their own zone more often.
-
 ## 1.4.0
-- Colour zones: a piece is split into up to four zones by the colours of its texture (metal, leather, cloth ...). In the COLOR section pick a zone chip (ring = original colour, middle = colour now) and dye just that zone; ALL still colours the whole piece. Greyish zones now take the colour you pick instead of a noisy tint.
+- Colour zones: a piece is split into up to four zones by the colours of its texture (metal, leather, cloth ...). In the COLOR section pick a zone chip (ring = original colour, middle = colour now) and dye just that zone; ALL still colours the whole piece.
+- A dyed zone has one colour all over, so Red is red also where a small accent colour fell into the zone. Small accent colours get their own zone more often.
+- The look menu redraws as soon as the colour zones of the shown piece change, so the zone chips show up right away after switching the piece or the look.
+- Fixed armour or helmet vanishing while recolouring: recoloured textures that were still on the character could be freed by the cache.
+- A failure while dyeing is logged and can no longer disturb vanilla gear update.
 
 ## 1.3.8
 - Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.
