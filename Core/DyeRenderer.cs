@@ -19,6 +19,8 @@ namespace MordasGearhold.Core
         private static readonly AccessTools.FieldRef<Humanoid, VisEquipment> s_vis = AccessTools.FieldRefAccess<Humanoid, VisEquipment>("m_visEquipment");
         private static readonly AccessTools.FieldRef<VisEquipment, GameObject> s_helmet = AccessTools.FieldRefAccess<VisEquipment, GameObject>("m_helmetItemInstance");
         private static readonly AccessTools.FieldRef<VisEquipment, GameObject> s_left = AccessTools.FieldRefAccess<VisEquipment, GameObject>("m_leftItemInstance");
+        private static readonly AccessTools.FieldRef<VisEquipment, GameObject> s_right = AccessTools.FieldRefAccess<VisEquipment, GameObject>("m_rightItemInstance");
+        private static readonly AccessTools.FieldRef<VisEquipment, GameObject> s_rightBack = AccessTools.FieldRefAccess<VisEquipment, GameObject>("m_rightBackItemInstance");
         private static readonly AccessTools.FieldRef<VisEquipment, GameObject> s_leftBack = AccessTools.FieldRefAccess<VisEquipment, GameObject>("m_leftBackItemInstance");
         private static readonly AccessTools.FieldRef<VisEquipment, List<GameObject>> s_chest = AccessTools.FieldRefAccess<VisEquipment, List<GameObject>>("m_chestItemInstances");
         private static readonly AccessTools.FieldRef<VisEquipment, List<GameObject>> s_legs = AccessTools.FieldRefAccess<VisEquipment, List<GameObject>>("m_legItemInstances");
@@ -58,23 +60,64 @@ namespace MordasGearhold.Core
                 case Transmog.Piece.Chest: if (s_chest(vis) != null) objects.AddRange(s_chest(vis)); break;
                 case Transmog.Piece.Legs: if (s_legs(vis) != null) objects.AddRange(s_legs(vis)); break;
                 case Transmog.Piece.Shoulder: if (s_shoulder(vis) != null) objects.AddRange(s_shoulder(vis)); break;
-                case Transmog.Piece.Shield: objects.Add(s_left(vis)); objects.Add(s_leftBack(vis)); break;
+                case Transmog.Piece.Shield:
+                    if (IsShield(s_leftHash(vis))) objects.Add(s_left(vis));
+                    if (IsShield(s_leftBackHash(vis))) objects.Add(s_leftBack(vis));
+                    break;
             }
             foreach (GameObject go in objects)
             {
-                if (go == null) continue;
-                foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
+                Texture found = MainTextureOf(go);
+                if (found != null) return found;
+            }
+            // nothing of the piece is on the character right now (a shield that is put away, a look not built yet):
+            // the texture of the item's own model shows the same colours
+            return ItemTexture(player, piece);
+        }
+
+        /// <summary>The first model texture of an object (meshes only, any shader).</summary>
+        private static Texture MainTextureOf(GameObject go)
+        {
+            if (go == null) return null;
+            foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue;
+                foreach (Material material in renderer.sharedMaterials)
                 {
-                    foreach (Material material in renderer.sharedMaterials)
+                    if (material != null && material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null)
                     {
-                        if (material != null && material.HasProperty(s_hue) && material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null)
-                        {
-                            return material.GetTexture("_MainTex");
-                        }
+                        return material.GetTexture("_MainTex");
                     }
                 }
             }
             return null;
+        }
+
+        /// <summary>The model texture of the item worn in a piece's slot, or of the look chosen for it.</summary>
+        private static Texture ItemTexture(Player player, Transmog.Piece piece)
+        {
+            ItemDrop.ItemData item;
+            switch (piece)
+            {
+                case Transmog.Piece.Helmet: item = Access.HelmetItem(player); break;
+                case Transmog.Piece.Chest: item = Access.ChestItem(player); break;
+                case Transmog.Piece.Legs: item = Access.LegItem(player); break;
+                case Transmog.Piece.Shoulder: item = Access.ShoulderItem(player); break;
+                default: item = MordasGearhold.Patches.Equipment.ItemIn(player, GearSlot.Shield); break;
+            }
+            return PrefabOf(item, Transmog.GetLook(player, piece));
+        }
+
+        /// <summary>The texture of a weapon's model (or of its chosen look), also while it is not drawn.</summary>
+        internal static Texture WeaponTexture(ItemDrop.ItemData weapon) => PrefabOf(weapon, Transmog.GetItemLook(weapon));
+
+        internal static ZoneSet WeaponZones(ItemDrop.ItemData weapon) => Zones.Of(WeaponTexture(weapon));
+
+        private static Texture PrefabOf(ItemDrop.ItemData item, string look)
+        {
+            if (item == null || look == Transmog.Hidden) return null;
+            GameObject prefab = !string.IsNullOrEmpty(look) && ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(look) : item.m_dropPrefab;
+            return MainTextureOf(prefab != null ? prefab : item.m_dropPrefab);
         }
 
         private static Texture OriginalBody(int textureId, int itemHash)
@@ -92,6 +135,14 @@ namespace MordasGearhold.Core
             if (vis != null)
             {
                 ApplyTo(player, vis);
+                try
+                {
+                    GlowRenderer.ApplyTo(player, vis); // the dyes may have cleared a weapon's property block: glow goes on again
+                }
+                catch (System.Exception ex)
+                {
+                    Plugin.Log.LogError("Gearhold weapon glow failed: " + ex);
+                }
             }
         }
 
@@ -160,15 +211,15 @@ namespace MordasGearhold.Core
 
         private static void ApplyAll(Player player, VisEquipment vis)
         {
-            DyeObject(s_helmet(vis), PlanFor(player, Transmog.Piece.Helmet));
+            Dyed(Transmog.Piece.Helmet, DyeObject(s_helmet(vis), PlanFor(player, Transmog.Piece.Helmet)), s_helmet(vis), player);
             Plan chest = PlanFor(player, Transmog.Piece.Chest);
-            DyeObjects(s_chest(vis), chest);
+            Dyed(Transmog.Piece.Chest, DyeObjects(s_chest(vis), chest), s_chest(vis) != null && s_chest(vis).Count > 0 ? s_chest(vis)[0] : null, player);
             Plan legs = PlanFor(player, Transmog.Piece.Legs);
-            DyeObjects(s_legs(vis), legs);
+            Dyed(Transmog.Piece.Legs, DyeObjects(s_legs(vis), legs), s_legs(vis) != null && s_legs(vis).Count > 0 ? s_legs(vis)[0] : null, player);
             DyeObjects(s_shoulder(vis), PlanFor(player, Transmog.Piece.Shoulder));
             Plan shield = PlanFor(player, Transmog.Piece.Shield);
-            if (IsShield(s_leftHash(vis))) DyeObject(s_left(vis), shield);
-            if (IsShield(s_leftBackHash(vis))) DyeObject(s_leftBack(vis), shield);
+            if (IsShield(s_leftHash(vis))) Dyed(Transmog.Piece.Shield, DyeObject(s_left(vis), shield), s_left(vis), player);
+            if (IsShield(s_leftBackHash(vis))) Dyed(Transmog.Piece.Shield, DyeObject(s_leftBack(vis), shield), s_leftBack(vis), player);
 
             if (vis.m_bodyModel != null)
             {
@@ -176,6 +227,34 @@ namespace MordasGearhold.Core
                 DyeBody(body, s_chestTex, s_chestHash(vis), chest);
                 DyeBody(body, s_legsTex, s_legHash(vis), legs);
             }
+
+            // weapons carry their own dye: in the hands, and the holstered ones on the body
+            ItemDrop.ItemData left = Access.LeftItem(player);
+            ItemDrop.ItemData holster = MordasGearhold.Patches.Equipment.ItemIn(player, GearSlot.Holster);
+            DyeWeapon(player, s_right(vis), Access.RightItem(player));
+            DyeWeapon(player, s_left(vis), left);
+            DyeWeapon(player, s_rightBack(vis), Access.HiddenRightItem(player) ?? holster);
+            DyeWeapon(player, s_leftBack(vis), Access.HiddenLeftItem(player) ?? holster);
+        }
+
+        private static readonly HashSet<string> s_reported = new HashSet<string>();
+
+        /// <summary>A dyed piece whose dye touched nothing is logged once: it shows which shader or model refuses colours.</summary>
+        private static void Dyed(Transmog.Piece piece, int touched, GameObject sample, Player player)
+        {
+            if (touched > 0 || sample == null || !Dye.IsDyed(player, piece) || !s_reported.Add(piece + "/" + sample.name))
+            {
+                return;
+            }
+            System.Text.StringBuilder shaders = new System.Text.StringBuilder();
+            foreach (Renderer renderer in sample.GetComponentsInChildren<Renderer>(true))
+            {
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material != null) shaders.Append(renderer.GetType().Name).Append(':').Append(material.shader != null ? material.shader.name : "-").Append(' ');
+                }
+            }
+            Plugin.Log.LogWarning($"Gearhold: the dye of {piece} ({sample.name}) changed nothing. Renderers: {shaders}");
         }
 
         private static bool IsShield(int hash)
@@ -187,55 +266,133 @@ namespace MordasGearhold.Core
 
         // ------------------------------------------------------------------ attached pieces
 
-        // renderers that carry a recoloured main texture in their property block (cleared again when the dye is uniform)
+        // renderers that carry a recoloured main texture in their property block (cleared again when the dye changes back)
         private static readonly HashSet<Renderer> s_textured = new HashSet<Renderer>();
 
-        private static void DyeObjects(List<GameObject> objects, Plan plan)
+        private static int DyeObjects(List<GameObject> objects, Plan plan)
         {
-            if (objects == null) return;
-            foreach (GameObject go in objects) DyeObject(go, plan);
+            int touched = 0;
+            if (objects == null) return 0;
+            foreach (GameObject go in objects) touched += DyeObject(go, plan);
+            return touched;
         }
 
-        private static void DyeObject(GameObject go, Plan plan)
+        /// <summary>
+        /// Dyes one model. Materials with the game's colour controls (_Hue, _Saturation, _Value) get them for one
+        /// colour on the whole piece; with colour zones, and for shaders without such controls (Standard and others),
+        /// the model's own texture is replaced by a recoloured copy through the renderer's property block.
+        /// Returns how many materials were touched.
+        /// </summary>
+        private static int DyeObject(GameObject go, Plan plan)
         {
-            if (go == null) return;
+            int touched = 0;
+            if (go == null) return 0;
             s_textured.RemoveWhere(r => r == null);
             foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
             {
                 if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue; // no particles, flares, ...
                 Material[] materials = renderer.sharedMaterials;
+                if (s_textured.Remove(renderer))
+                {
+                    for (int j = 0; j < materials.Length; j++)
+                    {
+                        renderer.SetPropertyBlock(null, j); // the recoloured texture of the last time goes; set again below if wanted
+                    }
+                }
                 for (int i = 0; i < materials.Length; i++)
                 {
                     Material material = materials[i];
-                    if (material == null || !material.HasProperty(s_hue)) continue; // e.g. Standard shader: no HSV
-                    if (plan.Uniform && s_textured.Remove(renderer))
-                    {
-                        renderer.SetPropertyBlock(null, i); // back from zones: drop the recoloured texture
-                    }
+                    if (material == null) continue;
+                    bool hsv = material.HasProperty(s_hue);
+                    Texture main = material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
                     DyeValue dye = plan.First;
                     if (plan.Uniform && dye.IsNeutral)
                     {
-                        renderer.SetPropertyBlock(null, i);
+                        if (hsv) renderer.SetPropertyBlock(null, i);
                         continue;
                     }
-                    renderer.GetPropertyBlock(s_block, i);
-                    Texture main = !plan.Uniform && material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
-                    if (main != null)
+                    if (plan.Uniform && hsv)
                     {
-                        // colour zones: this model's own texture with every zone dyed; the shader HSV stays neutral
-                        s_block.SetTexture("_MainTex", TextureDye.GetZoned(main, plan.Zones, plan.Dyes, false));
-                        s_block.SetFloat(s_hue, 0f);
-                        s_block.SetFloat(s_saturation, 0f);
-                        s_block.SetFloat(s_value, 0f);
-                        s_textured.Add(renderer);
-                    }
-                    else
-                    {
+                        renderer.GetPropertyBlock(s_block, i);
                         s_block.SetFloat(s_hue, Scale(material.shader, "_Hue", dye.Hue / 180f, hue: true));
                         s_block.SetFloat(s_saturation, Scale(material.shader, "_Saturation", dye.Saturation / 100f, hue: false));
                         s_block.SetFloat(s_value, Scale(material.shader, "_Value", dye.Brightness / 100f, hue: false));
+                        renderer.SetPropertyBlock(s_block, i);
+                        touched++;
                     }
+                    else if (main != null)
+                    {
+                        // zones, or a shader without colour controls: this model's own texture, recoloured
+                        Texture recoloured = plan.Uniform ? TextureDye.Get(main, dye, coverage: false) : TextureDye.GetZoned(main, plan.Zones, plan.Dyes, false);
+                        renderer.GetPropertyBlock(s_block, i);
+                        s_block.SetTexture("_MainTex", recoloured);
+                        if (hsv)
+                        {
+                            s_block.SetFloat(s_hue, 0f);
+                            s_block.SetFloat(s_saturation, 0f);
+                            s_block.SetFloat(s_value, 0f);
+                        }
+                        renderer.SetPropertyBlock(s_block, i);
+                        s_textured.Add(renderer);
+                        touched++;
+                    }
+                    else if (hsv)
+                    {
+                        renderer.GetPropertyBlock(s_block, i);
+                        s_block.SetFloat(s_hue, Scale(material.shader, "_Hue", dye.Hue / 180f, hue: true));
+                        s_block.SetFloat(s_saturation, Scale(material.shader, "_Saturation", dye.Saturation / 100f, hue: false));
+                        s_block.SetFloat(s_value, Scale(material.shader, "_Value", dye.Brightness / 100f, hue: false));
+                        renderer.SetPropertyBlock(s_block, i);
+                        touched++;
+                    }
+                }
+            }
+            return touched;
+        }
+
+        /// <summary>
+        /// Dyes the model of a weapon with the weapon's own dye (kept on the item, so it follows the weapon through
+        /// every set). Always the texture way: weapon shaders rarely have colour controls. The zones come from the
+        /// weapon's model texture, so they are the same whether it is drawn or not.
+        /// </summary>
+        private static void DyeWeapon(Player player, GameObject go, ItemDrop.ItemData item)
+        {
+            if (go == null || item == null || !Transmog.IsWeapon(item)) return;
+            DyeValue[] dyes = Dye.GetItemZones(item);
+            bool dyed = false;
+            foreach (DyeValue d in dyes)
+            {
+                if (!d.IsNeutral) dyed = true;
+            }
+            s_textured.RemoveWhere(r => r == null);
+            ZoneSet baseZones = dyed ? WeaponZones(item) : null;
+            foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue;
+                Material[] materials = renderer.sharedMaterials;
+                if (s_textured.Remove(renderer))
+                {
+                    for (int j = 0; j < materials.Length; j++)
+                    {
+                        renderer.SetPropertyBlock(null, j); // the glow colours are put on again right after the dyes
+                    }
+                }
+                if (!dyed) continue;
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    Material material = materials[i];
+                    Texture main = material != null && material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
+                    if (main == null) continue;
+                    ZoneSet zones = baseZones ?? Zones.Of(main);
+                    DyeValue[] fitted = new DyeValue[zones.Count];
+                    for (int k = 0; k < fitted.Length; k++)
+                    {
+                        fitted[k] = dyes.Length == 1 ? dyes[0] : (k < dyes.Length ? dyes[k] : default);
+                    }
+                    renderer.GetPropertyBlock(s_block, i);
+                    s_block.SetTexture("_MainTex", TextureDye.GetZoned(main, zones, fitted, false));
                     renderer.SetPropertyBlock(s_block, i);
+                    s_textured.Add(renderer);
                 }
             }
         }
@@ -469,9 +626,9 @@ namespace MordasGearhold.Core
             return copy;
         }
 
-        internal static Texture Get(Texture source, DyeValue dye)
+        internal static Texture Get(Texture source, DyeValue dye, bool coverage = true)
         {
-            string key = dye.ToString();
+            string key = dye.ToString() + (coverage ? "" : "m");
             foreach (var entry in s_cache)
             {
                 if (entry.source == source && entry.dye == key && entry.copy != null)
@@ -480,7 +637,7 @@ namespace MordasGearhold.Core
                     return entry.copy;
                 }
             }
-            Texture2D copy = Make(source, dye);
+            Texture2D copy = Make(source, dye, coverage);
             s_cache.Add((source, key, copy));
             s_pinned.Add(copy);
             return copy;
@@ -503,7 +660,7 @@ namespace MordasGearhold.Core
             return copy;
         }
 
-        private static Texture2D Make(Texture source, DyeValue dye)
+        private static Texture2D Make(Texture source, DyeValue dye, bool coverage)
         {
             Texture2D copy = ReadBack(source, MaxSize, true);
             copy.name = source.name + "_gearhold_dye";
@@ -514,7 +671,7 @@ namespace MordasGearhold.Core
             for (int i = 0; i < pixels.Length; i++)
             {
                 Color32 p = pixels[i];
-                if (p.a == 0)
+                if (coverage && p.a == 0)
                 {
                     continue; // skin shows through here
                 }
@@ -524,7 +681,7 @@ namespace MordasGearhold.Core
                 ss = sat >= 0f ? ss + (1f - ss) * sat : ss * (1f + sat);
                 vv = val >= 0f ? vv + (1f - vv) * val : vv * (1f + val);
                 Color32 shifted = Color.HSVToRGB(hh, ss, vv);
-                Color32 mixed = Color32.Lerp(p, shifted, p.a / 255f);
+                Color32 mixed = coverage ? Color32.Lerp(p, shifted, p.a / 255f) : shifted;
                 pixels[i] = new Color32(mixed.r, mixed.g, mixed.b, p.a);
             }
             copy.SetPixels32(pixels);

@@ -6,6 +6,9 @@
 - The look menu redraws as soon as the colour zones of the shown piece change, so the zone chips show up right away after switching the piece or the look.
 - Fixed armour or helmet vanishing while recolouring: recoloured textures that were still on the character could be freed by the cache.
 - A failure while dyeing is logged and can no longer disturb vanilla gear update.
+- Weapons can be dyed too (their look menu has the COLOR section with zones); the dye follows the weapon into every set.
+- Pieces whose shader has no colour controls (many shields, some armour) are dyed by recolouring a copy of their texture, so more pieces react to a colour. A shield that is put away can be dyed as well.
+- The log names a dyed piece whose colour changed nothing, with its shaders.
 
 ## 1.3.8
 - Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.

@@ -93,6 +93,8 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
 - **RESET** goes back to the original colours of that piece.
 - Skin under and around the armour keeps its colour: the painted armour is only recoloured where it covers the body.
 - Colours are saved **per set** and work together with looks, so a borrowed look can be dyed as well.
+- **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
+- **Shields and models without colour controls:** shaders that have no hue control of their own (many shields, weapons and some armour) are dyed by recolouring a copy of their texture, so every piece can take a colour. A shield that is put away can be dyed as well; it shows when you wield it.
 - **How it works:** only your character's copy is recoloured, never the item itself or other players' copies.
   - One colour for the whole piece: helmet, cape, shield and the chest/leg models use the game's own colour controls (`_Hue`, `_Saturation`, `_Value`).
   - Several zones: a recoloured copy of the model's texture, made once per change.

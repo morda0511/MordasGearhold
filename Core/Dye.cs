@@ -100,6 +100,54 @@ namespace MordasGearhold.Core
             DyeRenderer.Apply(player);
         }
 
+        // ------------------------------------------------------------------ weapons
+
+        /// <summary>A weapon carries its own dye (like its look), so it keeps it in every set: "h,s,b|h,s,b|..." per zone.</summary>
+        internal const string ItemKey = GearholdState.KeyPrefix + "Dye";
+
+        internal static DyeValue[] GetItemZones(ItemDrop.ItemData item)
+        {
+            if (item?.m_customData != null && item.m_customData.TryGetValue(ItemKey, out string raw) && raw.Length > 0)
+            {
+                DyeValue[] zones = raw.Split('|').Select(DyeValue.Parse).ToArray();
+                if (zones.Length > 0) return zones;
+            }
+            return new DyeValue[1];
+        }
+
+        internal static bool ItemDyed(ItemDrop.ItemData item) => item != null && GetItemZones(item).Any(z => !z.IsNeutral);
+
+        internal static string ReadItem(ItemDrop.ItemData item) =>
+            item?.m_customData != null && item.m_customData.TryGetValue(ItemKey, out string raw) ? raw : null;
+
+        internal static void WriteItem(Player player, ItemDrop.ItemData item, string raw)
+        {
+            if (item == null) return;
+            if (string.IsNullOrEmpty(raw)) item.m_customData.Remove(ItemKey);
+            else item.m_customData[ItemKey] = raw;
+            DyeRenderer.Apply(player);
+        }
+
+        private static string ToRaw(DyeValue[] zones)
+        {
+            DyeValue[] clamped = zones.Select(z => z.Clamped()).ToArray();
+            return clamped.All(z => z.IsNeutral) ? null : string.Join("|", clamped.Select(z => z.ToString()));
+        }
+
+        internal static void SetItem(Player player, ItemDrop.ItemData item, DyeValue dye) => WriteItem(player, item, ToRaw(new[] { dye }));
+
+        internal static void SetItemZone(Player player, ItemDrop.ItemData item, int zone, int zoneCount, DyeValue dye)
+        {
+            DyeValue[] current = GetItemZones(item);
+            DyeValue[] next = new DyeValue[Mathf.Max(zoneCount, zone + 1)];
+            for (int i = 0; i < next.Length; i++)
+            {
+                next[i] = current.Length == 1 ? current[0] : (i < current.Length ? current[i] : default);
+            }
+            next[zone] = dye;
+            WriteItem(player, item, ToRaw(next));
+        }
+
         /// <summary>All colours of one set as stored (null = none); the look menu restores this when closed without saving.</summary>
         internal static string ReadSet(Player player, int set) =>
             player.m_customData.TryGetValue(Key(set), out string raw) ? raw : null;

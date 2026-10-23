@@ -65,19 +65,22 @@ namespace MordasGearhold.UI
             {
                 Transmog.SetLook(player, piece, look);
                 OpenForPiece(player, piece); // redraw: the chosen look gets its mark, the menu stays open
-            }, player, piece);
+            }, PieceTarget(player, piece), piece, player);
         }
 
         internal static void OpenForWeapon(Player player, ItemDrop.ItemData weapon)
         {
+            s_openWeapon = weapon;
             if (!IsOpen)
             {
                 string look0 = Transmog.GetItemLook(weapon);
+                string dye0 = Dye.ReadItem(weapon);
                 GlowValue glow0 = Glow.Get(weapon);
                 s_revert = () =>
                 {
                     Transmog.SetItemLook(player, weapon, look0);
                     Glow.Set(player, weapon, glow0);
+                    Dye.WriteItem(player, weapon, dye0);
                 };
             }
             string current = Transmog.GetItemLook(weapon);
@@ -87,7 +90,7 @@ namespace MordasGearhold.UI
             {
                 Transmog.SetItemLook(player, weapon, look);
                 OpenForWeapon(player, weapon);
-            }, glowPlayer: player, glowWeapon: Glow.CanGlow(weapon) ? weapon : null);
+            }, WeaponTarget(player, weapon), glowPlayer: player, glowWeapon: Glow.CanGlow(weapon) ? weapon : null);
         }
 
         /// <summary>Closes the menu. Without <paramref name="save"/>, every change made in it is undone.</summary>
@@ -95,7 +98,7 @@ namespace MordasGearhold.UI
         {
             Action revert = s_revert;
             s_revert = null;
-            s_builtPiece = null;
+            s_builtDye = null;
             if (s_blocker != null)
             {
                 s_blocker.gameObject.SetActive(false);
@@ -129,10 +132,42 @@ namespace MordasGearhold.UI
             }
         }
 
-        private static Player s_builtPlayer;
-        private static Transmog.Piece? s_builtPiece;
+        // what the COLOR section of the open menu was built for: redrawn when the zones of that change
+        private static DyeTarget s_builtDye;
+        private static Action s_builtReopen;
         private static int s_builtZoneId;
         private static float s_nextZoneCheck;
+
+        /// <summary>What the COLOR section colours: a piece of the set, or a weapon. Zones, values and how to store them.</summary>
+        private sealed class DyeTarget
+        {
+            public Func<ZoneSet> Zones;
+            public Func<DyeValue[]> Get;
+            public Action<DyeValue> SetAll;
+            public Action<int, int, DyeValue> SetZone;
+            public Func<Texture> BaseTexture;
+            public object Key; // a different key resets the chosen zone
+        }
+
+        private static DyeTarget PieceTarget(Player player, Transmog.Piece piece) => new DyeTarget
+        {
+            Zones = () => DyeRenderer.ZonesOf(player, piece),
+            Get = () => Dye.GetZones(player, piece),
+            SetAll = dye => Dye.Set(player, piece, dye),
+            SetZone = (zone, count, dye) => Dye.SetZone(player, piece, zone, count, dye),
+            BaseTexture = () => DyeRenderer.BaseTexture(player, piece),
+            Key = piece,
+        };
+
+        private static DyeTarget WeaponTarget(Player player, ItemDrop.ItemData weapon) => new DyeTarget
+        {
+            Zones = () => DyeRenderer.WeaponZones(weapon),
+            Get = () => Dye.GetItemZones(weapon),
+            SetAll = dye => Dye.SetItem(player, weapon, dye),
+            SetZone = (zone, count, dye) => Dye.SetItemZone(player, weapon, zone, count, dye),
+            BaseTexture = () => DyeRenderer.WeaponTexture(weapon),
+            Key = weapon,
+        };
 
         /// <summary>
         /// A new look or piece only shows on the character a moment later (vanilla builds the new model on its next
@@ -141,20 +176,20 @@ namespace MordasGearhold.UI
         /// </summary>
         private static void RedrawIfZonesChanged()
         {
-            if (!s_builtPiece.HasValue || s_builtPlayer == null || Time.unscaledTime < s_nextZoneCheck)
+            if (s_builtDye == null || s_builtReopen == null || Time.unscaledTime < s_nextZoneCheck)
             {
                 return;
             }
             s_nextZoneCheck = Time.unscaledTime + 0.25f;
-            int id = DyeRenderer.ZonesOf(s_builtPlayer, s_builtPiece.Value)?.Id ?? 0;
+            int id = s_builtDye.Zones()?.Id ?? 0;
             if (id != s_builtZoneId)
             {
-                OpenForPiece(s_builtPlayer, s_builtPiece.Value);
+                s_builtReopen();
             }
         }
 
         private static void Open(string title, string current, List<GameObject> looks, int maxLooks, Action<string> choose,
-            Player dyePlayer = null, Transmog.Piece? dyePiece = null, Player glowPlayer = null, ItemDrop.ItemData glowWeapon = null)
+            DyeTarget dye = null, Transmog.Piece? tabsFor = null, Player tabPlayer = null, Player glowPlayer = null, ItemDrop.ItemData glowWeapon = null)
         {
             InventoryGui gui = InventoryGui.instance;
             if (gui == null)
@@ -170,8 +205,9 @@ namespace MordasGearhold.UI
                 UnityEngine.Object.Destroy(s_content.GetChild(i).gameObject);
             }
 
-            bool dyeable = dyePlayer != null && dyePiece.HasValue;
-            s_builtPiece = null; // set again below when this menu has a COLOR section
+            bool dyeable = dye != null;
+            bool tabs = tabsFor.HasValue && tabPlayer != null;
+            s_builtDye = null; // set again below when this menu has a COLOR section
             int cells = looks.Count + 1; // the "Hide" cell first, then every unlocked look
             int rows = Mathf.Max(1, Mathf.CeilToInt((maxLooks + 1) / (float)Columns));
             float ox = Pad + PreviewWidth;               // left edge of the right-hand column
@@ -181,12 +217,14 @@ namespace MordasGearhold.UI
             float width = ox + columnWidth;
 
             float tabsY = Pad + 50f;
-            float ownLookY = dyeable ? tabsY + 40f : Pad + 50f;
+            float ownLookY = tabs ? tabsY + 40f : Pad + 50f;
             float gridTop = ownLookY + 24f;
             float height = gridTop + rows * Cell + Pad;
+            float colorBlock = 0f;
             if (dyeable)
             {
-                height += 10f + ColorHeader + SwatchRow + 3 * ColorRow + 40f + (ZoneCount(dyePlayer, dyePiece.Value) > 1 ? ZoneRow : 0f);
+                colorBlock = 10f + ColorHeader + SwatchRow + 3 * ColorRow + 40f + ((dye.Zones()?.Count ?? 1) > 1 ? ZoneRow : 0f);
+                height += colorBlock;
             }
             bool glowable = glowPlayer != null && glowWeapon != null;
             if (glowable)
@@ -210,14 +248,14 @@ namespace MordasGearhold.UI
             AddButton(gui, "SAVE", previewX, height - Pad - 18f, 200f, false, () => Close(save: true));
 
             // right: one tab per piece, so all of them can be changed without leaving the menu
-            if (dyeable)
+            if (tabs)
             {
                 float tabWidth = inner / s_pieces.Length;
                 for (int i = 0; i < s_pieces.Length; i++)
                 {
                     Transmog.Piece piece = s_pieces[i];
                     AddButton(gui, PieceLabel(piece), ox + Pad + tabWidth / 2f + i * tabWidth, tabsY, tabWidth - 6f,
-                        piece == dyePiece.Value, () => OpenForPiece(dyePlayer, piece));
+                        piece == tabsFor.Value, () => OpenForPiece(tabPlayer, piece));
                 }
             }
 
@@ -236,16 +274,19 @@ namespace MordasGearhold.UI
                 AddCell(gui, data.GetIcon(), data.m_shared.m_name, x, y, prefab.name == current, () => choose(prefab.name));
             }
 
+            float sectionTop = gridTop + rows * Cell + 10f;
             if (dyeable)
             {
-                AddColorSection(gui, dyePlayer, dyePiece.Value, ox, columnWidth, gridTop + rows * Cell + 10f);
-                s_builtPlayer = dyePlayer;
-                s_builtPiece = dyePiece;
-                s_builtZoneId = DyeRenderer.ZonesOf(dyePlayer, dyePiece.Value)?.Id ?? 0;
+                AddColorSection(gui, dye, ox, columnWidth, sectionTop);
+                s_builtDye = dye;
+                s_builtZoneId = dye.Zones()?.Id ?? 0;
+                // a weapon menu redraws itself like it was opened; a piece menu for the shown piece
+                s_builtReopen = tabs ? (Action)(() => OpenForPiece(tabPlayer, tabsFor.Value)) : (() => OpenForWeapon(glowPlayer ?? Player.m_localPlayer, glowWeapon ?? s_openWeapon));
+                sectionTop += colorBlock;
             }
             if (glowable)
             {
-                AddGlowSection(gui, glowPlayer, glowWeapon, ox, columnWidth, gridTop + rows * Cell + 10f);
+                AddGlowSection(gui, glowPlayer, glowWeapon, ox, columnWidth, sectionTop);
             }
 
             // centred on the screen; scaled down when the screen is too small for it
@@ -257,6 +298,9 @@ namespace MordasGearhold.UI
             s_blocker.gameObject.SetActive(true);
             CharacterPreview.Begin();
         }
+
+        // the weapon of the open weapon menu (for redrawing it when the zones change)
+        private static ItemDrop.ItemData s_openWeapon;
 
         private static string PieceLabel(Transmog.Piece piece)
         {
@@ -278,23 +322,16 @@ namespace MordasGearhold.UI
 
         // which colour zone the COLOR controls act on: -1 = the whole piece, 0.. = one zone (reset on a new piece)
         private static int s_zone = -1;
-        private static Transmog.Piece? s_zonePiece;
-
-        /// <summary>How many colour zones the piece shows in the menu (1 = no zone choice).</summary>
-        private static int ZoneCount(Player player, Transmog.Piece piece)
-        {
-            ZoneSet zones = DyeRenderer.ZonesOf(player, piece);
-            return zones != null ? zones.Count : 1;
-        }
+        private static object s_zoneKey;
 
         /// <summary>
-        /// COLOR for this piece in the active set. A piece with several colour zones (metal, leather, cloth ...)
+        /// COLOR for a piece of the active set or a weapon. A target with several colour zones (metal, leather, cloth ...)
         /// first offers a chip per zone, ringed by its original colour, with its new colour in the middle;
         /// ALL colours every zone the same. Then swatches that turn the zone's colour into the chosen one,
         /// Black / White / Grey, the fine controls (Color, Intensity, Brightness) and a small RESET.
         /// Every click recolours the character at once; SAVE keeps it.
         /// </summary>
-        private static void AddColorSection(InventoryGui gui, Player player, Transmog.Piece piece, float ox, float columnWidth, float top)
+        private static void AddColorSection(InventoryGui gui, DyeTarget target, float ox, float columnWidth, float top)
         {
             float cx = ox + columnWidth / 2f;
             float inner = columnWidth - Pad * 2f;
@@ -303,19 +340,19 @@ namespace MordasGearhold.UI
             TMP_Text title = UiKit.Text(s_content, gui.m_craftingStationName, "COLOR", 18f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(title.rectTransform, cx, top + 18f, inner, 24f);
 
-            ZoneSet zones = DyeRenderer.ZonesOf(player, piece);
+            ZoneSet zones = target.Zones();
             int zoneCount = zones != null ? zones.Count : 1;
-            if (s_zonePiece != piece || s_zone >= zoneCount)
+            if (!Equals(s_zoneKey, target.Key) || s_zone >= zoneCount)
             {
                 s_zone = -1; // a new piece (or a look with fewer zones): back to the whole piece
-                s_zonePiece = piece;
+                s_zoneKey = target.Key;
             }
             bool zoned = zoneCount > 1;
             float belowZones = top + ColorHeader + (zoned ? ZoneRow : 0f);
 
             Image[] chipCentres = new Image[zoneCount];
             Button[] chipButtons = new Button[zoneCount + 1]; // [0] = ALL
-            DyeValue Current() => s_zone < 0 ? Dye.Get(player, piece) : Dye.GetZones(player, piece)[Mathf.Min(s_zone, Dye.GetZones(player, piece).Length - 1)];
+            DyeValue Current() { DyeValue[] all = target.Get(); return s_zone < 0 ? all[0] : all[Mathf.Min(s_zone, all.Length - 1)]; }
 
             TMP_Text[] values = new TMP_Text[3];
             void Refresh()
@@ -326,11 +363,11 @@ namespace MordasGearhold.UI
                 values[2].text = (d.Brightness > 0 ? "+" : "") + d.Brightness + "%";
                 if (zoned)
                 {
-                    DyeValue[] all = Dye.GetZones(player, piece);
+                    DyeValue[] all = target.Get();
                     for (int k = 0; k < zoneCount; k++)
                     {
-                        DyeValue dye = all.Length == 1 ? all[0] : (k < all.Length ? all[k] : default);
-                        chipCentres[k].color = TextureDye.ShiftColor(zones.Chips[k], dye);
+                        DyeValue shown = all.Length == 1 ? all[0] : (k < all.Length ? all[k] : default);
+                        chipCentres[k].color = TextureDye.ShiftColor(zones.Chips[k], shown);
                     }
                     for (int k = 0; k <= zoneCount; k++)
                     {
@@ -340,8 +377,8 @@ namespace MordasGearhold.UI
             }
             void SetDye(DyeValue d)
             {
-                if (s_zone < 0 || !zoned) Dye.Set(player, piece, d);
-                else Dye.SetZone(player, piece, s_zone, zoneCount, d);
+                if (s_zone < 0 || !zoned) target.SetAll(d);
+                else target.SetZone(s_zone, zoneCount, d);
                 Refresh();
             }
 
@@ -372,7 +409,7 @@ namespace MordasGearhold.UI
                 if (i < s_hues.Length)
                 {
                     float hue = s_hues[i].hue;
-                    AddSwatch(x, swatchY, size, Color.HSVToRGB(hue, 0.75f, 0.85f), s_hues[i].name, () => SetDye(TowardsHue(player, piece, zones, s_zone, hue)));
+                    AddSwatch(x, swatchY, size, Color.HSVToRGB(hue, 0.75f, 0.85f), s_hues[i].name, () => SetDye(TowardsHue(target, zones, s_zone, hue)));
                 }
                 else if (i == s_hues.Length)
                 {
@@ -416,7 +453,7 @@ namespace MordasGearhold.UI
             float resetY = rowsTop + 3 * ColorRow + 20f;
             AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, resetY, 120f, false, () =>
             {
-                if (zoned && s_zone < 0) Dye.Set(player, piece, default); // ALL: every zone back to its own colours
+                if (zoned && s_zone < 0) target.SetAll(default); // ALL: every zone back to its own colours
                 else SetDye(default);
                 Refresh();
             });
@@ -512,7 +549,7 @@ namespace MordasGearhold.UI
         }
 
         /// <summary>The shift that turns the piece's dominant colour into the target hue (greyish pieces get some colour added).</summary>
-        private static DyeValue TowardsHue(Player player, Transmog.Piece piece, ZoneSet zones, int zone, float targetHue)
+        private static DyeValue TowardsHue(DyeTarget target, ZoneSet zones, int zone, float targetHue)
         {
             float hue, saturation;
             if (zones != null && zone >= 0 && zone < zones.Count)
@@ -522,7 +559,7 @@ namespace MordasGearhold.UI
             }
             else
             {
-                Texture texture = DyeRenderer.BaseTexture(player, piece);
+                Texture texture = target.BaseTexture();
                 Vector3 dominant = texture != null ? TextureDye.Dominant(texture) : new Vector3(0f, 0.5f, 0.5f);
                 hue = dominant.x;
                 saturation = dominant.y;
