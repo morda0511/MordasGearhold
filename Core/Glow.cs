@@ -155,7 +155,37 @@ namespace MordasGearhold.Core
     /// </summary>
     internal sealed class GlowKeeper : MonoBehaviour
     {
-        private static readonly string[] s_materialColors = { "_Color", "_TintColor", "_EmissionColor" };
+        private static readonly Dictionary<Shader, string[]> s_colorProperties = new Dictionary<Shader, string[]>();
+        private static readonly string[] s_effectShaders = { "Particle", "Additive", "Unlit", "Glow", "Alpha Blended", "Gradient Mapped", "Multiply" };
+
+        /// <summary>Every colour property of a shader (cached): effect materials keep their colour under many names.</summary>
+        private static string[] ColorProperties(Shader shader)
+        {
+            if (shader == null) return new string[0];
+            if (!s_colorProperties.TryGetValue(shader, out string[] names))
+            {
+                List<string> list = new List<string>();
+                for (int i = 0; i < shader.GetPropertyCount(); i++)
+                {
+                    if (shader.GetPropertyType(i) == UnityEngine.Rendering.ShaderPropertyType.Color) list.Add(shader.GetPropertyName(i));
+                }
+                names = list.ToArray();
+                s_colorProperties[shader] = names;
+            }
+            return names;
+        }
+
+        /// <summary>A material of a light effect (flare, flame, glow quad), not of the weapon itself: all its colours are recoloured.</summary>
+        private static bool IsEffect(Renderer renderer, Material material)
+        {
+            if (renderer is ParticleSystemRenderer || renderer is TrailRenderer || renderer is LineRenderer) return true;
+            string shader = material.shader != null ? material.shader.name : "";
+            foreach (string marker in s_effectShaders)
+            {
+                if (shader.IndexOf(marker, System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
+        }
         private static readonly FieldInfo s_trailColors = AccessTools.Field(typeof(MeleeWeaponTrail), "_colors");
         private static readonly MaterialPropertyBlock s_block = new MaterialPropertyBlock();
 
@@ -168,6 +198,8 @@ namespace MordasGearhold.Core
             public ParticleSystem.MinMaxGradient Custom1;
             public ParticleSystem.MinMaxGradient Custom2;
             public bool HasCustom1, HasCustom2;
+            public bool HasTrails;
+            public ParticleSystem.MinMaxGradient TrailLife, TrailOver;
         }
 
         private readonly List<Particles> m_particles = new List<Particles>();
@@ -246,12 +278,52 @@ namespace MordasGearhold.Core
             }
             foreach (Renderer renderer in GetComponentsInChildren<Renderer>(true))
             {
-                if (renderer is ParticleSystemRenderer || renderer is MeshRenderer || renderer is SkinnedMeshRenderer)
+                if (renderer is ParticleSystemRenderer || renderer is MeshRenderer || renderer is SkinnedMeshRenderer
+                    || renderer is TrailRenderer || renderer is LineRenderer)
                 {
                     m_renderers.Add((renderer, InShine(renderer.transform)));
                 }
+                if (renderer is TrailRenderer tr) m_lines.Add((renderer, tr.colorGradient, InShine(renderer.transform)));
+                else if (renderer is LineRenderer lr) m_lines.Add((renderer, lr.colorGradient, InShine(renderer.transform)));
             }
+            foreach (Particles p in m_particles)
+            {
+                ParticleSystem.TrailModule trails = p.System.trails;
+                if (trails.enabled)
+                {
+                    p.HasTrails = true;
+                    p.TrailLife = trails.colorOverLifetime;
+                    p.TrailOver = trails.colorOverTrail;
+                }
+            }
+            Report();
         }
+
+        // trail and line renderers: their colour is a gradient
+        private readonly List<(Renderer renderer, Gradient gradient, bool shine)> m_lines = new List<(Renderer, Gradient, bool)>();
+
+        /// <summary>One log line per weapon model: what kinds of effect parts it has, to find one that colours cannot reach.</summary>
+        private void Report()
+        {
+            string name = gameObject.name.Replace("(Clone)", "");
+            if (!s_reported.Add(name)) return;
+            System.Text.StringBuilder others = new System.Text.StringBuilder();
+            foreach ((Renderer renderer, bool shine) in m_renderers)
+            {
+                if (renderer is ParticleSystemRenderer) continue;
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material != null && IsEffect(renderer, material))
+                    {
+                        others.Append(renderer.GetType().Name).Append(':').Append(renderer.name).Append('=').Append(material.shader != null ? material.shader.name : "-").Append("; ");
+                    }
+                }
+            }
+            Plugin.Log.LogInfo($"Gearhold effects of {name}: {m_particles.Count} particle systems, {m_lights.Count} lights, {m_lines.Count} trail/line renderers, " +
+                $"{m_trails.Count} swing trails. Other effect parts: {(others.Length > 0 ? others.ToString() : "none")}");
+        }
+
+        private static readonly HashSet<string> s_reported = new HashSet<string>();
 
         private void Recolor()
         {
@@ -266,6 +338,19 @@ namespace MordasGearhold.Core
                 ParticleSystem.CustomDataModule custom = p.System.customData;
                 if (p.HasCustom1) custom.SetColor(ParticleSystemCustomData.Custom1, Recolor(p.Custom1));
                 if (p.HasCustom2) custom.SetColor(ParticleSystemCustomData.Custom2, Recolor(p.Custom2));
+                if (p.HasTrails)
+                {
+                    ParticleSystem.TrailModule trails = p.System.trails;
+                    trails.colorOverLifetime = Recolor(p.TrailLife);
+                    trails.colorOverTrail = Recolor(p.TrailOver);
+                }
+            }
+            foreach ((Renderer renderer, Gradient gradient, bool shine) in m_lines)
+            {
+                if (renderer == null) continue;
+                m_forShine = shine;
+                if (renderer is TrailRenderer trail) trail.colorGradient = Recolor(gradient);
+                else if (renderer is LineRenderer line) line.colorGradient = Recolor(gradient);
             }
             foreach ((Light light, Color color, bool shine) in m_lights)
             {
@@ -285,16 +370,18 @@ namespace MordasGearhold.Core
             {
                 if (renderer == null) continue;
                 m_forShine = shine;
-                bool particles = renderer is ParticleSystemRenderer;
                 Material[] materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {
                     Material material = materials[i];
                     if (material == null) continue;
+                    // light effects (particles, glow quads, trails) change every colour they have; the weapon's own
+                    // material only its emission (glowing runes, cores), so the metal and leather keep their colours
+                    bool effect = IsEffect(renderer, material);
                     renderer.GetPropertyBlock(s_block, i);
-                    foreach (string property in s_materialColors)
+                    foreach (string property in ColorProperties(material.shader))
                     {
-                        if ((particles || property == "_EmissionColor") && material.HasProperty(property))
+                        if (effect || property == "_EmissionColor")
                         {
                             s_block.SetColor(property, Tint(material.GetColor(property)));
                         }

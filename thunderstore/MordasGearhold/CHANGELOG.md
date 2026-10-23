@@ -8,6 +8,7 @@
 - A failure while dyeing is logged and can no longer disturb vanilla gear update.
 - Weapons can be dyed too (their look menu has the COLOR section with zones); the dye follows the weapon into every set.
 - The Weapon 2 weapon on your body shows its chosen look (transmog) and colour, not the original model.
+- GLOW reaches more effect parts: glow quads and other effect meshes, trails and lines, particle trails and every colour property of an effect material. The log lists the effect parts of each weapon model once.
 - Weapons with the white upgrade shimmer get a SHINE section in their look menu: colour that shimmer separately from the GLOW (it shows on upgraded weapons).
 - Pieces whose shader has no colour controls (many shields, some armour) are dyed by recolouring a copy of their texture, so more pieces react to a colour. A shield that is put away can be dyed as well.
 - The log names a dyed piece whose colour changed nothing, with its shaders.
