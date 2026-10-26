@@ -125,7 +125,7 @@ namespace MordasGearhold.Core
             if (itemHash == 0) return null;
             GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(itemHash) : null;
             Material armor = prefab != null ? prefab.GetComponent<ItemDrop>()?.m_itemData.m_shared.m_armorMaterial : null;
-            return armor != null ? armor.GetTexture(textureId) : null;
+            return armor != null && armor.HasProperty(textureId) ? armor.GetTexture(textureId) : null; // e.g. the Lox armour has no painted body texture
         }
 
 
