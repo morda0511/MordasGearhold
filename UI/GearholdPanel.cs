@@ -172,7 +172,6 @@ namespace MordasGearhold.UI
             s_body.anchorMax = new Vector2(1f, 1f);
             s_body.offsetMin = s_body.offsetMax = Vector2.zero;
 
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, 132f, DesignWidth - 40f);
 
             // armour on the left, shield and trinkets on the right, the character sheet in between
             // (slot 1 of utility/trinket = vanilla slot, 2 and 3 always active); every position comes from PanelLayout
@@ -192,7 +191,6 @@ namespace MordasGearhold.UI
             float sheetTop = sheet.Y - sheet.H / 2f, sheetBottom = sheet.Y + sheet.H / 2f;
             p = PanelLayout.Get("Utility-Titel");
             float utilityTop = p.Y - 18f;
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, utilityTop, DesignWidth - 40f);
             TMP_Text utilityTitle = UiKit.Text(s_body, header, "UTILITY", 16f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(utilityTitle.rectTransform, p.X, p.Y, p.W, p.H);
             AddPlaced(gui, GearSlot.Utility, "Utility 1", "Utility 1");
@@ -216,7 +214,6 @@ namespace MordasGearhold.UI
 
             // food and meads of the active set, right above the quickslots (right-click eats / drinks)
             p = PanelLayout.Get("Food-Titel");
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, p.Y - 18f, DesignWidth - 40f);
             TMP_Text foodTitle = UiKit.Text(s_body, header, "FOOD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(foodTitle.rectTransform, p.X, p.Y, p.W, p.H);
             p = PanelLayout.Get("Mead-Titel");
@@ -249,7 +246,6 @@ namespace MordasGearhold.UI
             s_holsterKey = holster.KeyButton.GetComponentInParent<Button>()?.gameObject;
 
             p = PanelLayout.Get("Quickslot-Titel");
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, p.Y - 18f, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
             UiKit.Place(quickTitle.rectTransform, p.X, p.Y, p.W, p.H);
             for (int x = 0; x < Topology.QuickslotCount; x++)
