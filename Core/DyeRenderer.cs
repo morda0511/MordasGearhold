@@ -470,7 +470,6 @@ namespace MordasGearhold.Core
         }
 
         private const int ZonedCacheSize = 4;
-        private static float Softness => DyeTuning.Softness; // how softly one zone fades into the next (squared colour distance)
         private static readonly List<(Texture source, int zones, ZonedPixels data)> s_zoned = new List<(Texture, int, ZonedPixels)>();
 
         /// <summary>Frees the pixel data kept for fast re-colouring (the look menu closed); the coloured copies stay.</summary>
@@ -559,7 +558,7 @@ namespace MordasGearhold.Core
                 data.Lab[i * 3] = pl;
                 data.Lab[i * 3 + 1] = pa;
                 data.Lab[i * 3 + 2] = pb;
-                Vector3 f = Zones.Feature(pl, pa, pb);
+                Vector3 f = Zones.Feature(pl, pa, pb, zones.Params);
                 float best = float.MaxValue;
                 for (int k = 0; k < z; k++)
                 {
@@ -569,7 +568,7 @@ namespace MordasGearhold.Core
                 float sum = 0f;
                 for (int k = 0; k < z; k++)
                 {
-                    e[k] = Mathf.Exp(-(e[k] - best) / Softness);
+                    e[k] = Mathf.Exp(-(e[k] - best) / zones.Params.Softness);
                     sum += e[k];
                 }
                 for (int k = 0; k < z; k++)

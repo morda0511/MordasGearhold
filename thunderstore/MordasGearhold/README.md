@@ -184,3 +184,6 @@ Three slots under the shield take only the items you name: set `CustomSlot1`, `C
 
 ## Tuning the colouring (dye lab)
 `tools/dye-lab.html` (in the project, not in the mod package) shows how the colouring treats any texture: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Save as file" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.
+
+## Zones per texture
+`tools/zone-survey.html` loads all exported textures at once (Ctrl+Shift+F10 in the world writes them to `BepInEx/config/MordasGearhold-textures`) and shows the colour zones of each. A texture that needs other numbers gets its own set in the tool; "zones.json speichern" writes `MordasGearhold.zones.json`, which goes into `BepInEx/config` next to the dye file. The mod reads it live like the dye file; textures without an entry use the global numbers.

@@ -23,7 +23,7 @@
   .chips { display:flex; gap:3px; margin-top:4px; flex-wrap:wrap; }
   .chip { width:20px; height:14px; border:1px solid #000a; border-radius:2px; }
   .badge { display:inline-block; padding:1px 6px; border-radius:9px; font-weight:600; margin-right:4px; }
-  .low { background:#7a2b2b; } .ok { background:#2b5a3a; } .max { background:#8a5a1a; }
+  .own { background:#3a4f8a; } .low { background:#7a2b2b; } .ok { background:#2b5a3a; } .max { background:#8a5a1a; }
   #modal { position:fixed; inset:0; background:#000c; display:none; align-items:center; justify-content:center; z-index:9; }
   #modal .in { background:var(--panel); border:1px solid var(--gold); border-radius:8px; padding:12px; max-width:96vw; max-height:96vh; overflow:auto; }
   #modal canvas { image-rendering:pixelated; margin:4px; background:#111; }
@@ -38,6 +38,7 @@
     <input id="files" type="file" accept="image/*" multiple webkitdirectory>
     <label style="margin-left:8px"><input id="onlyModel" type="checkbox" checked> nur Modell-Texturen („model“ im Namen)</label>
     <div class="row" style="margin-top:6px"><input id="filter" type="text" placeholder="Filter (z. B. Flametal)"> <select id="sort"><option value="name">nach Name</option><option value="zones">nach Zonenzahl</option></select> <button id="csv">Tabelle (CSV) kopieren</button></div>
+    <div class="row" style="margin-top:6px"><span class="hint">Texturen mit eigenen Werten: <b id="ocount">0</b></span> <button id="zsave">zones.json speichern</button> <button id="zcopy">kopieren</button> <button id="zload">zones.json laden</button><input id="zfile" type="file" accept=".json,application/json" hidden></div>
     <div id="summary" class="hint" style="margin-top:6px"></div>
   </div>
   <div class="box" id="params"></div>
@@ -172,7 +173,10 @@ function kmeans(features, k) {
 
 const $ = id => document.getElementById(id);
 const palette = [[230,80,80],[80,170,230],[240,200,60],[110,200,110],[200,110,220],[240,150,60],[120,120,255],[210,210,210]];
-let entries = []; // {name, w, h, data (ImageData), result}
+let entries = []; // {name, tex, data (ImageData), zones, map}
+let overrides = {}; // texture name -> its own detection numbers
+try { overrides = JSON.parse(localStorage.getItem("gearhold-zone-overrides") || "{}"); } catch (err) {}
+const saveOverrides = () => { try { localStorage.setItem("gearhold-zone-overrides", JSON.stringify(overrides)); } catch (err) {} $("ocount").textContent = Object.keys(overrides).length; };
 
 function sampleOf(imageData, size) {
   const src = document.createElement("canvas"); src.width = imageData.width; src.height = imageData.height;
@@ -183,6 +187,11 @@ function sampleOf(imageData, size) {
   return x.getImageData(0, 0, c.width, c.height);
 }
 function analyse(e) {
+  const saved = P;
+  P = Object.assign({}, P, overrides[e.tex] || {});
+  try { analyseWith(e); } finally { P = saved; }
+}
+function analyseWith(e) {
   const small = sampleOf(e.data, P.sample), d = small.data;
   let opaque = 0; for (let i = 3; i < d.length; i += 4) if (d[i] >= 128) opaque++;
   const useAlpha = opaque >= d.length / 4 / 20;
@@ -215,7 +224,7 @@ function render() {
     const c = document.createElement("canvas"); c.width = e.map.width; c.height = e.map.height; c.getContext("2d").putImageData(e.map, 0, 0);
     tile.appendChild(c);
     const info = document.createElement("div"); info.className = "n";
-    info.innerHTML = '<span class="badge ' + cls + '">' + n + ' Zonen</span>' + e.name.replace(/__/g, " · ");
+    info.innerHTML = '<span class="badge ' + cls + '">' + n + ' Zonen</span>' + (overrides[e.tex] ? '<span class="badge own">eigene Werte</span>' : '') + e.name.replace(/__/g, " · ");
     tile.appendChild(info);
     const chips = document.createElement("div"); chips.className = "chips";
     e.zones.chips.forEach((ch, k) => { const d = document.createElement("div"); d.className = "chip"; d.style.background = hex(ch); d.title = Math.round(e.zones.share[k] * 100) + "%"; chips.appendChild(d); });
@@ -231,7 +240,30 @@ function show(e) {
   const b = document.createElement("canvas"); b.width = e.map.width; b.height = e.map.height; b.getContext("2d").putImageData(e.map, 0, 0);
   const scale = Math.max(1, Math.floor(480 / Math.max(a.width, a.height)));
   for (const c of [a, b]) { c.style.width = (c.width * (c === a ? 1 : e.data.width / e.map.width) * scale) + "px"; c.style.height = (c.height * (c === a ? 1 : e.data.height / e.map.height) * scale) + "px"; body.appendChild(c); }
+  const own = document.createElement("div"); own.className = "box"; own.style.marginTop = "8px";
+  own.innerHTML = '<div class="hint">Eigene Werte nur für <b>' + e.tex + '</b> (bleiben im Browser gespeichert, landen in der zones.json):</div>';
+  const eff = Object.assign({}, P, overrides[e.tex] || {});
+  DETECT.forEach(([key, label, min, max, step]) => {
+    const row = document.createElement("div"); row.className = "p";
+    row.innerHTML = '<span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + eff[key] + '"><span class="v">' + eff[key] + '</span>';
+    row.querySelector("input").oninput = ev => {
+      overrides[e.tex] = Object.assign({}, P, overrides[e.tex] || {}, { [key]: +ev.target.value });
+      ev.target.nextElementSibling.textContent = ev.target.value;
+      analyse(e); saveOverrides(); redrawModal(e); render();
+    };
+    own.appendChild(row);
+  });
+  const reset = document.createElement("button"); reset.textContent = "Eigene Werte entfernen"; reset.style.marginTop = "6px";
+  reset.onclick = ev => { ev.stopPropagation(); delete overrides[e.tex]; analyse(e); saveOverrides(); render(); show(e); };
+  own.appendChild(reset);
+  own.onclick = ev => ev.stopPropagation();
+  body.appendChild(own);
   $("modal").style.display = "flex";
+}
+function redrawModal(e) {
+  $("mtitle").textContent = e.name + " — " + e.zones.centers.length + " Zonen (" + e.zones.share.map(s => Math.round(s*100) + "%").join(" / ") + ")";
+  const cs = $("mbody").querySelectorAll("canvas");
+  if (cs.length >= 2) { cs[1].width = e.map.width; cs[1].height = e.map.height; cs[1].getContext("2d").putImageData(e.map, 0, 0); }
 }
 $("modal").onclick = () => $("modal").style.display = "none";
 
@@ -248,7 +280,7 @@ async function loadFiles(files) {
     const s = Math.min(1, 512 / Math.max(im.width, im.height)), w = Math.max(1, Math.round(im.width * s)), h = Math.max(1, Math.round(im.height * s));
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, w, h);
-    const e = { name: file.name.replace(/\.png$/i, ""), data: x.getImageData(0, 0, w, h) };
+    const base = file.name.replace(/\.png$/i, ""), e = { name: base, tex: base.split("__").pop(), data: x.getImageData(0, 0, w, h) };
     analyse(e); entries.push(e); URL.revokeObjectURL(url);
     if (++done % 8 === 0) { render(); await new Promise(r => setTimeout(r, 0)); }
   }
@@ -265,6 +297,12 @@ DETECT.forEach(([key, label, min, max, step]) => {
   root.appendChild(row);
 });
 $("files").onchange = e => loadFiles(e.target.files);
+const zonesText = () => JSON.stringify(overrides, null, 1);
+$("zsave").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([zonesText()], { type: "application/json" })); a.download = "MordasGearhold.zones.json"; a.click(); };
+$("zcopy").onclick = () => navigator.clipboard.writeText(zonesText());
+$("zload").onclick = () => $("zfile").click();
+$("zfile").onchange = async ev => { try { overrides = JSON.parse(await ev.target.files[0].text()); saveOverrides(); reanalyse(); } catch (err) { alert("Keine gültige zones.json"); } };
+saveOverrides();
 $("onlyModel").onchange = () => { if ($("files").files.length) loadFiles($("files").files); };
 $("filter").oninput = render; $("sort").onchange = render;
 $("csv").onclick = () => {

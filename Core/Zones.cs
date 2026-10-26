@@ -15,12 +15,14 @@ namespace MordasGearhold.Core
         internal readonly Vector3[] Centers; // in Zones.Feature space
         internal readonly Color[] Chips;     // the average colour of each zone, in the original
         internal readonly float[] Share;     // how much of the piece each zone covers (sums to 1)
+        internal readonly ZoneParams Params; // the numbers the zones were found with (they also set how softly pixels join them)
 
-        internal ZoneSet(Vector3[] centers, Color[] chips, float[] share)
+        internal ZoneSet(Vector3[] centers, Color[] chips, float[] share, ZoneParams parameters)
         {
             Centers = centers;
             Chips = chips;
             Share = share;
+            Params = parameters;
         }
 
         internal int Count => Centers.Length;
@@ -35,11 +37,13 @@ namespace MordasGearhold.Core
     /// </summary>
     internal static class Zones
     {
-        internal static int MaxZones => DyeTuning.MaxZones;
-        private static int SampleSize => DyeTuning.Sample;
-        private static float MinShare => DyeTuning.MinShare;   // smaller zones are merged into their neighbour
-        private static int StartClusters => DyeTuning.StartClusters;
-        private static float MergeDistance => DyeTuning.MergeDistance; // zones this close in colour are one zone
+        // the numbers of the texture being examined right now (global, or the texture's own from the zones file)
+        private static ZoneParams P = DyeTuning.Default;
+        internal static int MaxZones => P.MaxZones;
+        private static int SampleSize => P.Sample;
+        private static float MinShare => P.MinShare;   // smaller zones are merged into their neighbour
+        private static int StartClusters => P.StartClusters;
+        private static float MergeDistance => P.MergeDistance; // zones this close in colour are one zone
 
 
         /// <summary>Drops every remembered zone set (the tuning changed): they are found again with the new numbers.</summary>
@@ -47,8 +51,8 @@ namespace MordasGearhold.Core
 
         private static readonly Dictionary<Texture, ZoneSet> s_sets = new Dictionary<Texture, ZoneSet>();
         /// <summary>The position of a colour in the zone space: OKLab with the lightness and colour axes weighted (DyeTuning).</summary>
-        internal static Vector3 Feature(float lightness, float a, float b) =>
-            new Vector3(lightness * DyeTuning.BrightnessWeight, a * DyeTuning.ChromaWeight, b * DyeTuning.ChromaWeight);
+        internal static Vector3 Feature(float lightness, float a, float b, ZoneParams p) =>
+            new Vector3(lightness * p.BrightnessWeight, a * p.ChromaWeight, b * p.ChromaWeight);
 
         internal static ZoneSet Of(Texture texture)
         {
@@ -60,6 +64,7 @@ namespace MordasGearhold.Core
             {
                 return known;
             }
+            P = DyeTuning.ParamsFor(texture.name);
             ZoneSet found = Detect(texture);
             s_sets[texture] = found;
             Plugin.Log.LogInfo($"Colour zones of {texture.name}: {found.Count} ({string.Join(", ", System.Array.ConvertAll(found.Share, s => (s * 100f).ToString("0") + "%"))})");
@@ -92,13 +97,13 @@ namespace MordasGearhold.Core
                     if (useAlpha && p.a < 128) continue;
                     if (pass == 0 && System.Math.Max(p.r, System.Math.Max(p.g, p.b)) < 10) continue; // pure black outlines say nothing about the material
                     Oklab.FromRgb(p.r, p.g, p.b, out float lab0, out float lab1, out float lab2);
-                    features.Add(Feature(lab0, lab1, lab2));
+                    features.Add(Feature(lab0, lab1, lab2, P));
                     colors.Add(new Color(p.r / 255f, p.g / 255f, p.b / 255f));
                 }
             }
             if (features.Count == 0)
             {
-                return new ZoneSet(new[] { Feature(0.6f, 0f, 0f) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f });
+                return new ZoneSet(new[] { Feature(0.6f, 0f, 0f, P) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f }, P);
             }
 
             // start with more clusters than zones, so a small accent colour (teal stripes on brown leather) gets
@@ -173,7 +178,7 @@ namespace MordasGearhold.Core
                 chips[i] = new Color(mean.x, mean.y, mean.z, 1f);
                 share[i] = counts[k] / features.Count;
             }
-            return new ZoneSet(sortedCenters, chips, share);
+            return new ZoneSet(sortedCenters, chips, share, P);
         }
 
         private static int NearestOther(Vector3[] centers, int index)
