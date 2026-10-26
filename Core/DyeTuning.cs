@@ -19,7 +19,7 @@ namespace MordasGearhold.Core
         internal static int StartClusters = 12;
         internal static int MaxZones = 8;
         internal static float MinShare = 0.012f;
-        internal static float MergeDistance = 0.25f;
+        internal static float MergeDistance = 0.12f;
         internal static float BrightnessWeight = 0.7f;
         internal static float ChromaWeight = 6f;
         internal static int Sample = 96;
@@ -61,7 +61,7 @@ namespace MordasGearhold.Core
             StartClusters = Mathf.RoundToInt(Number(json, "startClusters", 12f, 2f, 16f));
             MaxZones = Mathf.RoundToInt(Number(json, "maxZones", 8f, 1f, 8f));
             MinShare = Number(json, "minShare", 0.012f, 0f, 0.2f);
-            MergeDistance = Number(json, "merge", 0.25f, 0.01f, 2f);
+            MergeDistance = Number(json, "merge", 0.12f, 0.01f, 2f);
             BrightnessWeight = Number(json, "bw", 0.7f, 0f, 3f);
             ChromaWeight = Number(json, "wc", 6f, 0f, 20f);
             Sample = Mathf.RoundToInt(Number(json, "sample", 96f, 24f, 256f));
