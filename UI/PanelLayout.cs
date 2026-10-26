@@ -26,77 +26,77 @@ Münzen 416,46,52,52
 Set 1 90,102,128,34
 Set 2 230,102,128,34
 Set 3 370,102,128,34
-Charakterblatt 230,353,248,414
+Charakterblatt 230,363,248,434
 Kopf 58,178,64,64
 Brust 58,266,64,64
 Beine 58,354,64,64
 Cape 58,442,64,64
 Schild 402,178,64,64
-Trinket 1 290,596,52,52
-Trinket 2 350,596,52,52
-Trinket 3 410,596,52,52
+Trinket 1 290,618,52,52
+Trinket 2 350,618,52,52
+Trinket 3 410,618,52,52
 Utility-Titel 118,558,160,22
 Custom 1 402,266,64,64
 Custom 2 402,354,64,64
 Custom 3 402,442,64,64
-Utility 1 58,596,52,52
-Utility 2 118,596,52,52
-Utility 3 178,596,52,52
-AMMO-Knopf 461,522,14,56
-Ammo-Dropdown 494,680,68,246
-Ammo 1 496,588,46,46
-Ammo 2 496,666,46,46
-Ammo 3 496,746,46,46
-Ammo-Taste 1 496,628,48,24
-Ammo-Taste 2 496,706,48,24
-Ammo-Taste 3 496,786,48,24
-Food-Titel 120,666,160,22
-Food 1 68,704,46,46
-Food 2 120,704,46,46
-Food 3 172,704,46,46
-Food-Taste 1 68,742,48,24
-Food-Taste 2 120,742,48,24
-Food-Taste 3 172,742,48,24
-Weapon-2-Titel 230,666,66,22
-Weapon 2 230,704,46,46
-Weapon-2-Taste 230,742,48,24
-Mead-Titel 340,666,160,22
-Mead 1 288,704,46,46
-Mead 2 340,704,46,46
-Mead 3 392,704,46,46
-Mead-Taste 1 288,742,48,24
-Mead-Taste 2 340,742,48,24
-Mead-Taste 3 392,742,48,24
-Quickslot-Titel 230,776,410,22
-Quickslot 1 48,816,46,46
-Quickslot 2 100,816,46,46
-Quickslot 3 152,816,46,46
-Quickslot 4 204,816,46,46
-Quickslot 5 256,816,46,46
-Quickslot 6 308,816,46,46
-Quickslot 7 360,816,46,46
-Quickslot 8 412,816,46,46
-Quickslot-Taste 1 48,854,48,24
-Quickslot-Taste 2 100,854,48,24
-Quickslot-Taste 3 152,854,48,24
-Quickslot-Taste 4 204,854,48,24
-Quickslot-Taste 5 256,854,48,24
-Quickslot-Taste 6 308,854,48,24
-Quickslot-Taste 7 360,854,48,24
-Quickslot-Taste 8 412,854,48,24
-Fußzeile 230,882,370,18
-HUD-Zahnrad 434,880,24,24
+Utility 1 58,618,52,52
+Utility 2 118,618,52,52
+Utility 3 178,618,52,52
+AMMO-Knopf 466,522,24,56
+Ammo-Dropdown 512,680,100,246
+Ammo 1 512,588,46,46
+Ammo 2 512,666,46,46
+Ammo 3 512,746,46,46
+Ammo-Taste 1 512,628,64,24
+Ammo-Taste 2 512,706,64,24
+Ammo-Taste 3 512,786,64,24
+Food-Titel 120,684,160,22
+Food 1 68,716,46,46
+Food 2 120,716,46,46
+Food 3 172,716,46,46
+Food-Taste 1 68,750,48,24
+Food-Taste 2 120,750,48,24
+Food-Taste 3 172,750,48,24
+Weapon-2-Titel 230,684,66,22
+Weapon 2 230,716,46,46
+Weapon-2-Taste 230,750,48,24
+Mead-Titel 340,684,160,22
+Mead 1 288,716,46,46
+Mead 2 340,716,46,46
+Mead 3 392,716,46,46
+Mead-Taste 1 288,750,48,24
+Mead-Taste 2 340,750,48,24
+Mead-Taste 3 392,750,48,24
+Quickslot-Titel 230,780,410,22
+Quickslot 1 48,810,46,46
+Quickslot 2 100,810,46,46
+Quickslot 3 152,810,46,46
+Quickslot 4 204,810,46,46
+Quickslot 5 256,810,46,46
+Quickslot 6 308,810,46,46
+Quickslot 7 360,810,46,46
+Quickslot 8 412,810,46,46
+Quickslot-Taste 1 48,842,48,24
+Quickslot-Taste 2 100,842,48,24
+Quickslot-Taste 3 152,842,48,24
+Quickslot-Taste 4 204,842,48,24
+Quickslot-Taste 5 256,842,48,24
+Quickslot-Taste 6 308,842,48,24
+Quickslot-Taste 7 360,842,48,24
+Quickslot-Taste 8 412,842,48,24
+Fußzeile 230,870,370,18
+HUD-Zahnrad 434,868,24,24
 ";
 
         internal const string FileName = "MordasGearhold.layout.json";
         private static readonly Dictionary<string, Part> s_parts = new Dictionary<string, Part>();
-        internal static float Height { get; private set; } = 910f;
+        internal static float Height { get; private set; } = 894f;
 
         /// <summary>Reads the built-in layout, then the optional file on top of it.</summary>
         internal static void Load()
         {
             s_parts.Clear();
-            Height = 910f;
+            Height = 894f;
             foreach (string line in Defaults.Split('\n'))
             {
                 string text = line.Trim();
