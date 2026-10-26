@@ -43,13 +43,13 @@ Utility 1 58,618,52,52
 Utility 2 118,618,52,52
 Utility 3 178,618,52,52
 AMMO-Knopf 466,522,24,56
-Ammo-Dropdown 512,680,100,246
-Ammo 1 512,588,46,46
-Ammo 2 512,666,46,46
-Ammo 3 512,746,46,46
-Ammo-Taste 1 512,628,64,24
-Ammo-Taste 2 512,706,64,24
-Ammo-Taste 3 512,786,64,24
+Ammo-Dropdown 502,682,100,246
+Ammo 1 502,588,46,46
+Ammo 2 502,666,46,46
+Ammo 3 502,746,46,46
+Ammo-Taste 1 502,628,64,24
+Ammo-Taste 2 502,706,64,24
+Ammo-Taste 3 502,786,64,24
 Food-Titel 120,684,160,22
 Food 1 68,716,46,46
 Food 2 120,716,46,46
