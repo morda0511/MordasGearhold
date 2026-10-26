@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,6 +34,50 @@ namespace MordasGearhold.UI
 
         internal static bool IsOpen => s_window != null && s_window.gameObject.activeSelf;
 
+        // the inventory windows are made invisible while the bar position window is open, so the bars on the screen can be seen
+        private static readonly List<(CanvasGroup group, float alpha, bool interactable, bool blocks, bool added)> s_hidden =
+            new List<(CanvasGroup, float, bool, bool, bool)>();
+
+        private static void HideInventory()
+        {
+            ShowInventory();
+            if (s_window == null || s_window.parent == null)
+            {
+                return;
+            }
+            foreach (Transform child in s_window.parent)
+            {
+                if (child == s_window || !child.gameObject.activeSelf)
+                {
+                    continue;
+                }
+                CanvasGroup group = child.GetComponent<CanvasGroup>();
+                bool added = group == null;
+                if (added) group = child.gameObject.AddComponent<CanvasGroup>();
+                s_hidden.Add((group, group.alpha, group.interactable, group.blocksRaycasts, added));
+                group.alpha = 0f;
+                group.interactable = false;
+                group.blocksRaycasts = false;
+            }
+        }
+
+        private static void ShowInventory()
+        {
+            foreach (var entry in s_hidden)
+            {
+                if (entry.group == null) continue;
+                if (entry.added)
+                {
+                    UnityEngine.Object.Destroy(entry.group);
+                    continue;
+                }
+                entry.group.alpha = entry.alpha;
+                entry.group.interactable = entry.interactable;
+                entry.group.blocksRaycasts = entry.blocks;
+            }
+            s_hidden.Clear();
+        }
+
         internal static void Open()
         {
             InventoryGui gui = InventoryGui.instance;
@@ -47,6 +92,7 @@ namespace MordasGearhold.UI
             Select(s_bar);
             s_window.SetAsLastSibling();
             s_window.gameObject.SetActive(true);
+            HideInventory();
         }
 
         /// <summary>Which bar the sliders move: quickslots, food or mead.</summary>
@@ -97,6 +143,7 @@ namespace MordasGearhold.UI
             if (s_window != null)
             {
                 s_window.gameObject.SetActive(false);
+                ShowInventory();
             }
         }
 

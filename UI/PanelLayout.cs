@@ -26,22 +26,22 @@ Münzen 416,46,52,52
 Set 1 90,102,128,34
 Set 2 230,102,128,34
 Set 3 370,102,128,34
-Charakterblatt 230,368,248,444
+Charakterblatt 230,373,248,454
 Kopf 58,178,64,64
 Brust 58,266,64,64
 Beine 58,354,64,64
 Cape 58,442,64,64
 Schild 402,178,64,64
-Trinket 1 290,630,52,52
-Trinket 2 350,630,52,52
-Trinket 3 410,630,52,52
+Trinket 1 308,636,46,46
+Trinket 2 360,636,46,46
+Trinket 3 412,636,46,46
 Utility-Titel 118,558,160,22
 Custom 1 402,266,64,64
 Custom 2 402,354,64,64
 Custom 3 402,442,64,64
-Utility 1 58,630,52,52
-Utility 2 118,630,52,52
-Utility 3 178,630,52,52
+Utility 1 48,636,46,46
+Utility 2 100,636,46,46
+Utility 3 152,636,46,46
 AMMO-Knopf 461,522,14,56
 Ammo-Dropdown 508,618,96,246
 Ammo 1 508,526,46,46
