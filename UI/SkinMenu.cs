@@ -101,6 +101,8 @@ namespace MordasGearhold.UI
             Action revert = s_revert;
             s_revert = null;
             s_builtDye = null;
+            s_presetsMode = false;
+            InventoryHider.Restore();
             if (s_blocker != null)
             {
                 s_blocker.gameObject.SetActive(false);
@@ -207,11 +209,20 @@ namespace MordasGearhold.UI
                 UnityEngine.Object.Destroy(s_content.GetChild(i).gameObject);
             }
 
+            bool presets = s_presetsMode && tabPlayer != null && tabsFor.HasValue;
+            if (!presets) s_presetsMode = false;
+            if (presets)
+            {
+                dye = null;
+                glowPlayer = null;
+                glowWeapon = null;
+                shineWeapon = null;
+            }
             bool dyeable = dye != null;
-            bool tabs = tabsFor.HasValue && tabPlayer != null;
+            bool tabs = !presets && tabsFor.HasValue && tabPlayer != null;
             s_builtDye = null; // set again below when this menu has a COLOR section
             int cells = looks.Count + 1; // the "Hide" cell first, then every unlocked look
-            int rows = Mathf.Max(1, Mathf.CeilToInt((maxLooks + 1) / (float)Columns));
+            int rows = presets ? Mathf.CeilToInt(LookPresets.Count * PresetRow / Cell) : Mathf.Max(1, Mathf.CeilToInt((maxLooks + 1) / (float)Columns));
             float ox = Pad + PreviewWidth;               // left edge of the right-hand column
             float columnWidth = Pad * 2f + Columns * Cell;
             float inner = columnWidth - Pad * 2f;
@@ -244,7 +255,7 @@ namespace MordasGearhold.UI
 
             // back arrow (discard) top left, title in the middle
             AddButton(gui, "< BACK", Pad + 50f, Pad + 14f, 100f, false, () => Close());
-            TMP_Text header = UiKit.Text(s_content, gui.m_craftingStationName, title, 22f, UiKit.Gold, TextAlignmentOptions.Center);
+            TMP_Text header = UiKit.Text(s_content, gui.m_craftingStationName, presets ? "LOOK PRESETS" : title, 22f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(header.rectTransform, width / 2f, Pad + 14f, width - 300f, 30f);
 
             // left: live 3D view of your character, SAVE below it
@@ -267,8 +278,25 @@ namespace MordasGearhold.UI
                 }
             }
 
-            AddButton(gui, "OWN LOOK", cx, ownLookY, inner, current == null, () => choose(null));
-            for (int i = 0; i < cells; i++)
+            if (tabPlayer != null && tabsFor.HasValue)
+            {
+                Player presetPlayer = tabPlayer;
+                Transmog.Piece presetPiece = tabsFor.Value;
+                AddButton(gui, presets ? "LOOKS" : "PRESETS", width - Pad - 55f, Pad + 14f, 110f, false, () =>
+                {
+                    s_presetsMode = !presets;
+                    OpenForPiece(presetPlayer, presetPiece);
+                });
+            }
+            if (presets)
+            {
+                BuildPresets(gui, tabPlayer, tabsFor.Value, ox, gridTop - 10f, inner);
+            }
+            else
+            {
+                AddButton(gui, "OWN LOOK", cx, ownLookY, inner, current == null, () => choose(null));
+            }
+            for (int i = 0; i < (presets ? 0 : cells); i++)
             {
                 float x = ox + Pad + Cell / 2f + (i % Columns) * Cell;
                 float y = gridTop + Cell / 2f + (i / Columns) * Cell;
@@ -308,8 +336,72 @@ namespace MordasGearhold.UI
             s_menu.localScale = Vector3.one * Mathf.Max(0.4f, scale);
             s_menu.anchoredPosition = Vector2.zero;
             s_blocker.SetAsLastSibling();
+            InventoryHider.Hide(s_blocker); // the other windows go while the menu is open
             s_blocker.gameObject.SetActive(true);
             CharacterPreview.Begin();
+        }
+
+        // ------------------------------------------------------------------ look presets
+
+        private const float PresetRow = 56f;
+        private static bool s_presetsMode;
+
+        /// <summary>
+        /// The preset list: per row the five looks as little icons, LOAD (puts the preset on the active set), SAVE (stores the
+        /// current looks and colours there) and X. Weapon looks and colours are not part of a preset.
+        /// </summary>
+        private static void BuildPresets(InventoryGui gui, Player player, Transmog.Piece piece, float ox, float top, float inner)
+        {
+            float left = ox + Pad;
+            for (int i = 0; i < LookPresets.Count; i++)
+            {
+                int index = i;
+                float y = top + PresetRow / 2f + i * PresetRow;
+                bool has = LookPresets.Has(player, index);
+                TMP_Text number = UiKit.Text(s_content, gui.m_craftingStationName, (index + 1).ToString(), 20f, has ? UiKit.Gold : UiKit.Dim, TextAlignmentOptions.Center);
+                UiKit.Place(number.rectTransform, left + 12f, y, 24f, 28f);
+                string[] looks = LookPresets.LooksOf(player, index, s_pieces);
+                for (int k = 0; k < s_pieces.Length; k++)
+                {
+                    float x = left + 44f + k * 38f;
+                    RectTransform cell = UiKit.Rect("PresetLook", s_content);
+                    UiKit.Place(cell, x, y - 5f, 34f, 34f);
+                    Image back = cell.gameObject.AddComponent<Image>();
+                    back.color = new Color(0f, 0f, 0f, has ? 0.35f : 0.15f);
+                    back.raycastTarget = false;
+                    if (!has) continue;
+                    if (looks[k] == Transmog.Hidden)
+                    {
+                        TMP_Text dash = UiKit.Text(s_content, gui.m_craftingStationName, "–", 18f, UiKit.Dim, TextAlignmentOptions.Center);
+                        UiKit.Place(dash.rectTransform, x, y - 5f, 34f, 34f);
+                    }
+                    else if (looks[k] != null)
+                    {
+                        GameObject prefab = ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(looks[k]) : null;
+                        ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+                        if (drop != null)
+                        {
+                            RectTransform iconRect = UiKit.Rect("PresetIcon", s_content);
+                            UiKit.Place(iconRect, x, y - 5f, 32f, 32f);
+                            Image icon = iconRect.gameObject.AddComponent<Image>();
+                            icon.sprite = drop.m_itemData.GetIcon();
+                            icon.preserveAspect = true;
+                            icon.raycastTarget = false;
+                        }
+                    }
+                }
+                if (has && LookPresets.HasColors(player, index))
+                {
+                    TMP_Text colored = UiKit.Text(s_content, gui.m_recipeDecription != null ? gui.m_recipeDecription : gui.m_craftingStationName, "+ colours", 11f, UiKit.Dim, TextAlignmentOptions.Left);
+                    UiKit.Place(colored.rectTransform, left + 44f + 95f, y + 19f, 190f, 14f);
+                }
+                AddButton(gui, "LOAD", left + 270f, y, 70f, !has, () => { LookPresets.Apply(player, index); OpenForPiece(player, piece); });
+                AddButton(gui, "SAVE", left + 346f, y, 70f, false, () => { LookPresets.Save(player, index); OpenForPiece(player, piece); });
+                if (has)
+                {
+                    AddButton(gui, "X", left + 410f, y, 36f, false, () => { LookPresets.Clear(player, index); OpenForPiece(player, piece); });
+                }
+            }
         }
 
         // the weapon of the open weapon menu (for redrawing it when the zones change)
