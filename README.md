@@ -181,3 +181,6 @@ Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to t
 
 ## Custom slots
 Three slots under the shield take only the items you name: set `CustomSlot1`, `CustomSlot2` or `CustomSlot3` (config, section 1 - Inventory) to a comma separated list of prefab names, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name. A slot with an empty list is hidden. The items stay real inventory items (weight, tombstone, saving work as usual) and belong to the active set. Right-click uses the item.
+
+## Tuning the colouring (dye lab)
+`tools/dye-lab.html` (in the project, not in the mod package) shows how the colouring treats any texture: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Save as file" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.

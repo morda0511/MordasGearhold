@@ -35,12 +35,15 @@ namespace MordasGearhold.Core
     /// </summary>
     internal static class Zones
     {
-        internal const int MaxZones = 4;
-        private const int SampleSize = 96;
-        private const float MinShare = 0.025f;   // smaller zones are merged into their neighbour
-        private const int StartClusters = 6;
-        private const float MergeDistance = 0.20f; // zones this close in colour are one zone
-        private const float BrightnessWeight = 0.6f;
+        internal static int MaxZones => DyeTuning.MaxZones;
+        private static int SampleSize => DyeTuning.Sample;
+        private static float MinShare => DyeTuning.MinShare;   // smaller zones are merged into their neighbour
+        private static int StartClusters => DyeTuning.StartClusters;
+        private static float MergeDistance => DyeTuning.MergeDistance; // zones this close in colour are one zone
+        private static float BrightnessWeight => DyeTuning.BrightnessWeight;
+
+        /// <summary>Drops every remembered zone set (the tuning changed): they are found again with the new numbers.</summary>
+        internal static void Forget() => s_sets.Clear();
 
         private static readonly Dictionary<Texture, ZoneSet> s_sets = new Dictionary<Texture, ZoneSet>();
 

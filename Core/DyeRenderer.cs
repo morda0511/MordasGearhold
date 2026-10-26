@@ -469,7 +469,7 @@ namespace MordasGearhold.Core
         }
 
         private const int ZonedCacheSize = 4;
-        private const float Softness = 0.03f; // how softly one zone fades into the next (squared colour distance)
+        private static float Softness => DyeTuning.Softness; // how softly one zone fades into the next (squared colour distance)
         private static readonly List<(Texture source, int zones, ZonedPixels data)> s_zoned = new List<(Texture, int, ZonedPixels)>();
 
         /// <summary>Frees the pixel data kept for fast re-colouring (the look menu closed); the coloured copies stay.</summary>
@@ -499,10 +499,10 @@ namespace MordasGearhold.Core
         internal static Color ShiftTarget(float saturation, float value, DyeValue dye, Vector3 chip)
         {
             Color.RGBToHSV(dye.TargetColor, out float th, out float ts, out float tv);
-            float relS = chip.y > 0.04f ? Mathf.Clamp(saturation / chip.y, 0f, 1.5f) : 1f;
-            float relV = Mathf.Clamp(value / Mathf.Max(chip.z, 0.05f), 0f, 2f);
-            float s = ts <= 0.02f ? 0f : Mathf.Clamp01(ts * relS);
-            float v = Mathf.Clamp01(tv * relV);
+            float relS = chip.y > 0.04f ? Mathf.Clamp(saturation / chip.y, 0f, DyeTuning.SatMax) : 1f;
+            float relV = Mathf.Clamp(value / Mathf.Max(chip.z, 0.05f), 0f, DyeTuning.ValMax);
+            float s = ts <= 0.02f ? 0f : Mathf.Clamp01(ts * (1f + (relS - 1f) * DyeTuning.SatFollow));
+            float v = Mathf.Clamp01(tv * (1f + (relV - 1f) * DyeTuning.ValFollow));
             return Color.HSVToRGB(th, s, v);
         }
 
@@ -565,7 +565,7 @@ namespace MordasGearhold.Core
         /// </summary>
         internal static Texture GetZoned(Texture source, ZoneSet zones, DyeValue[] dyes, bool coverage)
         {
-            string key = "z" + zones.Id + (coverage ? "b" : "m") + string.Join("|", System.Array.ConvertAll(dyes, d => d.ToString()));
+            string key = "z" + zones.Id + "v" + DyeTuning.Version + (coverage ? "b" : "m") + string.Join("|", System.Array.ConvertAll(dyes, d => d.ToString()));
             foreach (var entry in s_cache)
             {
                 if (entry.source == source && entry.dye == key && entry.copy != null)
@@ -685,7 +685,7 @@ namespace MordasGearhold.Core
 
         internal static Texture Get(Texture source, DyeValue dye, bool coverage = true)
         {
-            string key = dye.ToString() + (coverage ? "" : "m");
+            string key = dye.ToString() + (coverage ? "" : "m") + (dye.IsTarget ? "v" + DyeTuning.Version : "");
             foreach (var entry in s_cache)
             {
                 if (entry.source == source && entry.dye == key && entry.copy != null)

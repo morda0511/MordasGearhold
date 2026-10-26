@@ -201,6 +201,20 @@ namespace MordasGearhold.Core
             return zones.Length > 0 ? zones : new DyeValue[1];
         }
 
+        /// <summary>The colouring numbers changed (dye file): colour your character and the others again.</summary>
+        private static void ReapplyAll(Player me)
+        {
+            DyeRenderer.Apply(me);
+            foreach (KeyValuePair<Player, Record> pair in s_records)
+            {
+                VisEquipment vis = pair.Key != null ? pair.Key.GetComponent<VisEquipment>() : null;
+                if (vis != null)
+                {
+                    DyeRenderer.ApplyTo(pair.Key, vis);
+                }
+            }
+        }
+
         // ------------------------------------------------------------------ once per half second
 
         internal static void Tick(Player me)
@@ -212,6 +226,7 @@ namespace MordasGearhold.Core
             s_nextSend = Time.unscaledTime + 0.5f;
             try
             {
+                if (DyeTuning.Tick()) ReapplyAll(me);
                 Send(me);
                 Receive(me);
             }
