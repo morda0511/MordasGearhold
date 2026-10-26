@@ -767,21 +767,24 @@ namespace MordasGearhold.UI
                 return;
             }
             ItemDrop.ItemData item = slot.Item != null && player.GetInventory().ContainsItem(slot.Item) ? slot.Item : null;
-            Transmog.Piece? piece = Transmog.PieceFor(slot.Kind);
-            if (piece.HasValue)
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
             {
-                // armour and shield: the look menu (taking gear off is a left-click on the slot)
-                SkinMenu.OpenForPiece(player, piece.Value);
-                return;
-            }
-            if (item != null && Transmog.IsWeapon(item))
-            {
-                // a weapon in a quickslot: its look menu, not equip/unequip (its hotkey draws it)
-                SkinMenu.OpenForWeapon(player, item);
-                return;
+                // Shift + right-click: shortcut into the look menu (the transmog button opens it too)
+                Transmog.Piece? piece = Transmog.PieceFor(slot.Kind);
+                if (piece.HasValue)
+                {
+                    SkinMenu.OpenForPiece(player, piece.Value);
+                    return;
+                }
+                if (item != null && Transmog.IsWeapon(item))
+                {
+                    SkinMenu.OpenForWeapon(player, item);
+                    return;
+                }
             }
             if (item != null)
             {
+                // like in the vanilla inventory: use / equip / unequip
                 player.UseItem(null, item, true);
             }
         }
