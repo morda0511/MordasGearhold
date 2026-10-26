@@ -16,16 +16,16 @@ namespace MordasGearhold.Core
     {
         internal const string FileName = "MordasGearhold.dye.json";
 
-        internal static int StartClusters = 6;
-        internal static int MaxZones = 4;
-        internal static float MinShare = 0.025f;
-        internal static float MergeDistance = 0.20f;
-        internal static float BrightnessWeight = 0.6f;
+        internal static int StartClusters = 12;
+        internal static int MaxZones = 8;
+        internal static float MinShare = 0.012f;
+        internal static float MergeDistance = 0.25f;
+        internal static float BrightnessWeight = 0.7f;
+        internal static float ChromaWeight = 6f;
         internal static int Sample = 96;
-        internal static float Softness = 0.03f;
-        internal static float SatMax = 1.5f;
-        internal static float ValMax = 2f;
-        internal static float SatFollow = 1f;
+        internal static float Softness = 0.12f;
+        internal static float Detail = 1f;
+        internal static float ValMax = 3f;
         internal static float ValFollow = 1f;
 
         /// <summary>Changes with every reload: part of the cache keys of recoloured textures.</summary>
@@ -58,16 +58,16 @@ namespace MordasGearhold.Core
 
         private static void Load(string json)
         {
-            StartClusters = Mathf.RoundToInt(Number(json, "startClusters", 6f, 2f, 12f));
-            MaxZones = Mathf.RoundToInt(Number(json, "maxZones", 4f, 1f, 8f));
-            MinShare = Number(json, "minShare", 0.025f, 0f, 0.2f);
-            MergeDistance = Number(json, "merge", 0.20f, 0.01f, 1f);
-            BrightnessWeight = Number(json, "bw", 0.6f, 0f, 3f);
+            StartClusters = Mathf.RoundToInt(Number(json, "startClusters", 12f, 2f, 16f));
+            MaxZones = Mathf.RoundToInt(Number(json, "maxZones", 8f, 1f, 8f));
+            MinShare = Number(json, "minShare", 0.012f, 0f, 0.2f);
+            MergeDistance = Number(json, "merge", 0.25f, 0.01f, 2f);
+            BrightnessWeight = Number(json, "bw", 0.7f, 0f, 3f);
+            ChromaWeight = Number(json, "wc", 6f, 0f, 20f);
             Sample = Mathf.RoundToInt(Number(json, "sample", 96f, 24f, 256f));
-            Softness = Number(json, "soft", 0.03f, 0.001f, 0.5f);
-            SatMax = Number(json, "satMax", 1.5f, 1f, 5f);
-            ValMax = Number(json, "valMax", 2f, 1f, 6f);
-            SatFollow = Number(json, "satFollow", 1f, 0f, 1f);
+            Softness = Number(json, "soft", 0.12f, 0.001f, 1f);
+            Detail = Number(json, "detail", 1f, 0f, 2f);
+            ValMax = Number(json, "valMax", 3f, 1f, 6f);
             ValFollow = Number(json, "valFollow", 1f, 0f, 1f);
             Version++;
             Zones.Forget();

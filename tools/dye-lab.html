@@ -68,18 +68,18 @@
 <script>
 // ---------------------------------------------------------------- parameters (defaults = the mod's current values)
 const DETECT = [
-  ["startClusters","Start-Cluster",2,12,1,6],
-  ["maxZones","Max. Zonen",1,6,1,4],
-  ["minShare","Min. Anteil",0,0.1,0.005,0.025],
-  ["merge","Verschmelz-Abstand",0.02,0.6,0.01,0.20],
-  ["bw","Helligkeits-Gewicht",0,1.5,0.05,0.6],
+  ["startClusters","Start-Cluster",2,16,1,12],
+  ["maxZones","Max. Zonen",1,8,1,8],
+  ["minShare","Min. Anteil",0,0.1,0.002,0.012],
+  ["merge","Verschmelz-Abstand",0.02,1.2,0.01,0.25],
+  ["bw","Helligkeits-Gewicht",0,2,0.05,0.7],
+  ["wc","Farb-Gewicht",0,20,0.5,6],
   ["sample","Stichprobe (px)",32,192,16,96],
 ];
 const MAP = [
-  ["soft","Weichheit der Zonen",0.002,0.2,0.002,0.03],
-  ["satMax","Max. Sättigungs-Faktor",1,3,0.1,1.5],
-  ["valMax","Max. Helligkeits-Faktor",1,4,0.1,2],
-  ["satFollow","Sättigungs-Verlauf behalten",0,1,0.05,1],
+  ["soft","Weichheit der Zonen",0.002,1,0.002,0.12],
+  ["detail","Farb-Details behalten",0,2,0.05,1],
+  ["valMax","Max. Helligkeits-Faktor",1,6,0.1,3],
   ["valFollow","Helligkeits-Verlauf behalten",0,1,0.05,1],
 ];
 let P = {};
@@ -101,7 +101,19 @@ function hsv2rgb(h, s, v) {
   const i = Math.floor(h), f = h - i, p = v*(1-s), q = v*(1-s*f), t = v*(1-s*(1-f));
   return [[v,t,p],[q,v,p],[p,v,t],[p,q,v],[t,p,v],[v,p,q]][i % 6];
 }
-const feature = (h, s, v) => { const a = h * Math.PI * 2; return [Math.cos(a)*s, Math.sin(a)*s, v*P.bw]; };
+const toLin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const toSrgb = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+function oklab(r, g, b) {
+  r = toLin(r); g = toLin(g); b = toLin(b);
+  const l = Math.cbrt(0.4122214708*r + 0.5363325363*g + 0.0514459929*b), m = Math.cbrt(0.2119034982*r + 0.6806995451*g + 0.1073969566*b), s = Math.cbrt(0.0883024619*r + 0.2817188376*g + 0.6299787005*b);
+  return [0.2104542553*l + 0.7936177850*m - 0.0040720468*s, 1.9779984951*l - 2.4285922050*m + 0.4505937099*s, 0.0259040371*l + 0.7827717662*m - 0.8086757660*s];
+}
+function fromOklab(L, a, b) {
+  const l = (L + 0.3963377774*a + 0.2158037573*b) ** 3, m = (L - 0.1055613458*a - 0.0638541728*b) ** 3, s = (L - 0.0894841775*a - 1.2914855480*b) ** 3;
+  return [4.0767416621*l - 3.3077115913*m + 0.2309699292*s, -1.2684380046*l + 2.6097574011*m - 0.3413193965*s, -0.0041960863*l - 0.7034186147*m + 1.7076147010*s]
+    .map(x => Math.min(1, Math.max(0, toSrgb(Math.min(1, Math.max(0, x))))));
+}
+const feature = (L, a, b) => [L * P.bw, a * P.wc, b * P.wc];
 const dist2 = (a, b) => (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -113,12 +125,12 @@ function detect(sampleData, useAlpha) {
     for (let i = 0; i < sampleData.length; i += 4) {
       if (useAlpha && sampleData[i+3] < 128) continue;
       const r = sampleData[i]/255, g = sampleData[i+1]/255, b = sampleData[i+2]/255;
-      const [h, s, v] = rgb2hsv(r, g, b);
-      if (pass === 0 && v < 0.04) continue;
-      features.push(feature(h, s, v)); colors.push([r, g, b]);
+      if (pass === 0 && Math.max(r, g, b) < 10/255) continue;
+      const lab = oklab(r, g, b);
+      features.push(feature(lab[0], lab[1], lab[2])); colors.push([r, g, b]);
     }
   }
-  if (!features.length) return { centers:[feature(0,0,.5)], chips:[[.5,.5,.5]], share:[1] };
+  if (!features.length) return { centers:[feature(0.6,0,0)], chips:[[.5,.5,.5]], share:[1] };
   let centers = kmeans(features, P.startClusters);
   let assign = new Int32Array(features.length), counts = new Float64Array(centers.length);
   doAssign(features, centers, assign, counts);
@@ -194,13 +206,18 @@ function shiftHsv(h, s, v, d, zoneHue) {
   const v2 = val >= 0 ? v + (1 - v) * val : v * (1 + val);
   return hsv2rgb(hh, s2, v2);
 }
-function shiftTarget(s, v, d, chip) {
-  const [th, ts, tv] = rgb2hsv(...d.rgb);
-  const relS = chip[1] > 0.04 ? Math.min(Math.max(s / chip[1], 0), P.satMax) : 1;
-  const relV = Math.min(Math.max(v / Math.max(chip[2], 0.05), 0), P.valMax);
-  const s2 = ts <= 0.02 ? 0 : Math.min(1, ts * (1 + (relS - 1) * P.satFollow));
-  const v2 = Math.min(1, tv * (1 + (relV - 1) * P.valFollow));
-  return hsv2rgb(th, s2, v2);
+// the zone's target map (see TargetMap in DyeRenderer.cs): colour moved in OKLab, the texture keeps its own light and fine colour variation
+function targetMap(d, chip) {
+  const t = oklab(...d.rgb), c = oklab(...chip);
+  let cos = 1, sin = 0;
+  const tc = Math.hypot(t[1], t[2]), cc = Math.hypot(c[1], c[2]);
+  if (tc > 0.03 && cc > 0.03) { const ang = Math.atan2(t[2], t[1]) - Math.atan2(c[2], c[1]); cos = Math.cos(ang); sin = Math.sin(ang); }
+  return (L, a, b) => {
+    const rel = Math.min(Math.max(L / Math.max(c[0], 0.05), 0), P.valMax);
+    const nl = Math.min(1, t[0] * (P.valFollow >= 0.999 ? rel : Math.pow(rel, P.valFollow)));
+    const da = (a - c[1]) * P.detail, db = (b - c[2]) * P.detail;
+    return fromOklab(nl, t[1] + da * cos - db * sin, t[2] + da * sin + db * cos);
+  };
 }
 
 // ---------------------------------------------------------------- state
@@ -267,7 +284,7 @@ function computeWeights() {
   weights = new Float32Array(n * z);
   const e = new Float64Array(z);
   for (let i = 0; i < n; i++) {
-    const [h, s, v] = rgb2hsv(p[i*4]/255, p[i*4+1]/255, p[i*4+2]/255), f = feature(h, s, v);
+    const lab = oklab(p[i*4]/255, p[i*4+1]/255, p[i*4+2]/255), f = feature(lab[0], lab[1], lab[2]);
     let best = Infinity;
     for (let k = 0; k < z; k++) { e[k] = dist2(f, zones.centers[k]); if (e[k] < best) best = e[k]; }
     let sum = 0;
@@ -285,6 +302,7 @@ function render() {
   const out = new ImageData(img.width, img.height), o = out.data;
   const active = dyes.map(d => d.mode !== "none");
   const hues = zones.chips.map(c => rgb2hsv(...c));
+  const maps = dyes.map((d, k) => d.mode === "target" ? targetMap(d, zones.chips[k]) : null);
   for (let i = 0; i < n; i++) {
     const r = p[i*4], g = p[i*4+1], b = p[i*4+2], a = p[i*4+3];
     o[i*4+3] = a;
@@ -292,12 +310,13 @@ function render() {
     let touched = 0; for (let k = 0; k < z; k++) if (active[k]) touched += weights[i*z+k];
     if (touched < 2/255) { o[i*4] = r; o[i*4+1] = g; o[i*4+2] = b; continue; }
     const [h, s, v] = rgb2hsv(r/255, g/255, b/255);
+    const lab = oklab(r/255, g/255, b/255);
     let R = 0, G = 0, B = 0;
     for (let k = 0; k < z; k++) {
       const w = weights[i*z+k]; if (w <= 0) continue;
       let c;
       if (!active[k]) c = [r/255, g/255, b/255];
-      else if (dyes[k].mode === "target") c = shiftTarget(s, v, dyes[k], hues[k]);
+      else if (dyes[k].mode === "target") c = maps[k](lab[0], lab[1], lab[2]);
       else c = shiftHsv(h, s, v, dyes[k], hues[k][0]);
       R += c[0]*w; G += c[1]*w; B += c[2]*w;
     }

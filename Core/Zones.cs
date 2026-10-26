@@ -40,19 +40,15 @@ namespace MordasGearhold.Core
         private static float MinShare => DyeTuning.MinShare;   // smaller zones are merged into their neighbour
         private static int StartClusters => DyeTuning.StartClusters;
         private static float MergeDistance => DyeTuning.MergeDistance; // zones this close in colour are one zone
-        private static float BrightnessWeight => DyeTuning.BrightnessWeight;
+
 
         /// <summary>Drops every remembered zone set (the tuning changed): they are found again with the new numbers.</summary>
         internal static void Forget() => s_sets.Clear();
 
         private static readonly Dictionary<Texture, ZoneSet> s_sets = new Dictionary<Texture, ZoneSet>();
-
-        /// <summary>The position of a colour in the zone space.</summary>
-        internal static Vector3 Feature(float hue, float saturation, float value)
-        {
-            float angle = hue * Mathf.PI * 2f;
-            return new Vector3(Mathf.Cos(angle) * saturation, Mathf.Sin(angle) * saturation, value * BrightnessWeight);
-        }
+        /// <summary>The position of a colour in the zone space: OKLab with the lightness and colour axes weighted (DyeTuning).</summary>
+        internal static Vector3 Feature(float lightness, float a, float b) =>
+            new Vector3(lightness * DyeTuning.BrightnessWeight, a * DyeTuning.ChromaWeight, b * DyeTuning.ChromaWeight);
 
         internal static ZoneSet Of(Texture texture)
         {
@@ -94,15 +90,15 @@ namespace MordasGearhold.Core
                 foreach (Color32 p in pixels)
                 {
                     if (useAlpha && p.a < 128) continue;
-                    Color.RGBToHSV(p, out float h, out float s, out float v);
-                    if (pass == 0 && v < 0.04f) continue; // pure black outlines say nothing about the material
-                    features.Add(Feature(h, s, v));
+                    if (pass == 0 && System.Math.Max(p.r, System.Math.Max(p.g, p.b)) < 10) continue; // pure black outlines say nothing about the material
+                    Oklab.FromRgb(p.r, p.g, p.b, out float lab0, out float lab1, out float lab2);
+                    features.Add(Feature(lab0, lab1, lab2));
                     colors.Add(new Color(p.r / 255f, p.g / 255f, p.b / 255f));
                 }
             }
             if (features.Count == 0)
             {
-                return new ZoneSet(new[] { Feature(0f, 0f, 0.5f) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f });
+                return new ZoneSet(new[] { Feature(0.6f, 0f, 0f) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f });
             }
 
             // start with more clusters than zones, so a small accent colour (teal stripes on brown leather) gets
