@@ -36,6 +36,9 @@ Trinket 1 290,596,52,52
 Trinket 2 350,596,52,52
 Trinket 3 410,596,52,52
 Utility-Titel 118,558,160,22
+Custom 1 402,266,64,64
+Custom 2 402,354,64,64
+Custom 3 402,442,64,64
 Utility 1 58,596,52,52
 Utility 2 118,596,52,52
 Utility 3 178,596,52,52

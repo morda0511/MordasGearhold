@@ -30,6 +30,7 @@ namespace MordasGearhold
         internal static ConfigEntry<int> ExtraRows;
         internal static ConfigEntry<int> TrinketSlots;
         internal static ConfigEntry<int> UtilitySlots;
+        internal static readonly ConfigEntry<string>[] CustomSlotPrefabs = new ConfigEntry<string>[Topology.CustomSlotCount];
         internal static ConfigEntry<KeyboardShortcut> KeySet1;
         internal static ConfigEntry<KeyboardShortcut> Weapon2SwapKey;
         internal static ConfigEntry<KeyboardShortcut> KeySet2;
@@ -88,6 +89,13 @@ namespace MordasGearhold
                     "An item in a slot that is switched off goes back into the inventory grid.",
                     new AcceptableValueRange<int>(1, 3)));
 
+            for (int i = 0; i < CustomSlotPrefabs.Length; i++)
+            {
+                CustomSlotPrefabs[i] = Config.Bind("1 - Inventory", "CustomSlot" + (i + 1), "",
+                    "Prefab names of the items custom slot " + (i + 1) + " takes, comma separated (e.g. Wishbone,Demister). " +
+                    "Works for items of other mods too. Empty = the slot is not shown. " +
+                    "Names are the prefab names, not the display names (a mod's page or the item's spawn command shows them).");
+            }
             KeySet1 = Config.Bind("2 - Hotkeys", "Set1", KeyboardShortcut.Empty, "Switch to equipment set 1.");
             Weapon2SwapKey = Config.Bind("2 - Hotkeys", "Weapon2Swap", KeyboardShortcut.Empty,
                 "Swaps the weapon in hand with the Weapon 2 slot. Empty: the vanilla hide key (R) swaps. Set: only this key swaps and R is vanilla again.");

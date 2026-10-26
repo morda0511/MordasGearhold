@@ -178,3 +178,6 @@ Source and issues: https://github.com/morda0511/MordasGearhold
 
 ## Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (UI) turns off seeing other players' colours.
+
+## Custom slots
+Three slots under the shield take only the items you name: set `CustomSlot1`, `CustomSlot2` or `CustomSlot3` (config, section 1 - Inventory) to a comma separated list of prefab names, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name. A slot with an empty list is hidden. The items stay real inventory items (weight, tombstone, saving work as usual) and belong to the active set. Right-click uses the item.

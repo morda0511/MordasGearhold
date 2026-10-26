@@ -14,7 +14,8 @@ namespace MordasGearhold.Core
         Ammo = 9, Ammo2, Ammo3, Trinket2, Trinket3, Utility2, Utility3,  // hidden row 1 (full)
         Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8, // hidden row 2
         Food1 = 24, Food2, Food3, Mead1, Mead2, Mead3,                     // hidden row 3 (since 1.2.0)
-        Holster = 30                                                       // hidden row 3 (since 1.3.8): second weapon, R swaps; 31 free
+        Holster = 30,                                                      // hidden row 3 (since 1.3.8): second weapon, R swaps; 31 free
+        Custom1 = 32, Custom2, Custom3                                     // hidden row 4 (since 1.4.0): hold only the items named in the config
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ namespace MordasGearhold.Core
         internal const int VanillaRows = 4;
         internal const int DefaultExtraRows = 3;
         internal const int MaxExtraRows = 5;
-        internal const int HiddenRows = 4;
+        internal const int HiddenRows = 5;
         internal const int QuickslotCount = 8;
 
         /// <summary>Stored sets keep slot cells at y = 200 + row, independent of the grid height.</summary>
@@ -117,6 +118,9 @@ namespace MordasGearhold.Core
                 case GearSlot.Utility2: return Plugin.UtilitySlots.Value >= 2;
                 case GearSlot.Utility3: return Plugin.UtilitySlots.Value >= 3;
                 case GearSlot.Holster: return Plugin.EnableWeapon2.Value;
+                case GearSlot.Custom1:
+                case GearSlot.Custom2:
+                case GearSlot.Custom3: return CustomPrefabs(slot).Count > 0;
                 default: return true;
             }
         }
@@ -124,6 +128,28 @@ namespace MordasGearhold.Core
         internal static readonly GearSlot[] ExtraSlots ={ GearSlot.Trinket2, GearSlot.Trinket3, GearSlot.Utility2, GearSlot.Utility3 };
 
         internal static bool IsTrinketSlot(GearSlot slot) => slot == GearSlot.Trinket || IsExtraTrinketSlot(slot);
+
+        internal const int CustomSlotCount = 3;
+
+        internal static bool IsCustomSlot(GearSlot slot) => slot >= GearSlot.Custom1 && slot <= GearSlot.Custom3;
+
+        private static readonly string[] s_customRaw = new string[CustomSlotCount];
+        private static readonly HashSet<string>[] s_customSets = new HashSet<string>[CustomSlotCount];
+
+        /// <summary>The prefab names a custom slot takes (config CustomSlotN, comma separated, not case sensitive).</summary>
+        internal static HashSet<string> CustomPrefabs(GearSlot slot)
+        {
+            int n = slot - GearSlot.Custom1;
+            string raw = Plugin.CustomSlotPrefabs[n]?.Value ?? "";
+            if (s_customSets[n] == null || s_customRaw[n] != raw)
+            {
+                s_customRaw[n] = raw;
+                s_customSets[n] = new HashSet<string>(
+                    raw.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).Where(s => s.Length > 0),
+                    StringComparer.OrdinalIgnoreCase);
+            }
+            return s_customSets[n];
+        }
 
         internal const int FoodSlotCount = 3;
         internal const int MeadSlotCount = 3;
@@ -160,6 +186,7 @@ namespace MordasGearhold.Core
         internal static bool Accepts(GearSlot slot, ItemDrop.ItemData item)
         {
             if (slot == GearSlot.Holster) return Plugin.EnableWeapon2.Value && IsHolsterWeapon(item);
+            if (IsCustomSlot(slot)) return item.m_dropPrefab != null && CustomPrefabs(slot).Contains(item.m_dropPrefab.name);
             if (IsFoodSlot(slot)) return IsFood(item);
             if (IsMeadSlot(slot)) return IsMead(item);
             if (slot >= GearSlot.Quick1) return true;

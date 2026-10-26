@@ -185,6 +185,11 @@ namespace MordasGearhold.UI
             AddPlaced(gui, GearSlot.Trinket3, "Trinket 3", "Trinket 3");
             // the coin slot, top right next to the title: shared by all sets, coins there weigh nothing
             AddPlaced(gui, GearSlot.Coins, null, "Münzen");
+            // three slots under the shield that only take the items named in the config (CustomSlot1..3)
+            for (int n = 0; n < Topology.CustomSlotCount; n++)
+            {
+                AddPlaced(gui, GearSlot.Custom1 + n, "Custom " + (n + 1), "Custom " + (n + 1));
+            }
 
             // utility slots in a row below the armour; the ammo slots sit in a drop-down opened by the AMMO button
             PanelLayout.Part sheet = PanelLayout.Get("Charakterblatt");
@@ -551,7 +556,7 @@ namespace MordasGearhold.UI
             foreach (Slot slot in s_slots)
             {
                 // Trinket/Utility 2 and 3 can be switched off in the config (TrinketSlots, UtilitySlots)
-                bool enabled = Topology.IsEnabled(slot.Kind) && (!slot.InDrawer || s_ammoOpen);
+                bool enabled = (Topology.IsEnabled(slot.Kind) || (Topology.IsCustomSlot(slot.Kind) && Equipment.ItemIn(player, slot.Kind) != null)) && (!slot.InDrawer || s_ammoOpen);
                 if (slot.Kind == GearSlot.Holster)
                 {
                     // the Weapon 2 title and key box come and go with the slot (config EnableWeapon2)
