@@ -26,7 +26,7 @@ Münzen 416,46,52,52
 Set 1 90,102,128,34
 Set 2 230,102,128,34
 Set 3 370,102,128,34
-Charakterblatt 230,315,248,338
+Charakterblatt 230,343,248,394
 Kopf 58,178,64,64
 Brust 58,266,64,64
 Beine 58,354,64,64
@@ -40,13 +40,13 @@ Utility 1 58,570,52,52
 Utility 2 118,570,52,52
 Utility 3 178,570,52,52
 AMMO-Knopf 461,522,14,56
-Ammo-Dropdown 494,618,68,246
-Ammo 1 496,526,46,46
-Ammo 2 496,604,46,46
-Ammo 3 496,684,46,46
-Ammo-Taste 1 496,566,48,24
-Ammo-Taste 2 496,644,48,24
-Ammo-Taste 3 496,724,48,24
+Ammo-Dropdown 494,680,68,246
+Ammo 1 496,588,46,46
+Ammo 2 496,666,46,46
+Ammo 3 496,746,46,46
+Ammo-Taste 1 496,628,48,24
+Ammo-Taste 2 496,706,48,24
+Ammo-Taste 3 496,786,48,24
 Food-Titel 120,644,160,22
 Food 1 68,682,46,46
 Food 2 120,682,46,46

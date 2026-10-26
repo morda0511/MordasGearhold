@@ -189,10 +189,6 @@ namespace MordasGearhold.UI
             // utility slots in a row below the armour; the ammo slots sit in a drop-down opened by the AMMO button
             PanelLayout.Part sheet = PanelLayout.Get("Charakterblatt");
             float sheetTop = sheet.Y - sheet.H / 2f, sheetBottom = sheet.Y + sheet.H / 2f;
-            p = PanelLayout.Get("Utility-Titel");
-            float utilityTop = p.Y - 18f;
-            TMP_Text utilityTitle = UiKit.Text(s_body, header, "UTILITY", 16f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(utilityTitle.rectTransform, p.X, p.Y, p.W, p.H);
             AddPlaced(gui, GearSlot.Utility, "Utility 1", "Utility 1");
             AddPlaced(gui, GearSlot.Utility2, "Utility 2", "Utility 2");
             AddPlaced(gui, GearSlot.Utility3, "Utility 3", "Utility 3");
@@ -405,8 +401,8 @@ namespace MordasGearhold.UI
             RectTransform box = UiKit.Rect("AmmoDrawer", s_body);
             UiKit.Place(box, b.X, b.Y, b.W, b.H);
             Image back = box.gameObject.AddComponent<Image>();
-            Image source = UiKit.Named(gui.m_crafting, "Decription");
-            if (source != null) UiKit.CopyLook(back, source, new Color(0f, 0f, 0f, 0.92f));
+            Image source = UiKit.Named(gui.m_crafting, "Bkg") ?? UiKit.FindBackground(gui.m_crafting); // the wooden board of the panels
+            if (source != null) UiKit.CopyLook(back, source, Color.white);
             else back.color = new Color(0f, 0f, 0f, 0.92f);
             back.raycastTarget = true; // clicks must not fall through to the sheet
             s_ammoBox = box.gameObject;
