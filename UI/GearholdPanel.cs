@@ -188,7 +188,8 @@ namespace MordasGearhold.UI
             // three slots under the shield that only take the items named in the config (CustomSlot1..3)
             for (int n = 0; n < Topology.CustomSlotCount; n++)
             {
-                AddPlaced(gui, GearSlot.Custom1 + n, "Custom " + (n + 1), "Custom " + (n + 1));
+                Slot custom = AddPlaced(gui, GearSlot.Custom1 + n, "Custom " + (n + 1), "Custom " + (n + 1));
+                custom.KeyButton = AddPlacedKey(gui, custom.Kind, custom.Label, "Custom-Taste " + (n + 1));
             }
 
             // utility slots in a row below the armour; the ammo slots sit in a drop-down opened by the AMMO button

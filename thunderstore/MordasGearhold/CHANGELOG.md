@@ -17,6 +17,7 @@
 - Panel is more compact: utility slots sit in a row below the armour, trinkets next to the armour, and the ammo slots moved into a drop-down opened by the AMMO button; less space between food and quickslots.
 - The panel layout comes from a built-in table and can be overridden by a `MordasGearhold.layout.json` in the BepInEx config folder (made with tools/layout-editor.html).
 - Right-click on a Gearhold slot equips / unequips like in the vanilla inventory; the look menu opens from the transmog button (Shift + right-click on a slot is a shortcut).
+- Custom slots have hotkeys (config Custom1-3, also set with the key button under each slot).
 - Custom slots show the name of their item (or of the first item of their list) under the slot; items of other mods work as long as the prefab name is right.
 - Custom slots: three slots under the shield that only take the items named in the config (CustomSlot1-3, prefab names, also items of other mods). The inventory gets one more hidden row for them.
 

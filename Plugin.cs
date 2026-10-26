@@ -40,6 +40,7 @@ namespace MordasGearhold
         internal static readonly ConfigEntry<KeyboardShortcut>[] KeyAmmo = new ConfigEntry<KeyboardShortcut>[Topology.AmmoSlotCount];
         internal static readonly ConfigEntry<KeyboardShortcut>[] KeyFood = new ConfigEntry<KeyboardShortcut>[Topology.FoodSlotCount];
         internal static readonly ConfigEntry<KeyboardShortcut>[] KeyMead = new ConfigEntry<KeyboardShortcut>[Topology.MeadSlotCount];
+        internal static readonly ConfigEntry<KeyboardShortcut>[] KeyCustom = new ConfigEntry<KeyboardShortcut>[Topology.CustomSlotCount];
         internal static ConfigEntry<float> FoodBarX;
         internal static ConfigEntry<float> FoodBarY;
         internal static ConfigEntry<float> MeadBarX;
@@ -125,6 +126,11 @@ namespace MordasGearhold
             {
                 KeyMead[i] = Config.Bind("2 - Hotkeys", "Mead" + (i + 1), KeyboardShortcut.Empty,
                     "Drink the mead in Gearhold mead slot " + (i + 1) + " of the active set. Also editable in the panel.");
+            }
+            for (int i = 0; i < KeyCustom.Length; i++)
+            {
+                KeyCustom[i] = Config.Bind("2 - Hotkeys", "Custom" + (i + 1), KeyboardShortcut.Empty,
+                    "Use the item in custom slot " + (i + 1) + " of the active set (eat, drink, equip). Also editable in the panel.");
             }
 
             AutoEquip = Config.Bind("3 - Behaviour", "AutoEquip", true,
@@ -252,6 +258,7 @@ namespace MordasGearhold
         {
             GearSlot.Quick1, GearSlot.Quick2, GearSlot.Quick3, GearSlot.Quick4, GearSlot.Quick5, GearSlot.Quick6, GearSlot.Quick7, GearSlot.Quick8,
             GearSlot.Food1, GearSlot.Food2, GearSlot.Food3, GearSlot.Mead1, GearSlot.Mead2, GearSlot.Mead3,
+            GearSlot.Custom1, GearSlot.Custom2, GearSlot.Custom3,
         };
 
         /// <summary>The use key of a quickslot, food or mead slot; null for other slots.</summary>
@@ -260,6 +267,7 @@ namespace MordasGearhold
             if (slot >= GearSlot.Quick1 && slot <= GearSlot.Quick8) return KeyQuickslots[slot - GearSlot.Quick1];
             if (Topology.IsFoodSlot(slot)) return KeyFood[slot - GearSlot.Food1];
             if (Topology.IsMeadSlot(slot)) return KeyMead[slot - GearSlot.Mead1];
+            if (Topology.IsCustomSlot(slot)) return KeyCustom[slot - GearSlot.Custom1];
             return null;
         }
 
@@ -364,6 +372,7 @@ namespace MordasGearhold
             foreach (ConfigEntry<KeyboardShortcut> entry in KeyAmmo) yield return entry;
             foreach (ConfigEntry<KeyboardShortcut> entry in KeyFood) yield return entry;
             foreach (ConfigEntry<KeyboardShortcut> entry in KeyMead) yield return entry;
+            foreach (ConfigEntry<KeyboardShortcut> entry in KeyCustom) yield return entry;
             yield return KeySet1;
             yield return KeySet2;
             yield return KeySet3;

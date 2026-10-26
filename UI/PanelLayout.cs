@@ -36,9 +36,12 @@ Trinket 1 308,636,46,46
 Trinket 2 360,636,46,46
 Trinket 3 412,636,46,46
 Utility-Titel 118,558,160,22
-Custom 1 402,266,64,64
-Custom 2 402,354,64,64
-Custom 3 402,442,64,64
+Custom 1 402,262,52,52
+Custom-Taste 1 402,320,56,22
+Custom 2 402,358,52,52
+Custom-Taste 2 402,416,56,22
+Custom 3 402,454,52,52
+Custom-Taste 3 402,512,56,22
 Utility 1 48,636,46,46
 Utility 2 100,636,46,46
 Utility 3 152,636,46,46
