@@ -599,6 +599,13 @@ namespace MordasGearhold.UI
             {
                 s_nextSheet = Time.unscaledTime + 0.25f;
                 s_stats.text = CharacterSheet.Build(player);
+                foreach (Slot custom in s_slots)
+                {
+                    if (Topology.IsCustomSlot(custom.Kind) && custom.Caption != null)
+                    {
+                        custom.Caption.text = Topology.CustomLabel(custom.Kind, custom.Item);
+                    }
+                }
                 int dormant = GearholdState.TryReadSet(player, active, out SetPackage own, out _) ? own.Records.Count : 0;
                 s_footer.text = dormant > 0
                     ? $"<color=#e0a040>{dormant} items of this set wait for their mod to return</color>"

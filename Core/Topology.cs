@@ -129,6 +129,28 @@ namespace MordasGearhold.Core
 
         internal static bool IsTrinketSlot(GearSlot slot) => slot == GearSlot.Trinket || IsExtraTrinketSlot(slot);
 
+        /// <summary>
+        /// Name shown under a custom slot: the item it holds, else the first item of its list (display name of the
+        /// prefab, so items of other mods work too as long as their prefab is registered); "+n" when the list has more.
+        /// </summary>
+        internal static string CustomLabel(GearSlot slot, ItemDrop.ItemData held)
+        {
+            if (held != null)
+            {
+                return Localization.instance.Localize(held.m_shared.m_name);
+            }
+            HashSet<string> names = CustomPrefabs(slot);
+            if (names.Count == 0 || ObjectDB.instance == null)
+            {
+                return "Custom " + (slot - GearSlot.Custom1 + 1);
+            }
+            string first = names.First();
+            UnityEngine.GameObject prefab = ObjectDB.instance.GetItemPrefab(first);
+            ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            string label = drop != null ? Localization.instance.Localize(drop.m_itemData.m_shared.m_name) : first;
+            return names.Count > 1 ? label + " +" + (names.Count - 1) : label;
+        }
+
         internal const int CustomSlotCount = 3;
 
         internal static bool IsCustomSlot(GearSlot slot) => slot >= GearSlot.Custom1 && slot <= GearSlot.Custom3;
