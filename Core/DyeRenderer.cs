@@ -164,20 +164,21 @@ namespace MordasGearhold.Core
             bool same = true;
             for (int i = 1; i < dyes.Length; i++)
             {
-                if (dyes[i].Hue != dyes[0].Hue || dyes[i].Saturation != dyes[0].Saturation || dyes[i].Brightness != dyes[0].Brightness)
+                if (!dyes[i].SameAs(dyes[0]))
                 {
                     same = false;
                 }
             }
-            ZoneSet zones = same ? null : ZonesOf(player, piece);
-            if (zones == null || zones.Count < 2)
+            bool anyTarget = dyes.Length > 0 && dyes[0].IsTarget;
+            ZoneSet zones = same && !anyTarget ? null : ZonesOf(player, piece);
+            if (zones == null || (zones.Count < 2 && !anyTarget))
             {
                 return new Plan { Dyes = dyes }; // one colour for the whole piece
             }
             DyeValue[] fitted = new DyeValue[zones.Count]; // missing zones stay as they are, extra ones are dropped
             for (int i = 0; i < fitted.Length; i++)
             {
-                fitted[i] = i < dyes.Length ? dyes[i] : default;
+                fitted[i] = dyes.Length == 1 ? dyes[0] : (i < dyes.Length ? dyes[i] : default); // one value = every zone
             }
             return new Plan { Dyes = fitted, Zones = zones };
         }
@@ -490,10 +491,26 @@ namespace MordasGearhold.Core
             return Color.HSVToRGB(h, s, v);
         }
 
+        /// <summary>
+        /// A pixel moved to a chosen target colour: the hue is the target's, and saturation and brightness follow the
+        /// target scaled by how far this pixel lies from the zone's average (<paramref name="chip"/>), so the shading
+        /// of the model stays: highlights stay light and creases dark, around the new colour.
+        /// </summary>
+        internal static Color ShiftTarget(float saturation, float value, DyeValue dye, Vector3 chip)
+        {
+            Color.RGBToHSV(dye.TargetColor, out float th, out float ts, out float tv);
+            float relS = chip.y > 0.04f ? Mathf.Clamp(saturation / chip.y, 0f, 1.5f) : 1f;
+            float relV = Mathf.Clamp(value / Mathf.Max(chip.z, 0.05f), 0f, 2f);
+            float s = ts <= 0.02f ? 0f : Mathf.Clamp01(ts * relS);
+            float v = Mathf.Clamp01(tv * relV);
+            return Color.HSVToRGB(th, s, v);
+        }
+
         /// <summary>The result of a dye on one colour of a zone (for the preview chips in the menu).</summary>
         internal static Color ShiftColor(Color colour, DyeValue dye)
         {
             Color.RGBToHSV(colour, out float h, out float s, out float v);
+            if (dye.IsTarget) return dye.TargetColor;
             return dye.IsNeutral ? colour : ShiftHsv(h, s, v, dye, h);
         }
 
@@ -612,10 +629,12 @@ namespace MordasGearhold.Core
             ZonedPixels data = PixelsOf(source, zones);
             int n = data.Source.Length, z = zones.Count;
             float[] zoneHue = new float[z];
+            Vector3[] zoneChip = new Vector3[z];
             bool[] active = new bool[z];
             for (int k = 0; k < z; k++)
             {
-                Color.RGBToHSV(zones.Chips[k], out zoneHue[k], out float _, out float _);
+                Color.RGBToHSV(zones.Chips[k], out zoneHue[k], out float chipS, out float chipV);
+                zoneChip[k] = new Vector3(zoneHue[k], chipS, chipV);
                 active[k] = k < dyes.Length && !dyes[k].IsNeutral;
             }
             Color32[] result = new Color32[n];
@@ -645,7 +664,8 @@ namespace MordasGearhold.Core
                 {
                     float w = data.Weights[i * z + k] / (float)sum;
                     if (w <= 0f) continue;
-                    Color c = active[k] ? ShiftHsv(h, s, v, dyes[k], zoneHue[k]) : new Color(p.r / 255f, p.g / 255f, p.b / 255f);
+                    Color c = !active[k] ? new Color(p.r / 255f, p.g / 255f, p.b / 255f)
+                        : dyes[k].IsTarget ? ShiftTarget(s, v, dyes[k], zoneChip[k]) : ShiftHsv(h, s, v, dyes[k], zoneHue[k]);
                     r += c.r * w;
                     g += c.g * w;
                     b += c.b * w;
@@ -702,6 +722,7 @@ namespace MordasGearhold.Core
             Texture2D copy = ReadBack(source, MaxSize, true);
             copy.name = source.name + "_gearhold_dye";
             Color32[] pixels = copy.GetPixels32();
+            Vector3 targetChip = dye.IsTarget ? Dominant(source) : default;
             float hueShift = dye.Hue / 360f;
             float sat = dye.Saturation / 100f;
             float val = dye.Brightness / 100f;
@@ -713,11 +734,12 @@ namespace MordasGearhold.Core
                     continue; // skin shows through here
                 }
                 Color.RGBToHSV(new Color32(p.r, p.g, p.b, 255), out float hh, out float ss, out float vv);
+                float s0 = ss, v0 = vv;
                 hh = hh + hueShift;
                 hh -= Mathf.Floor(hh);
                 ss = sat >= 0f ? ss + (1f - ss) * sat : ss * (1f + sat);
                 vv = val >= 0f ? vv + (1f - vv) * val : vv * (1f + val);
-                Color32 shifted = Color.HSVToRGB(hh, ss, vv);
+                Color32 shifted = dye.IsTarget ? (Color32)ShiftTarget(s0, v0, dye, targetChip) : (Color32)Color.HSVToRGB(hh, ss, vv);
                 Color32 mixed = coverage ? Color32.Lerp(p, shifted, p.a / 255f) : shifted;
                 pixels[i] = new Color32(mixed.r, mixed.g, mixed.b, p.a);
             }

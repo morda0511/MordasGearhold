@@ -16,13 +16,39 @@ namespace MordasGearhold.Core
         public int Saturation; // percent, -100..100
         public int Brightness; // percent, -100..100
 
-        public bool IsNeutral => Hue == 0 && Saturation == 0 && Brightness == 0;
+        /// <summary>
+        /// A chosen target colour (0xRRGGBB) instead of a shift: the zone takes this colour and keeps its own shading.
+        /// Stored as "#RRGGBB"; the shift values above are unused then.
+        /// </summary>
+        public bool IsTarget;
+        public int Rgb;
 
-        public override string ToString() => Hue + "," + Saturation + "," + Brightness;
+        public bool IsNeutral => !IsTarget && Hue == 0 && Saturation == 0 && Brightness == 0;
+
+        public Color TargetColor => new Color(((Rgb >> 16) & 255) / 255f, ((Rgb >> 8) & 255) / 255f, (Rgb & 255) / 255f);
+
+        internal static DyeValue Target(Color color)
+        {
+            Color32 c = color;
+            return new DyeValue { IsTarget = true, Rgb = (c.r << 16) | (c.g << 8) | c.b };
+        }
+
+        public bool SameAs(DyeValue o) => IsTarget == o.IsTarget && (IsTarget ? Rgb == o.Rgb : Hue == o.Hue && Saturation == o.Saturation && Brightness == o.Brightness);
+
+        public override string ToString() => IsTarget ? "#" + Rgb.ToString("X6", CultureInfo.InvariantCulture) : Hue + "," + Saturation + "," + Brightness;
 
         internal static DyeValue Parse(string raw)
         {
             DyeValue dye = new DyeValue();
+            if (raw != null && raw.Length == 7 && raw[0] == '#')
+            {
+                if (int.TryParse(raw.Substring(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rgb))
+                {
+                    dye.IsTarget = true;
+                    dye.Rgb = rgb & 0xFFFFFF;
+                }
+                return dye;
+            }
             string[] parts = raw.Split(',');
             if (parts.Length == 3)
             {
@@ -35,6 +61,10 @@ namespace MordasGearhold.Core
 
         internal DyeValue Clamped()
         {
+            if (IsTarget)
+            {
+                return new DyeValue { IsTarget = true, Rgb = Rgb & 0xFFFFFF };
+            }
             int hue = ((Hue + 180) % 360 + 360) % 360 - 180; // wrap around the colour wheel
             return new DyeValue
             {

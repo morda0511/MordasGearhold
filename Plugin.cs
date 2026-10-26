@@ -413,7 +413,7 @@ namespace MordasGearhold
         }
 
         /// <summary>True while any input field (Unity or TextMeshPro, any mod) is being typed into.</summary>
-        private static bool TextFieldFocused()
+        internal static bool TextFieldFocused()
         {
             GameObject selected = UnityEngine.EventSystems.EventSystem.current != null
                 ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;

@@ -17,6 +17,8 @@
 - Panel is more compact: utility slots sit in a row below the armour, trinkets next to the armour, and the ammo slots moved into a drop-down opened by the AMMO button; less space between food and quickslots.
 - The panel layout comes from a built-in table and can be overridden by a `MordasGearhold.layout.json` in the BepInEx config folder (made with tools/layout-editor.html).
 - Right-click on a Gearhold slot equips / unequips like in the vanilla inventory; the look menu opens from the transmog button (Shift + right-click on a slot is a shortcut).
+- Colouring reworked: you pick the colour a zone gets (swatches, or the Hue / Saturation / Brightness sliders and a #RRGGBB field with a preview) instead of shifting it; the model keeps its own shading around the chosen colour. Old colours still work. Sliders recolour about five times a second while you drag.
+- Typing a preset name no longer sends keys to the game (E closing the menu, the character moving).
 - The look menu hides the inventory windows while it is open and brings them back when you leave it. New PRESETS button in the look menu: eight named slots (click the name to rename) that save the looks and colours of your five pieces (SAVE) and put them on the active set later (LOAD). Weapon looks and colours are not part of a preset.
 - Custom slots have hotkeys (config Custom1-3, also set with the key button under each slot).
 - Custom slots show the name of their item (or of the first item of their list) under the slot; items of other mods work as long as the prefab name is right.

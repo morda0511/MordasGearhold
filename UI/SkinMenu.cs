@@ -98,10 +98,12 @@ namespace MordasGearhold.UI
         /// <summary>Closes the menu. Without <paramref name="save"/>, every change made in it is undone.</summary>
         internal static void Close(bool save = false)
         {
+            if (save) FlushPending(); else s_pending = null;
             Action revert = s_revert;
             s_revert = null;
             s_builtDye = null;
             s_presetsMode = false;
+            TypingGuard.End();
             InventoryHider.Restore();
             if (s_blocker != null)
             {
@@ -125,6 +127,8 @@ namespace MordasGearhold.UI
         /// <summary>Called every frame by the panel: the menu lives only while the inventory is open.</summary>
         internal static void Tick()
         {
+            TypingGuard.Tick();
+            TickPending();
             if (IsOpen && !InventoryGui.IsVisible())
             {
                 Close();
@@ -435,7 +439,9 @@ namespace MordasGearhold.UI
             input.characterLimit = 18;
             input.richText = false;
             input.text = value;
-            input.onEndEdit.AddListener(v => commit(v));
+            input.onSelect.AddListener(_ => TypingGuard.Begin());
+            input.onDeselect.AddListener(_ => TypingGuard.End());
+            input.onEndEdit.AddListener(v => { TypingGuard.End(); commit(v); });
             rect.gameObject.SetActive(true);
         }
 
@@ -494,20 +500,42 @@ namespace MordasGearhold.UI
             Button[] chipButtons = new Button[zoneCount + 1]; // [0] = ALL
             DyeValue Current() { DyeValue[] all = target.Get(); return s_zone < 0 ? all[0] : all[Mathf.Min(s_zone, all.Length - 1)]; }
 
-            TMP_Text[] values = new TMP_Text[3];
-            void Refresh()
+            // the colour the selected zone (or the whole piece) shows right now
+            Color Displayed()
             {
                 DyeValue d = Current();
-                values[0].text = (d.Hue > 0 ? "+" : "") + d.Hue + "°";
-                values[1].text = (d.Saturation > 0 ? "+" : "") + d.Saturation + "%";
-                values[2].text = (d.Brightness > 0 ? "+" : "") + d.Brightness + "%";
+                if (d.IsTarget) return d.TargetColor;
+                if (zones != null && s_zone >= 0 && s_zone < zones.Count) return TextureDye.ShiftColor(zones.Chips[s_zone], d);
+                if (zones != null && zones.Count == 1) return TextureDye.ShiftColor(zones.Chips[0], d);
+                Texture texture = target.BaseTexture();
+                Vector3 dom = texture != null ? TextureDye.Dominant(texture) : new Vector3(0f, 0.5f, 0.5f);
+                return TextureDye.ShiftColor(Color.HSVToRGB(dom.x, dom.y, dom.z), d);
+            }
+
+            Slider[] sliders = new Slider[3];
+            TMP_Text hexText = null;
+            Image preview = null;
+            TMP_InputField hexInput = null;
+            void Refresh(bool moveSliders = true)
+            {
+                Color shown = Displayed();
+                Color.RGBToHSV(shown, out float h, out float s, out float v);
+                if (s < 0.02f && s_lastHue >= 0f) h = s_lastHue; // a grey keeps the hue the slider had
+                if (moveSliders)
+                {
+                    sliders[0].SetValueWithoutNotify(h * 360f);
+                    sliders[1].SetValueWithoutNotify(s * 100f);
+                    sliders[2].SetValueWithoutNotify(v * 100f);
+                }
+                if (preview != null) preview.color = shown;
+                if (hexInput != null && !hexInput.isFocused) hexInput.SetTextWithoutNotify("#" + ColorUtility.ToHtmlStringRGB(shown));
                 if (zoned)
                 {
                     DyeValue[] all = target.Get();
                     for (int k = 0; k < zoneCount; k++)
                     {
-                        DyeValue shown = all.Length == 1 ? all[0] : (k < all.Length ? all[k] : default);
-                        chipCentres[k].color = TextureDye.ShiftColor(zones.Chips[k], shown);
+                        DyeValue shownDye = all.Length == 1 ? all[0] : (k < all.Length ? all[k] : default);
+                        chipCentres[k].color = TextureDye.ShiftColor(zones.Chips[k], shownDye);
                     }
                     for (int k = 0; k <= zoneCount; k++)
                     {
@@ -515,11 +543,21 @@ namespace MordasGearhold.UI
                     }
                 }
             }
+            // a chosen colour is applied at once; sliders send many values while dragged, so those are thinned out
             void SetDye(DyeValue d)
             {
-                if (s_zone < 0 || !zoned) target.SetAll(d);
-                else target.SetZone(s_zone, zoneCount, d);
+                FlushPending();
+                ApplyDye(target, d, zoned, zoneCount);
                 Refresh();
+            }
+            void SetFromSliders()
+            {
+                float h = sliders[0].value / 360f, s = sliders[1].value / 100f, v = sliders[2].value / 100f;
+                s_lastHue = h;
+                DyeValue d = DyeValue.Target(Color.HSVToRGB(h, s, v));
+                QueueDye(() => { ApplyDye(target, d, zoned, zoneCount); Refresh(false); });
+                if (preview != null) preview.color = Color.HSVToRGB(h, s, v);
+                if (hexInput != null) hexInput.SetTextWithoutNotify("#" + ColorUtility.ToHtmlStringRGB(Color.HSVToRGB(h, s, v)));
             }
 
             // zone chips: ALL, then one per colour zone (ring = original colour, middle = colour now)
@@ -529,16 +567,16 @@ namespace MordasGearhold.UI
                 float rowWidth = (zoneCount + 1) * chipSize + zoneCount * gap;
                 float x0 = cx - rowWidth / 2f + chipSize / 2f;
                 float chipY = top + ColorHeader + ZoneRow / 2f - 4f;
-                chipButtons[0] = AddChip(gui, "ALL", x0, chipY, chipSize, null, out Image _, () => { s_zone = -1; Refresh(); });
+                chipButtons[0] = AddChip(gui, "ALL", x0, chipY, chipSize, null, out Image _, () => { FlushPending(); s_zone = -1; Refresh(); });
                 for (int k = 0; k < zoneCount; k++)
                 {
                     int zone = k;
                     float x = x0 + (k + 1) * (chipSize + gap);
-                    chipButtons[k + 1] = AddChip(gui, "Zone " + (k + 1), x, chipY, chipSize, zones.Chips[k], out chipCentres[k], () => { s_zone = zone; Refresh(); });
+                    chipButtons[k + 1] = AddChip(gui, "Zone " + (k + 1), x, chipY, chipSize, zones.Chips[k], out chipCentres[k], () => { FlushPending(); s_zone = zone; Refresh(); });
                 }
             }
 
-            // swatches: 8 colours + black, white, grey
+            // swatches: 8 colours + black, white, grey (each one a target colour, the model's shading stays)
             int count = s_hues.Length + 3;
             float step = inner / count;
             float size = Mathf.Min(step - 6f, 34f);
@@ -546,58 +584,191 @@ namespace MordasGearhold.UI
             for (int i = 0; i < count; i++)
             {
                 float x = ox + Pad + step / 2f + i * step;
+                Color color;
+                string name;
                 if (i < s_hues.Length)
                 {
-                    float hue = s_hues[i].hue;
-                    AddSwatch(x, swatchY, size, Color.HSVToRGB(hue, 0.75f, 0.85f), s_hues[i].name, () => SetDye(TowardsHue(target, zones, s_zone, hue)));
+                    color = Color.HSVToRGB(s_hues[i].hue, 0.75f, 0.85f);
+                    name = s_hues[i].name;
                 }
                 else if (i == s_hues.Length)
                 {
-                    AddSwatch(x, swatchY, size, new Color(0.08f, 0.08f, 0.08f), "Black", () => SetDye(new DyeValue { Saturation = -60, Brightness = -70 }));
+                    color = new Color(0.08f, 0.08f, 0.08f);
+                    name = "Black";
                 }
                 else if (i == s_hues.Length + 1)
                 {
-                    AddSwatch(x, swatchY, size, new Color(0.92f, 0.92f, 0.9f), "White", () => SetDye(new DyeValue { Saturation = -95, Brightness = 60 }));
+                    color = new Color(0.92f, 0.92f, 0.9f);
+                    name = "White";
                 }
                 else
                 {
-                    AddSwatch(x, swatchY, size, new Color(0.5f, 0.5f, 0.5f), "Grey", () => SetDye(new DyeValue { Saturation = -100 }));
+                    color = new Color(0.5f, 0.5f, 0.5f);
+                    name = "Grey";
                 }
+                Color chosen = color;
+                AddSwatch(x, swatchY, size, color, name, () => { s_lastHue = -1f; SetDye(DyeValue.Target(chosen)); });
             }
 
-            // fine controls
-            string[] names = { "Color", "Intensity", "Brightness" };
-            int[] steps = { 15, 10, 10 };
+            // the picker: hue, saturation and brightness of the colour the zone gets
+            string[] names = { "Hue", "Saturation", "Brightness" };
+            float[] maxima = { 360f, 100f, 100f };
             float rowsTop = belowZones + SwatchRow;
             for (int row = 0; row < 3; row++)
             {
-                int channel = row;
                 float y = rowsTop + ColorRow / 2f + row * ColorRow;
                 TMP_Text label = UiKit.Text(s_content, gui.m_recipeDecription, names[row], 16f, UiKit.Parchment, TextAlignmentOptions.Left);
-                UiKit.Place(label.rectTransform, ox + Pad + 60f, y, 120f, 24f);
-                AddButton(gui, "-", ox + columnWidth - Pad - 150f, y, 40f, false, () =>
-                {
-                    DyeValue d = Current();
-                    Nudge(ref d, channel, -steps[channel]);
-                    SetDye(d);
-                });
-                values[row] = UiKit.Text(s_content, gui.m_recipeDecription, "", 16f, UiKit.Gold, TextAlignmentOptions.Center);
-                UiKit.Place(values[row].rectTransform, ox + columnWidth - Pad - 90f, y, 70f, 24f);
-                AddButton(gui, "+", ox + columnWidth - Pad - 30f, y, 40f, false, () =>
-                {
-                    DyeValue d = Current();
-                    Nudge(ref d, channel, steps[channel]);
-                    SetDye(d);
-                });
+                UiKit.Place(label.rectTransform, ox + Pad + 62f, y, 120f, 24f);
+                sliders[row] = AddPickerSlider(ox + Pad + 120f + (inner - 120f) / 2f, y, inner - 130f, maxima[row], row == 0, SetFromSliders);
             }
-            float resetY = rowsTop + 3 * ColorRow + 20f;
-            AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, resetY, 120f, false, () =>
+            float lastRow = rowsTop + 3 * ColorRow + 20f;
+            RectTransform previewRect = UiKit.Rect("ColorPreview", s_content);
+            UiKit.Place(previewRect, ox + Pad + 22f, lastRow, 34f, 26f);
+            preview = previewRect.gameObject.AddComponent<Image>();
+            preview.raycastTarget = false;
+            Outline previewOutline = previewRect.gameObject.AddComponent<Outline>();
+            previewOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            previewOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            hexInput = AddHexField(gui, ox + Pad + 118f, lastRow, 140f, 26f, value =>
             {
+                if (TryParseHex(value, out Color parsed))
+                {
+                    s_lastHue = -1f;
+                    SetDye(DyeValue.Target(parsed));
+                }
+                else
+                {
+                    Refresh();
+                }
+            });
+            AddButton(gui, "RESET", ox + columnWidth - Pad - 60f, lastRow, 120f, false, () =>
+            {
+                FlushPending();
                 if (zoned && s_zone < 0) target.SetAll(default); // ALL: every zone back to its own colours
-                else SetDye(default);
+                else ApplyDye(target, default, zoned, zoneCount);
                 Refresh();
             });
             Refresh();
+        }
+
+        private static float s_lastHue = -1f;
+
+        private static void ApplyDye(DyeTarget target, DyeValue d, bool zoned, int zoneCount)
+        {
+            if (s_zone < 0 || !zoned) target.SetAll(d);
+            else target.SetZone(s_zone, zoneCount, d);
+        }
+
+        // ---- thinning out slider changes: at most one recolouring every 0.2 s while dragging, the last value always lands
+        private static Action s_pending;
+        private static float s_pendingSince;
+        private static float s_lastApplied;
+
+        private static void QueueDye(Action apply)
+        {
+            if (s_pending == null) s_pendingSince = Time.unscaledTime;
+            s_pending = apply;
+        }
+
+        private static void FlushPending()
+        {
+            Action pending = s_pending;
+            s_pending = null;
+            if (pending != null)
+            {
+                s_lastApplied = Time.unscaledTime;
+                pending();
+            }
+        }
+
+        private static void TickPending()
+        {
+            if (s_pending != null && Time.unscaledTime - s_lastApplied >= 0.2f)
+            {
+                FlushPending();
+            }
+        }
+
+        private static bool TryParseHex(string text, out Color color)
+        {
+            color = Color.white;
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            string t = text.Trim();
+            if (!t.StartsWith("#")) t = "#" + t;
+            return ColorUtility.TryParseHtmlString(t, out color);
+        }
+
+        private static Texture2D s_hueTexture;
+
+        /// <summary>A slider for the colour picker: dark track (the hue one shows the rainbow), gold handle.</summary>
+        private static Slider AddPickerSlider(float x, float y, float width, float max, bool rainbow, Action changed)
+        {
+            GameObject go = DefaultControls.CreateSlider(new DefaultControls.Resources());
+            go.name = "PickerSlider";
+            RectTransform rect = (RectTransform)go.transform;
+            rect.SetParent(s_content, false);
+            UiKit.Place(rect, x, y, width, 18f);
+            foreach (Image image in go.GetComponentsInChildren<Image>(true))
+            {
+                switch (image.gameObject.name)
+                {
+                    case "Background":
+                        image.color = new Color(0f, 0f, 0f, 0.55f);
+                        if (rainbow)
+                        {
+                            if (s_hueTexture == null)
+                            {
+                                s_hueTexture = new Texture2D(256, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+                                for (int i = 0; i < 256; i++) s_hueTexture.SetPixel(i, 0, Color.HSVToRGB(i / 255f, 0.85f, 0.9f));
+                                s_hueTexture.Apply();
+                            }
+                            image.sprite = Sprite.Create(s_hueTexture, new Rect(0, 0, 256, 1), new Vector2(0.5f, 0.5f));
+                            image.type = Image.Type.Simple;
+                            image.color = Color.white;
+                        }
+                        break;
+                    case "Fill": image.color = rainbow ? new Color(0f, 0f, 0f, 0f) : new Color(UiKit.Gold.r, UiKit.Gold.g, UiKit.Gold.b, 0.55f); break;
+                    case "Handle": image.color = UiKit.Gold; break;
+                }
+            }
+            Slider slider = go.GetComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = max;
+            slider.wholeNumbers = false;
+            slider.onValueChanged.AddListener(_ => changed());
+            return slider;
+        }
+
+        /// <summary>The hex field "#RRGGBB" of the picker.</summary>
+        private static TMP_InputField AddHexField(InventoryGui gui, float x, float y, float width, float height, Action<string> commit)
+        {
+            RectTransform rect = UiKit.Rect("HexField", s_content);
+            UiKit.Place(rect, x, y, width, height);
+            Image back = rect.gameObject.AddComponent<Image>();
+            back.color = new Color(0f, 0f, 0f, 0.4f);
+            RectTransform viewport = UiKit.Rect("Viewport", rect);
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.offsetMin = new Vector2(8f, 0f);
+            viewport.offsetMax = new Vector2(-8f, 0f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            TMP_Text text = UiKit.Text(viewport, gui.m_craftingStationName, "", 16f, UiKit.Gold, TextAlignmentOptions.Center);
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.offsetMin = text.rectTransform.offsetMax = Vector2.zero;
+            rect.gameObject.SetActive(false);
+            TMP_InputField input = rect.gameObject.AddComponent<TMP_InputField>();
+            input.textViewport = viewport;
+            input.textComponent = text;
+            input.targetGraphic = back;
+            input.lineType = TMP_InputField.LineType.SingleLine;
+            input.characterLimit = 7;
+            input.richText = false;
+            input.onSelect.AddListener(_ => TypingGuard.Begin());
+            input.onDeselect.AddListener(_ => TypingGuard.End());
+            input.onEndEdit.AddListener(v => { TypingGuard.End(); commit(v); });
+            rect.gameObject.SetActive(true);
+            return input;
         }
 
         /// <summary>
