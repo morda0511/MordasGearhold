@@ -209,6 +209,7 @@ namespace MordasGearhold
             {
                 return;
             }
+            TextureExport.Tick();
             Patches.Equipment.LateShieldCheck(player);
             Patches.Trinkets.Tick(player);
             Patches.Coins.Tick(player);
