@@ -197,7 +197,6 @@ namespace MordasGearhold.UI
             AddPlaced(gui, GearSlot.Utility, "Utility 1", "Utility 1");
             AddPlaced(gui, GearSlot.Utility2, "Utility 2", "Utility 2");
             AddPlaced(gui, GearSlot.Utility3, "Utility 3", "Utility 3");
-            s_ammoButton = AddAmmoButton(gui);
             if (descriptionBox != null)
             {
                 RectTransform boxRect = UiKit.Rect("SheetBox", s_body);
@@ -212,6 +211,7 @@ namespace MordasGearhold.UI
 
             // the ammo drop-down (created after the sheet, so it draws on top)
             BuildAmmoDrawer(gui);
+            s_ammoButton = AddAmmoButton(gui); // after the drawer: the arrow stays on top of its edge
 
             // food and meads of the active set, right above the quickslots (right-click eats / drinks)
             p = PanelLayout.Get("Food-Titel");
@@ -247,8 +247,6 @@ namespace MordasGearhold.UI
             s_holsterKey = holster.KeyButton.GetComponentInParent<Button>()?.gameObject;
 
             p = PanelLayout.Get("Quickslot-Titel");
-            TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
-            UiKit.Place(quickTitle.rectTransform, p.X, p.Y, p.W, p.H);
             for (int x = 0; x < Topology.QuickslotCount; x++)
             {
                 Slot quick = AddPlaced(gui, Topology.QuickSlot(x), null, "Quickslot " + (x + 1));
@@ -604,7 +602,7 @@ namespace MordasGearhold.UI
                 int dormant = GearholdState.TryReadSet(player, active, out SetPackage own, out _) ? own.Records.Count : 0;
                 s_footer.text = dormant > 0
                     ? $"<color=#e0a040>{dormant} items of this set wait for their mod to return</color>"
-                    : "Only the Gearhold slots change with the set · the inventory is shared";
+                    : ""; // the static tip is gone; only the warning shows
             }
         }
 
