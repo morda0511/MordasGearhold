@@ -358,14 +358,14 @@ namespace MordasGearhold.UI
                 int index = i;
                 float y = top + PresetRow / 2f + i * PresetRow;
                 bool has = LookPresets.Has(player, index);
-                TMP_Text number = UiKit.Text(s_content, gui.m_craftingStationName, (index + 1).ToString(), 20f, has ? UiKit.Gold : UiKit.Dim, TextAlignmentOptions.Center);
-                UiKit.Place(number.rectTransform, left + 12f, y, 24f, 28f);
+                AddNameField(gui, left + 10f + 105f, y - 18f, 210f, 20f, LookPresets.NameOf(player, index), has,
+                    value => LookPresets.SetName(player, index, value));
                 string[] looks = LookPresets.LooksOf(player, index, s_pieces);
                 for (int k = 0; k < s_pieces.Length; k++)
                 {
-                    float x = left + 44f + k * 38f;
+                    float x = left + 22f + k * 36f;
                     RectTransform cell = UiKit.Rect("PresetLook", s_content);
-                    UiKit.Place(cell, x, y - 5f, 34f, 34f);
+                    UiKit.Place(cell, x, y + 9f, 34f, 34f);
                     Image back = cell.gameObject.AddComponent<Image>();
                     back.color = new Color(0f, 0f, 0f, has ? 0.35f : 0.15f);
                     back.raycastTarget = false;
@@ -373,7 +373,7 @@ namespace MordasGearhold.UI
                     if (looks[k] == Transmog.Hidden)
                     {
                         TMP_Text dash = UiKit.Text(s_content, gui.m_craftingStationName, "–", 18f, UiKit.Dim, TextAlignmentOptions.Center);
-                        UiKit.Place(dash.rectTransform, x, y - 5f, 34f, 34f);
+                        UiKit.Place(dash.rectTransform, x, y + 9f, 34f, 34f);
                     }
                     else if (looks[k] != null)
                     {
@@ -382,7 +382,7 @@ namespace MordasGearhold.UI
                         if (drop != null)
                         {
                             RectTransform iconRect = UiKit.Rect("PresetIcon", s_content);
-                            UiKit.Place(iconRect, x, y - 5f, 32f, 32f);
+                            UiKit.Place(iconRect, x, y + 9f, 32f, 32f);
                             Image icon = iconRect.gameObject.AddComponent<Image>();
                             icon.sprite = drop.m_itemData.GetIcon();
                             icon.preserveAspect = true;
@@ -393,7 +393,7 @@ namespace MordasGearhold.UI
                 if (has && LookPresets.HasColors(player, index))
                 {
                     TMP_Text colored = UiKit.Text(s_content, gui.m_recipeDecription != null ? gui.m_recipeDecription : gui.m_craftingStationName, "+ colours", 11f, UiKit.Dim, TextAlignmentOptions.Left);
-                    UiKit.Place(colored.rectTransform, left + 44f + 95f, y + 19f, 190f, 14f);
+                    UiKit.Place(colored.rectTransform, left + 22f + 5 * 36f + 8f, y + 9f, 190f, 14f);
                 }
                 AddButton(gui, "LOAD", left + 270f, y, 70f, !has, () => { LookPresets.Apply(player, index); OpenForPiece(player, piece); });
                 AddButton(gui, "SAVE", left + 346f, y, 70f, false, () => { LookPresets.Save(player, index); OpenForPiece(player, piece); });
@@ -402,6 +402,41 @@ namespace MordasGearhold.UI
                     AddButton(gui, "X", left + 410f, y, 36f, false, () => { LookPresets.Clear(player, index); OpenForPiece(player, piece); });
                 }
             }
+        }
+
+        /// <summary>A one-line text box (name of a preset): click, type, Enter or click elsewhere keeps it.</summary>
+        private static void AddNameField(InventoryGui gui, float x, float y, float width, float height, string value, bool editable, Action<string> commit)
+        {
+            RectTransform rect = UiKit.Rect("PresetName", s_content);
+            UiKit.Place(rect, x, y, width, height);
+            Image back = rect.gameObject.AddComponent<Image>();
+            back.color = new Color(0f, 0f, 0f, editable ? 0.35f : 0.15f);
+            RectTransform viewport = UiKit.Rect("Viewport", rect);
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.offsetMin = new Vector2(6f, 0f);
+            viewport.offsetMax = new Vector2(-6f, 0f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            TMP_Text text = UiKit.Text(viewport, gui.m_craftingStationName, value, 15f, editable ? UiKit.Gold : UiKit.Dim, TextAlignmentOptions.Left);
+            text.rectTransform.anchorMin = Vector2.zero;
+            text.rectTransform.anchorMax = Vector2.one;
+            text.rectTransform.offsetMin = text.rectTransform.offsetMax = Vector2.zero;
+            if (!editable)
+            {
+                return; // an empty preset has no name to edit
+            }
+            // the input field reads its parts in Awake: switched off while they are put in
+            rect.gameObject.SetActive(false);
+            TMP_InputField input = rect.gameObject.AddComponent<TMP_InputField>();
+            input.textViewport = viewport;
+            input.textComponent = text;
+            input.targetGraphic = back;
+            input.lineType = TMP_InputField.LineType.SingleLine;
+            input.characterLimit = 18;
+            input.richText = false;
+            input.text = value;
+            input.onEndEdit.AddListener(v => commit(v));
+            rect.gameObject.SetActive(true);
         }
 
         // the weapon of the open weapon menu (for redrawing it when the zones change)

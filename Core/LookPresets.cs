@@ -25,7 +25,24 @@ namespace MordasGearhold.Core
             player.m_customData[Key(index)] = looks + Separator + dyes;
         }
 
-        internal static void Clear(Player player, int index) => player.m_customData.Remove(Key(index));
+        internal static void Clear(Player player, int index)
+        {
+            player.m_customData.Remove(Key(index));
+            player.m_customData.Remove(NameKey(index));
+        }
+
+        private static string NameKey(int index) => GearholdState.KeyPrefix + "PresetName." + index;
+
+        internal static string NameOf(Player player, int index) =>
+            player.m_customData.TryGetValue(NameKey(index), out string name) && name.Length > 0 ? name : "Preset " + (index + 1);
+
+        internal static void SetName(Player player, int index, string name)
+        {
+            name = (name ?? "").Trim();
+            if (name.Length > 18) name = name.Substring(0, 18);
+            if (name.Length == 0 || name == "Preset " + (index + 1)) player.m_customData.Remove(NameKey(index));
+            else player.m_customData[NameKey(index)] = name;
+        }
 
         /// <summary>Puts a preset on the active set (the character changes at once).</summary>
         internal static void Apply(Player player, int index)
