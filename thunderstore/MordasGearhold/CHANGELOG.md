@@ -14,6 +14,7 @@
 - Pieces whose shader has no colour controls (many shields, some armour) are dyed by recolouring a copy of their texture, so more pieces react to a colour. A shield that is put away can be dyed as well.
 - The log names a dyed piece whose colour changed nothing, with its shaders.
 - Multiplayer: other players with Gearhold see your dyes (all zones), weapon dyes and GLOW / SHINE colours, also on the Weapon 2 weapon on your body. Players without Gearhold see the normal colours; the server needs nothing. Config `ShowOthersColors` (UI) switches seeing others' colours off.
+- Panel is more compact: utility slots sit in a row below the armour, trinkets next to the armour, and the ammo slots moved into a drop-down opened by the AMMO button; less space between food and quickslots.
 
 ## 1.3.8
 - Weapon 2 slot between food and mead: put a second weapon there, the hide key (R) swaps it with the weapon in your hand. Empty slot: R works like vanilla.

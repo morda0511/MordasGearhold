@@ -19,7 +19,7 @@ namespace MordasGearhold.UI
     internal static class GearholdPanel
     {
         private const float DesignWidth = 460f;
-        private const float DesignHeight = 1054f;
+        private const float DesignHeight = 894f; // quickTop (742) + 152
         private const float SlotTop = 178f;
         private const float SlotStep = 88f;
         private const float CompactHeight = 140f;
@@ -36,6 +36,7 @@ namespace MordasGearhold.UI
             public TMP_Text Caption;
             public ItemDrop.ItemData Item;
             public string Label;
+            public bool InDrawer; // an ammo slot: only there while the AMMO drop-down is open
         }
 
         private static InventoryGui s_gui;
@@ -48,6 +49,9 @@ namespace MordasGearhold.UI
         private static TMP_Text s_stats;
         private static TMP_Text s_footer;
         private static bool s_failed;
+        private static bool s_ammoOpen;
+        private static GameObject s_ammoBox;
+        private static TMP_Text s_ammoButton;
 
         internal static void Tick()
         {
@@ -172,26 +176,23 @@ namespace MordasGearhold.UI
             AddSlot(gui, GearSlot.Chest, "Chest", leftX, Row(1));
             AddSlot(gui, GearSlot.Legs, "Legs", leftX, Row(2));
             AddSlot(gui, GearSlot.Shoulder, "Cape", leftX, Row(3));
-            AddSlot(gui, GearSlot.Utility, "Utility 1", leftX, Row(4));
-            AddSlot(gui, GearSlot.Utility2, "Utility 2", leftX, Row(5));
-            AddSlot(gui, GearSlot.Utility3, "Utility 3", leftX, Row(6));
             AddSlot(gui, GearSlot.Shield, "Shield", rightX, Row(0));
-            AddSlot(gui, GearSlot.Trinket, "Trinket 1", rightX, Row(4));
-            AddSlot(gui, GearSlot.Trinket2, "Trinket 2", rightX, Row(5));
-            AddSlot(gui, GearSlot.Trinket3, "Trinket 3", rightX, Row(6));
+            AddSlot(gui, GearSlot.Trinket, "Trinket 1", rightX, Row(1));
+            AddSlot(gui, GearSlot.Trinket2, "Trinket 2", rightX, Row(2));
+            AddSlot(gui, GearSlot.Trinket3, "Trinket 3", rightX, Row(3));
             // the coin slot, top right next to the title: shared by all sets, coins there weigh nothing
             AddSlot(gui, GearSlot.Coins, null, DesignWidth - 44f, 46f, 52f);
-            for (int n = 0; n < Topology.AmmoSlotCount; n++)
-            {
-                Slot ammo = AddSlot(gui, Topology.AmmoSlot(n), "Ammo " + (n + 1), rightX, Row(1 + n));
-                // under the slot only the hotkey button, centred like the food / mead keys (click = press a new key)
-                UnityEngine.Object.Destroy(ammo.Caption.gameObject);
-                ammo.Caption = null;
-                ammo.KeyEntry = Plugin.KeyAmmo[n];
-                ammo.KeyButton = AddKeyButton(gui, ammo.KeyEntry, ammo.Label, rightX, Row(1 + n) + SlotSize / 2f + 13f, 58f, 22f);
-            }
-            // the dark box vanilla puts behind a recipe description, behind the character sheet
-            float sheetTop = 146f, sheetBottom = Row(6) + 42f;
+
+            // utility slots in a row below the armour; the ammo slots sit in a drop-down opened by the AMMO button
+            float sheetTop = 146f, sheetBottom = Row(3) + 42f;
+            float utilityTop = sheetBottom + 30f;
+            UiKit.Divider(s_body, braid, DesignWidth / 2f, utilityTop, DesignWidth - 40f);
+            TMP_Text utilityTitle = UiKit.Text(s_body, header, "UTILITY", 16f, UiKit.Gold, TextAlignmentOptions.Center);
+            UiKit.Place(utilityTitle.rectTransform, leftX + (QuickSize + 14f), utilityTop + 18f, 160f, 22f);
+            AddSlot(gui, GearSlot.Utility, "Utility 1", leftX, utilityTop + 56f, 52f);
+            AddSlot(gui, GearSlot.Utility2, "Utility 2", leftX + QuickSize + 14f, utilityTop + 56f, 52f);
+            AddSlot(gui, GearSlot.Utility3, "Utility 3", leftX + 2f * (QuickSize + 14f), utilityTop + 56f, 52f);
+            s_ammoButton = AddAmmoButton(gui, DesignWidth - 90f, utilityTop + 56f);
             if (descriptionBox != null)
             {
                 RectTransform boxRect = UiKit.Rect("SheetBox", s_body);
@@ -204,8 +205,11 @@ namespace MordasGearhold.UI
             UiKit.Place(viking.rectTransform, DesignWidth / 2f, 160f, 230f, 28f);
             s_stats = BuildScrollingSheet(gui, body, DesignWidth / 2f, 180f, 232f, sheetBottom - 8f);
 
+            // the ammo drop-down, over the lower part of the sheet (created after it, so it draws on top)
+            BuildAmmoDrawer(gui, DesignWidth / 2f, utilityTop - 108f);
+
             // food and meads of the active set, right above the quickslots (right-click eats / drinks)
-            float provisionsTop = sheetBottom + 30f;
+            float provisionsTop = utilityTop + 112f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, provisionsTop, DesignWidth - 40f);
             float foodX = DesignWidth / 2f - 110f, meadX = DesignWidth / 2f + 110f;
             TMP_Text foodTitle = UiKit.Text(s_body, header, "FOOD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
@@ -237,7 +241,7 @@ namespace MordasGearhold.UI
             holster.KeyButton = AddKeyButton(gui, holster.KeyEntry, holster.Label, holsterX, provisionsTop + 94f, QuickSize + 2f, 24f);
             s_holsterKey = holster.KeyButton.GetComponentInParent<Button>()?.gameObject;
 
-            float quickTop = provisionsTop + 124f;
+            float quickTop = provisionsTop + 116f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, quickTop, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
             UiKit.Place(quickTitle.rectTransform, DesignWidth / 2f, quickTop + 18f, DesignWidth - 50f, 22f);
@@ -357,6 +361,44 @@ namespace MordasGearhold.UI
             tooltip.m_tooltipPrefab = prefab;
             tooltip.m_topic = topic;
             tooltip.m_text = text;
+        }
+
+        /// <summary>The AMMO button: opens and closes the drop-down with the three ammo slots.</summary>
+        private static TMP_Text AddAmmoButton(InventoryGui gui, float x, float y)
+        {
+            Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
+            button.gameObject.name = "AmmoToggle";
+            button.gameObject.SetActive(true);
+            button.interactable = true;
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() => s_ammoOpen = !s_ammoOpen);
+            UiKit.Place((RectTransform)button.transform, x, y, 110f, 34f);
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            AddTooltip(gui, button.gameObject, "Ammo", "Arrows and bolts: open to see the three ammo slots and their keys (Alt+1/2/3 switch the ammo in use).");
+            return label;
+        }
+
+        /// <summary>A small framed box with the three ammo slots and their key buttons, hidden until AMMO is clicked.</summary>
+        private static void BuildAmmoDrawer(InventoryGui gui, float centerX, float top)
+        {
+            RectTransform box = UiKit.Rect("AmmoDrawer", s_body);
+            UiKit.Place(box, centerX, top + 50f, 200f, 100f);
+            Image back = box.gameObject.AddComponent<Image>();
+            Image source = UiKit.Named(gui.m_crafting, "Decription");
+            if (source != null) UiKit.CopyLook(back, source, new Color(0f, 0f, 0f, 0.92f));
+            else back.color = new Color(0f, 0f, 0f, 0.92f);
+            back.raycastTarget = true; // clicks must not fall through to the sheet
+            s_ammoBox = box.gameObject;
+            s_ammoBox.SetActive(false);
+            for (int n = 0; n < Topology.AmmoSlotCount; n++)
+            {
+                float x = centerX + (n - 1) * (QuickSize + 12f);
+                Slot ammo = AddSlot(gui, Topology.AmmoSlot(n), null, x, top + 30f, QuickSize);
+                ammo.Label = "Ammo " + (n + 1);
+                ammo.InDrawer = true;
+                ammo.KeyEntry = Plugin.KeyAmmo[n];
+                ammo.KeyButton = AddKeyButton(gui, ammo.KeyEntry, ammo.Label, x, top + 70f, QuickSize + 2f, 24f);
+            }
         }
 
         /// <summary>Small vanilla-style button under a quickslot: shows the key, a click lets you press a new one.</summary>
@@ -487,10 +529,12 @@ namespace MordasGearhold.UI
                 s_tabs[i].interactable = i != active;
             }
             ItemDrop.ItemData drag = Access.DragItem(s_gui);
+            if (s_ammoBox != null && s_ammoBox.activeSelf != s_ammoOpen) s_ammoBox.SetActive(s_ammoOpen);
+            if (s_ammoButton != null) s_ammoButton.text = s_ammoOpen ? "AMMO  ▲" : "AMMO  ▼";
             foreach (Slot slot in s_slots)
             {
                 // Trinket/Utility 2 and 3 can be switched off in the config (TrinketSlots, UtilitySlots)
-                bool enabled = Topology.IsEnabled(slot.Kind);
+                bool enabled = Topology.IsEnabled(slot.Kind) && (!slot.InDrawer || s_ammoOpen);
                 if (slot.Kind == GearSlot.Holster)
                 {
                     // the Weapon 2 title and key box come and go with the slot (config EnableWeapon2)
