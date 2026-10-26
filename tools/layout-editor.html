@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gearhold Layout Editor</title>
+<style>
+  :root { --bg:#1b1713; --panel:#3a2c1f; --gold:#e0b64a; --dim:#a8977a; --line:#6b5236; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:#eadfc8; font:14px system-ui, sans-serif; display:flex; gap:20px; padding:16px; min-height:100vh; }
+  #stage { position:relative; flex:none; }
+  #board { position:relative; width:460px; background:linear-gradient(#4a3826,#3a2c1f); border:2px solid var(--line); border-radius:6px; transform-origin: top left; touch-action:none; }
+  .el { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center; font-size:11px; color:#fff; cursor:grab; user-select:none; border:1px solid #0008; overflow:hidden; }
+  .el.slot { background:#2a1f15; border:1px solid #8a6d44; color:var(--dim); }
+  .el.key { background:#5a4630; border:1px solid #a98a58; color:var(--gold); font-weight:600; }
+  .el.text { background:transparent; border:1px dashed #8a6d4488; color:var(--gold); }
+  .el.box { background:#0006; border:1px dashed #8a6d44; color:var(--dim); }
+  .el.sel { outline:2px solid #4fd1ff; z-index:5; overflow:visible; }
+  .el.primary { outline-color:#ffd24f; }
+  .el.hidden-el { opacity:.25; }
+  .hd { position:absolute; width:9px; height:9px; background:#4fd1ff; border:1px solid #06232c; z-index:9; }
+  #marquee { position:absolute; border:1px dashed #4fd1ff; background:#4fd1ff22; pointer-events:none; z-index:20; display:none; }
+  #side { flex:1; max-width:440px; display:flex; flex-direction:column; gap:10px; }
+  h1 { margin:0; font-size:18px; color:var(--gold); }
+  label { display:flex; gap:6px; align-items:center; }
+  input[type=number] { width:64px; background:#2a1f15; color:#eadfc8; border:1px solid var(--line); padding:3px 5px; border-radius:3px; }
+  button { background:var(--panel); color:#eadfc8; border:1px solid var(--line); padding:6px 10px; border-radius:4px; cursor:pointer; }
+  button:hover { border-color:var(--gold); }
+  textarea { width:100%; height:180px; background:#120f0c; color:#cfe3c0; border:1px solid var(--line); font:12px ui-monospace, monospace; padding:6px; }
+  .hint { color:var(--dim); font-size:12px; line-height:1.5; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  #info { color:var(--gold); min-height:20px; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="board"></div></div>
+<div id="side">
+  <h1>Gearhold Layout Editor</h1>
+  <div class="hint">
+    <b>Ziehen</b> = verschieben · <b>Ecken/Kanten ziehen</b> = Größe (Breite und Höhe getrennt) · <b>Shift+Klick</b> = zu Auswahl hinzufügen / entfernen (die Auswahl bewegt sich zusammen)
+    · <b>Rahmen aufziehen</b> auf leerer Fläche (Shift = hinzufügen) · <b>Alt+Ziehen</b> = ganze Gruppe · Pfeiltasten 1 px (Shift 10 px) · Strg+A alles · Entf = ausblenden.
+    Koordinaten = Mitte des Elements im 460-px-Panel.
+  </div>
+  <div id="info">Nichts ausgewählt</div>
+  <div class="row">
+    <label>X <input id="ix" type="number"></label>
+    <label>Y <input id="iy" type="number"></label>
+    <label>B <input id="iw" type="number"></label>
+    <label>H <input id="ih" type="number"></label>
+    <label><input id="ihid" type="checkbox"> aus</label>
+  </div>
+  <div class="row">
+    <span class="hint">Ausrichten:</span>
+    <button data-a="left">⇤</button><button data-a="hcenter">↔ Mitte</button><button data-a="right">⇥</button>
+    <button data-a="top">⤒</button><button data-a="vmiddle">↕ Mitte</button><button data-a="bottom">⤓</button>
+  </div>
+  <div class="row">
+    <span class="hint">Verteilen / gleich:</span>
+    <button data-a="disth">Abstand horizontal</button><button data-a="distv">Abstand vertikal</button>
+    <button data-a="samew">gleich breit</button><button data-a="sameh">gleich hoch</button>
+  </div>
+  <div class="row">
+    <label>Panel-Höhe <input id="height" type="number" value="894"></label>
+    <label>Zoom <input id="zoom" type="range" min="0.8" max="2" step="0.1" value="1.4"></label>
+    <label><input id="snap" type="checkbox" checked> Raster 2 px</label>
+  </div>
+  <div class="row">
+    <button id="undo">Rückgängig (Strg+Z)</button>
+    <button id="copy">JSON kopieren</button>
+    <button id="reset">Zurücksetzen</button>
+    <button id="load">JSON laden</button>
+  </div>
+  <textarea id="json" spellcheck="false"></textarea>
+  <div class="hint">Wenn du fertig bist: „JSON kopieren“ und mir den Text schicken. Dein Stand bleibt in diesem Browser gespeichert.</div>
+</div>
+
+<script>
+const DEFAULT = [
+  ["Titel","head","text",230,34,420,44,"MORDA'S GEARHOLD"],
+  ["Untertitel","head","text",230,64,420,20,"INVENTORY · LOADOUTS · QUICKSLOTS"],
+  ["Münzen","head","slot",416,46,52,52,"200"],
+  ["Set 1","sets","key",90,102,128,34,"SET 1"],
+  ["Set 2","sets","key",230,102,128,34,"SET 2"],
+  ["Set 3","sets","key",370,102,128,34,"SET 3"],
+  ["Charakterblatt","sheet","box",230,315,248,338,"YOUR VIKING"],
+  ["Kopf","armour","slot",58,178,64,64,"Head"],
+  ["Brust","armour","slot",58,266,64,64,"Chest"],
+  ["Beine","armour","slot",58,354,64,64,"Legs"],
+  ["Cape","armour","slot",58,442,64,64,"Cape"],
+  ["Schild","right","slot",402,178,64,64,"Shield"],
+  ["Trinket 1","trinkets","slot",290,570,52,52,"Trinket 1"],
+  ["Trinket 2","trinkets","slot",350,570,52,52,"Trinket 2"],
+  ["Trinket 3","trinkets","slot",410,570,52,52,"Trinket 3"],
+  ["Custom 1","custom","slot",402,266,64,64,"Custom 1"],
+  ["Custom 2","custom","slot",402,354,64,64,"Custom 2"],
+  ["Custom 3","custom","slot",402,442,64,64,"Custom 3"],
+  ["Utility-Titel","utility","text",118,532,160,22,"UTILITY"],
+  ["Utility 1","utility","slot",58,570,52,52,"Util 1"],
+  ["Utility 2","utility","slot",118,570,52,52,"Util 2"],
+  ["Utility 3","utility","slot",178,570,52,52,"Util 3"],
+  ["AMMO-Knopf","ammo","key",370,570,110,34,"AMMO ▼"],
+  ["Ammo-Dropdown","ammo","box",230,450,200,100,"Dropdown (Munition)"],
+  ["Ammo 1","ammo","slot",178,430,46,46,"A1"],
+  ["Ammo 2","ammo","slot",230,430,46,46,"A2"],
+  ["Ammo 3","ammo","slot",282,430,46,46,"A3"],
+  ["Ammo-Taste 1","ammo","key",178,470,48,24,"Alt+1"],
+  ["Ammo-Taste 2","ammo","key",230,470,48,24,"Alt+2"],
+  ["Ammo-Taste 3","ammo","key",282,470,48,24,"Alt+3"],
+  ["Food-Titel","food","text",120,644,160,22,"FOOD"],
+  ["Food 1","food","slot",68,682,46,46,"F1"],
+  ["Food 2","food","slot",120,682,46,46,"F2"],
+  ["Food 3","food","slot",172,682,46,46,"F3"],
+  ["Food-Taste 1","foodkeys","key",68,720,48,24,"–"],
+  ["Food-Taste 2","foodkeys","key",120,720,48,24,"–"],
+  ["Food-Taste 3","foodkeys","key",172,720,48,24,"–"],
+  ["Weapon-2-Titel","holster","text",230,644,66,22,"WEAPON 2"],
+  ["Weapon 2","holster","slot",230,682,46,46,"W2"],
+  ["Weapon-2-Taste","holster","key",230,720,48,24,"Alt+R"],
+  ["Mead-Titel","mead","text",340,644,160,22,"MEAD"],
+  ["Mead 1","mead","slot",288,682,46,46,"M1"],
+  ["Mead 2","mead","slot",340,682,46,46,"M2"],
+  ["Mead 3","mead","slot",392,682,46,46,"M3"],
+  ["Mead-Taste 1","meadkeys","key",288,720,48,24,"–"],
+  ["Mead-Taste 2","meadkeys","key",340,720,48,24,"–"],
+  ["Mead-Taste 3","meadkeys","key",392,720,48,24,"–"],
+  ["Quickslot-Titel","quick","text",230,760,410,22,"QUICKSLOTS · ACTIVE SET"],
+  ...Array.from({length:8},(_,i)=>["Quickslot "+(i+1),"quickrow","slot",230+(i-3.5)*52,800,46,46,"Q"+(i+1)]),
+  ...Array.from({length:8},(_,i)=>["Quickslot-Taste "+(i+1),"quickkeys","key",230+(i-3.5)*52,838,48,24,"–"]),
+  ["Fußzeile","foot","text",230,866,370,18,"Only the Gearhold slots change with the set"],
+  ["HUD-Zahnrad","foot","key",434,864,24,24,"⚙"],
+];
+const GROUPS = { // Alt+drag moves all of these together
+  armour:["armour"], trinkets:["trinkets"], custom:["custom"], right:["right"], utility:["utility"], ammo:["ammo"], food:["food","foodkeys"], mead:["mead","meadkeys"],
+  holster:["holster"], quickrow:["quickrow","quickkeys","quick"], quickkeys:["quickrow","quickkeys","quick"], quick:["quickrow","quickkeys","quick"],
+  foodkeys:["food","foodkeys"], meadkeys:["mead","meadkeys"], sets:["sets"], head:["head"], sheet:["sheet"], foot:["foot"],
+};
+const STORE = "gearhold-layout-v2";
+const $ = id => document.getElementById(id);
+let items = load() || fresh();
+let sel = [];      // selected items; the last one is the primary (its numbers show in the boxes)
+let undoStack = [];
+const board = $("board"), height = $("height"), zoom = $("zoom");
+
+function fresh(){ return DEFAULT.map(d=>({name:d[0],group:d[1],kind:d[2],x:d[3],y:d[4],w:d[5],h:d[6],label:d[7],hidden:false})); }
+function load(){
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE));
+    if (s && s.items) { if (s.height) setTimeout(()=>{ height.value = s.height; render(); }); return s.items; }
+  } catch(e){}
+  return null;
+}
+function save(){ try { localStorage.setItem(STORE, JSON.stringify({items, height:+height.value})); } catch(e){} }
+function pushUndo(){ undoStack.push(JSON.stringify({items, height:+height.value})); if (undoStack.length > 60) undoStack.shift(); }
+function undo(){
+  const s = undoStack.pop(); if (!s) return;
+  const d = JSON.parse(s); items = d.items; height.value = d.height;
+  sel = sel.map(o => items.find(i => i.name === o.name)).filter(Boolean); render();
+}
+const snapv = v => $("snap").checked ? Math.round(v/2)*2 : Math.round(v);
+const primary = () => sel[sel.length-1];
+
+function render(){
+  board.style.height = height.value + "px";
+  board.style.transform = "scale(" + zoom.value + ")";
+  $("stage").style.width = (460*zoom.value + 8) + "px";
+  $("stage").style.height = (height.value*zoom.value + 8) + "px";
+  board.innerHTML = "";
+  items.forEach(it => {
+    const d = document.createElement("div");
+    const on = sel.includes(it);
+    d.className = "el " + it.kind + (on?" sel":"") + (it===primary()?" primary":"") + (it.hidden?" hidden-el":"");
+    d.style.left = (it.x - it.w/2) + "px"; d.style.top = (it.y - it.h/2) + "px";
+    d.style.width = it.w + "px"; d.style.height = it.h + "px";
+    d.textContent = it.label; d.title = it.name;
+    d.addEventListener("pointerdown", e => { e.stopPropagation(); press(e, it); });
+    if (on && sel.length === 1) {
+      [["n",.5,0],["s",.5,1],["w",0,.5],["e",1,.5],["nw",0,0],["ne",1,0],["sw",0,1],["se",1,1]].forEach(([dir,fx,fy]) => {
+        const h = document.createElement("div"); h.className = "hd";
+        h.style.left = (fx*it.w - 5) + "px"; h.style.top = (fy*it.h - 5) + "px"; h.style.cursor = dir + "-resize";
+        h.addEventListener("pointerdown", e => { e.stopPropagation(); resize(e, it, dir); });
+        d.appendChild(h);
+      });
+    }
+    board.appendChild(d);
+  });
+  const m = document.createElement("div"); m.id = "marquee"; board.appendChild(m);
+  info(); json(); save();
+}
+
+function info(){
+  const p = primary();
+  if (!p) { $("info").textContent = "Nichts ausgewählt"; return; }
+  $("info").textContent = sel.length > 1 ? sel.length + " Elemente ausgewählt (Hauptelement: " + p.name + ")" : p.name;
+  $("ix").value = Math.round(p.x); $("iy").value = Math.round(p.y);
+  $("iw").value = Math.round(p.w); $("ih").value = Math.round(p.h); $("ihid").checked = p.hidden;
+}
+function json(){
+  const out = { height:+height.value, elements:{} };
+  items.forEach(it => out.elements[it.name] = { x:Math.round(it.x), y:Math.round(it.y), width:Math.round(it.w), height:Math.round(it.h), hidden:it.hidden||undefined });
+  $("json").value = JSON.stringify(out, null, 1);
+}
+
+function press(e, it){
+  e.preventDefault();
+  if (e.shiftKey) {
+    sel = sel.includes(it) ? sel.filter(o => o !== it) : [...sel, it];
+    render(); return;
+  }
+  if (!sel.includes(it)) sel = [it];
+  else sel = [...sel.filter(o => o !== it), it];
+  const moving = e.altKey ? items.filter(o => (GROUPS[it.group]||[it.group]).includes(o.group)) : sel;
+  if (e.altKey) sel = moving.slice();
+  pushUndo();
+  const sx = e.clientX, sy = e.clientY, z = +zoom.value, origin = moving.map(o => [o, o.x, o.y]);
+  let moved = false;
+  const move = ev => {
+    moved = true;
+    const dx = (ev.clientX-sx)/z, dy = (ev.clientY-sy)/z;
+    origin.forEach(([o,ox,oy]) => { o.x = snapv(ox+dx); o.y = snapv(oy+dy); });
+    render();
+  };
+  const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); if (!moved) undoStack.pop(); };
+  addEventListener("pointermove", move); addEventListener("pointerup", up);
+  render();
+}
+
+function resize(e, it, dir){
+  e.preventDefault(); pushUndo();
+  const sx = e.clientX, sy = e.clientY, z = +zoom.value;
+  const l0 = it.x - it.w/2, r0 = it.x + it.w/2, t0 = it.y - it.h/2, b0 = it.y + it.h/2;
+  const move = ev => {
+    const dx = (ev.clientX-sx)/z, dy = (ev.clientY-sy)/z;
+    let l = l0, r = r0, t = t0, b = b0;
+    if (dir.includes("w")) l = Math.min(snapv(l0+dx), r0-8);
+    if (dir.includes("e")) r = Math.max(snapv(r0+dx), l0+8);
+    if (dir.includes("n")) t = Math.min(snapv(t0+dy), b0-8);
+    if (dir.includes("s")) b = Math.max(snapv(b0+dy), t0+8);
+    it.x = (l+r)/2; it.y = (t+b)/2; it.w = r-l; it.h = b-t;
+    render();
+  };
+  const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); };
+  addEventListener("pointermove", move); addEventListener("pointerup", up);
+}
+
+// marquee selection on the empty board
+board.addEventListener("pointerdown", e => {
+  if (e.target !== board) return;
+  e.preventDefault();
+  const z = +zoom.value, rect = board.getBoundingClientRect();
+  const pt = ev => ({ x:(ev.clientX-rect.left)/z, y:(ev.clientY-rect.top)/z });
+  const a = pt(e), base = e.shiftKey ? sel.slice() : [];
+  if (!e.shiftKey) { sel = []; }
+  const move = ev => {
+    const b = pt(ev), x0 = Math.min(a.x,b.x), x1 = Math.max(a.x,b.x), y0 = Math.min(a.y,b.y), y1 = Math.max(a.y,b.y);
+    const hit = items.filter(i => i.x-i.w/2 < x1 && i.x+i.w/2 > x0 && i.y-i.h/2 < y1 && i.y+i.h/2 > y0);
+    sel = [...base, ...hit.filter(i => !base.includes(i))];
+    render();
+    const m = $("marquee"); m.style.display = "block";
+    m.style.left = x0+"px"; m.style.top = y0+"px"; m.style.width = (x1-x0)+"px"; m.style.height = (y1-y0)+"px";
+  };
+  const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); render(); };
+  addEventListener("pointermove", move); addEventListener("pointerup", up);
+  render();
+});
+
+addEventListener("keydown", e => {
+  const typing = e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA";
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !typing) { e.preventDefault(); undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a" && !typing) { e.preventDefault(); sel = items.slice(); render(); return; }
+  if (typing || !sel.length) return;
+  if (e.key === "Delete") { pushUndo(); sel.forEach(o => o.hidden = !o.hidden); render(); return; }
+  const step = e.shiftKey ? 10 : 1;
+  const d = {ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[e.key];
+  if (d) { e.preventDefault(); pushUndo(); sel.forEach(o => { o.x += d[0]; o.y += d[1]; }); render(); }
+});
+
+[["ix","x"],["iy","y"],["iw","w"],["ih","h"]].forEach(([id,k]) => $(id).addEventListener("input", e => {
+  const p = primary(); if (!p) return; pushUndo(); p[k] = Math.max(k==="w"||k==="h" ? 4 : -999, +e.target.value); render();
+}));
+$("ihid").addEventListener("input", e => { const p = primary(); if (p) { pushUndo(); p.hidden = e.target.checked; render(); } });
+
+document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+  if (sel.length < 1) return; pushUndo();
+  const a = b.dataset.a, p = primary();
+  const L = o => o.x - o.w/2, R = o => o.x + o.w/2, T = o => o.y - o.h/2, B = o => o.y + o.h/2;
+  if (a === "samew") sel.forEach(o => o.w = p.w);
+  if (a === "sameh") sel.forEach(o => o.h = p.h);
+  if (sel.length > 1 || a.startsWith("same")) {
+    const minL = Math.min(...sel.map(L)), maxR = Math.max(...sel.map(R)), minT = Math.min(...sel.map(T)), maxB = Math.max(...sel.map(B));
+    if (a === "left") sel.forEach(o => o.x = minL + o.w/2);
+    if (a === "right") sel.forEach(o => o.x = maxR - o.w/2);
+    if (a === "hcenter") sel.forEach(o => o.x = (minL+maxR)/2);
+    if (a === "top") sel.forEach(o => o.y = minT + o.h/2);
+    if (a === "bottom") sel.forEach(o => o.y = maxB - o.h/2);
+    if (a === "vmiddle") sel.forEach(o => o.y = (minT+maxB)/2);
+    if (a === "disth" && sel.length > 2) {
+      const s = sel.slice().sort((p,q) => p.x - q.x), total = s.reduce((n,o) => n+o.w, 0), gap = (maxR-minL-total)/(s.length-1);
+      let x = minL; s.forEach(o => { o.x = x + o.w/2; x += o.w + gap; });
+    }
+    if (a === "distv" && sel.length > 2) {
+      const s = sel.slice().sort((p,q) => p.y - q.y), total = s.reduce((n,o) => n+o.h, 0), gap = (maxB-minT-total)/(s.length-1);
+      let y = minT; s.forEach(o => { o.y = y + o.h/2; y += o.h + gap; });
+    }
+  } else {
+    // a single element aligns to the panel
+    if (a === "hcenter") sel[0].x = 230;
+    if (a === "left") sel[0].x = sel[0].w/2 + 10;
+    if (a === "right") sel[0].x = 460 - sel[0].w/2 - 10;
+  }
+  render();
+});
+
+height.addEventListener("input", render); zoom.addEventListener("input", render);
+$("undo").onclick = undo;
+$("copy").onclick = () => { navigator.clipboard.writeText($("json").value); };
+$("reset").onclick = () => { if (confirm("Alles auf den aktuellen Mod-Stand zurücksetzen?")) { localStorage.removeItem(STORE); location.reload(); } };
+$("load").onclick = () => {
+  try {
+    const data = JSON.parse($("json").value); pushUndo();
+    items.forEach(it => {
+      const e = data.elements[it.name]; if (!e) return;
+      it.x = e.x; it.y = e.y; it.w = e.width ?? e.size ?? it.w; it.h = e.height ?? e.size ?? it.h; it.hidden = !!e.hidden;
+    });
+    if (data.height) height.value = data.height;
+    render();
+  } catch (err) { alert("Kein gültiges JSON"); }
+};
+render();
+</script>
+</body>
+</html>

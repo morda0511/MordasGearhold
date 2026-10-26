@@ -19,7 +19,7 @@ namespace MordasGearhold.UI
     internal static class GearholdPanel
     {
         private const float DesignWidth = 460f;
-        private const float DesignHeight = 894f; // quickTop (742) + 152
+        private static float DesignHeight => PanelLayout.Height;
         private const float SlotTop = 178f;
         private const float SlotStep = 88f;
         private const float CompactHeight = 140f;
@@ -52,6 +52,7 @@ namespace MordasGearhold.UI
         private static bool s_ammoOpen;
         private static GameObject s_ammoBox;
         private static TMP_Text s_ammoButton;
+        private static bool s_ammoNarrow;
 
         internal static void Tick()
         {
@@ -139,10 +140,14 @@ namespace MordasGearhold.UI
             TMP_Text header = gui.m_craftingStationName;
             TMP_Text body = gui.m_recipeDecription != null ? gui.m_recipeDecription : header;
 
+            PanelLayout.Load();
+            PanelLayout.Part p;
+            p = PanelLayout.Get("Titel");
             TMP_Text title = UiKit.Text(s_root, header, "MORDA'S GEARHOLD", 34f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(title.rectTransform, DesignWidth / 2f, 34f, DesignWidth - 40f, 44f);
+            UiKit.Place(title.rectTransform, p.X, p.Y, p.W, p.H);
+            p = PanelLayout.Get("Untertitel");
             TMP_Text subtitle = UiKit.Text(s_root, body, "INVENTORY · LOADOUTS · QUICKSLOTS", 14f, UiKit.Dim, TextAlignmentOptions.Center);
-            UiKit.Place(subtitle.rectTransform, DesignWidth / 2f, 64f, DesignWidth - 40f, 20f);
+            UiKit.Place(subtitle.rectTransform, p.X, p.Y, p.W, p.H);
 
             for (int i = 0; i < Topology.SetCount; i++)
             {
@@ -157,7 +162,8 @@ namespace MordasGearhold.UI
                 {
                     label.text = "SET " + (i + 1);
                 }
-                UiKit.Place((RectTransform)tab.transform, 90f + i * 140f, 102f, 128f, 34f);
+                p = PanelLayout.Get("Set " + (i + 1));
+                UiKit.Place((RectTransform)tab.transform, p.X, p.Y, p.W, p.H);
                 s_tabs[i] = tab;
             }
 
@@ -168,97 +174,100 @@ namespace MordasGearhold.UI
 
             UiKit.Divider(s_body, braid, DesignWidth / 2f, 132f, DesignWidth - 40f);
 
-            // left: armour and the three utility slots; right: shield, ammo and the three trinkets;
-            // the character sheet in between (slot 1 of utility/trinket = vanilla slot, 2 and 3 always active)
-            const float leftX = 58f, rightX = DesignWidth - 58f;
-            float Row(int i) => SlotTop + i * SlotStep;
-            AddSlot(gui, GearSlot.Helmet, "Head", leftX, Row(0));
-            AddSlot(gui, GearSlot.Chest, "Chest", leftX, Row(1));
-            AddSlot(gui, GearSlot.Legs, "Legs", leftX, Row(2));
-            AddSlot(gui, GearSlot.Shoulder, "Cape", leftX, Row(3));
-            AddSlot(gui, GearSlot.Shield, "Shield", rightX, Row(0));
-            AddSlot(gui, GearSlot.Trinket, "Trinket 1", rightX, Row(1));
-            AddSlot(gui, GearSlot.Trinket2, "Trinket 2", rightX, Row(2));
-            AddSlot(gui, GearSlot.Trinket3, "Trinket 3", rightX, Row(3));
+            // armour on the left, shield and trinkets on the right, the character sheet in between
+            // (slot 1 of utility/trinket = vanilla slot, 2 and 3 always active); every position comes from PanelLayout
+            AddPlaced(gui, GearSlot.Helmet, "Head", "Kopf");
+            AddPlaced(gui, GearSlot.Chest, "Chest", "Brust");
+            AddPlaced(gui, GearSlot.Legs, "Legs", "Beine");
+            AddPlaced(gui, GearSlot.Shoulder, "Cape", "Cape");
+            AddPlaced(gui, GearSlot.Shield, "Shield", "Schild");
+            AddPlaced(gui, GearSlot.Trinket, "Trinket 1", "Trinket 1");
+            AddPlaced(gui, GearSlot.Trinket2, "Trinket 2", "Trinket 2");
+            AddPlaced(gui, GearSlot.Trinket3, "Trinket 3", "Trinket 3");
             // the coin slot, top right next to the title: shared by all sets, coins there weigh nothing
-            AddSlot(gui, GearSlot.Coins, null, DesignWidth - 44f, 46f, 52f);
+            AddPlaced(gui, GearSlot.Coins, null, "Münzen");
 
             // utility slots in a row below the armour; the ammo slots sit in a drop-down opened by the AMMO button
-            float sheetTop = 146f, sheetBottom = Row(3) + 42f;
-            float utilityTop = sheetBottom + 30f;
+            PanelLayout.Part sheet = PanelLayout.Get("Charakterblatt");
+            float sheetTop = sheet.Y - sheet.H / 2f, sheetBottom = sheet.Y + sheet.H / 2f;
+            p = PanelLayout.Get("Utility-Titel");
+            float utilityTop = p.Y - 18f;
             UiKit.Divider(s_body, braid, DesignWidth / 2f, utilityTop, DesignWidth - 40f);
             TMP_Text utilityTitle = UiKit.Text(s_body, header, "UTILITY", 16f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(utilityTitle.rectTransform, leftX + (QuickSize + 14f), utilityTop + 18f, 160f, 22f);
-            AddSlot(gui, GearSlot.Utility, "Utility 1", leftX, utilityTop + 56f, 52f);
-            AddSlot(gui, GearSlot.Utility2, "Utility 2", leftX + QuickSize + 14f, utilityTop + 56f, 52f);
-            AddSlot(gui, GearSlot.Utility3, "Utility 3", leftX + 2f * (QuickSize + 14f), utilityTop + 56f, 52f);
-            s_ammoButton = AddAmmoButton(gui, DesignWidth - 90f, utilityTop + 56f);
+            UiKit.Place(utilityTitle.rectTransform, p.X, p.Y, p.W, p.H);
+            AddPlaced(gui, GearSlot.Utility, "Utility 1", "Utility 1");
+            AddPlaced(gui, GearSlot.Utility2, "Utility 2", "Utility 2");
+            AddPlaced(gui, GearSlot.Utility3, "Utility 3", "Utility 3");
+            s_ammoButton = AddAmmoButton(gui);
             if (descriptionBox != null)
             {
                 RectTransform boxRect = UiKit.Rect("SheetBox", s_body);
-                UiKit.Place(boxRect, DesignWidth / 2f, (sheetTop + sheetBottom) / 2f, 248f, sheetBottom - sheetTop);
+                UiKit.Place(boxRect, sheet.X, sheet.Y, sheet.W, sheet.H);
                 Image box = boxRect.gameObject.AddComponent<Image>();
                 UiKit.CopyLook(box, descriptionBox, Color.clear);
                 box.raycastTarget = false;
             }
             TMP_Text viking = UiKit.Text(s_body, header, "YOUR VIKING", 22f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(viking.rectTransform, DesignWidth / 2f, 160f, 230f, 28f);
-            s_stats = BuildScrollingSheet(gui, body, DesignWidth / 2f, 180f, 232f, sheetBottom - 8f);
+            UiKit.Place(viking.rectTransform, sheet.X, sheetTop + 14f, sheet.W - 18f, 28f);
+            s_stats = BuildScrollingSheet(gui, body, sheet.X, sheetTop + 34f, sheet.W - 16f, sheetBottom - 8f);
 
-            // the ammo drop-down, over the lower part of the sheet (created after it, so it draws on top)
-            BuildAmmoDrawer(gui, DesignWidth / 2f, utilityTop - 108f);
+            // the ammo drop-down (created after the sheet, so it draws on top)
+            BuildAmmoDrawer(gui);
 
             // food and meads of the active set, right above the quickslots (right-click eats / drinks)
-            float provisionsTop = utilityTop + 112f;
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, provisionsTop, DesignWidth - 40f);
-            float foodX = DesignWidth / 2f - 110f, meadX = DesignWidth / 2f + 110f;
+            p = PanelLayout.Get("Food-Titel");
+            UiKit.Divider(s_body, braid, DesignWidth / 2f, p.Y - 18f, DesignWidth - 40f);
             TMP_Text foodTitle = UiKit.Text(s_body, header, "FOOD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(foodTitle.rectTransform, foodX, provisionsTop + 18f, 160f, 22f);
+            UiKit.Place(foodTitle.rectTransform, p.X, p.Y, p.W, p.H);
+            p = PanelLayout.Get("Mead-Titel");
             TMP_Text meadTitle = UiKit.Text(s_body, header, "MEAD", 16f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(meadTitle.rectTransform, meadX, provisionsTop + 18f, 160f, 22f);
+            UiKit.Place(meadTitle.rectTransform, p.X, p.Y, p.W, p.H);
             for (int n = 0; n < Topology.FoodSlotCount; n++)
             {
-                Slot food = AddSlot(gui, GearSlot.Food1 + n, null, foodX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
+                Slot food = AddPlaced(gui, GearSlot.Food1 + n, null, "Food " + (n + 1));
                 food.Label = "Food " + (n + 1);
-                food.KeyButton = AddKeyButton(gui, food.Kind, food.Label, foodX + (n - 1) * (QuickSize + 6f), provisionsTop + 94f);
+                food.KeyButton = AddPlacedKey(gui, food.Kind, food.Label, "Food-Taste " + (n + 1));
             }
             for (int n = 0; n < Topology.MeadSlotCount; n++)
             {
-                Slot mead = AddSlot(gui, GearSlot.Mead1 + n, null, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 56f, QuickSize);
+                Slot mead = AddPlaced(gui, GearSlot.Mead1 + n, null, "Mead " + (n + 1));
                 mead.Label = "Mead " + (n + 1);
-                mead.KeyButton = AddKeyButton(gui, mead.Kind, mead.Label, meadX + (n - 1) * (QuickSize + 6f), provisionsTop + 94f);
+                mead.KeyButton = AddPlacedKey(gui, mead.Kind, mead.Label, "Mead-Taste " + (n + 1));
             }
 
             // holster between food and mead: the second weapon, the vanilla hide key (R) swaps it into the hand
-            float holsterX = DesignWidth / 2f;
+            p = PanelLayout.Get("Weapon-2-Titel");
             TMP_Text holsterTitle = UiKit.Text(s_body, header, "WEAPON 2", 13f, UiKit.Gold, TextAlignmentOptions.Center);
-            UiKit.Place(holsterTitle.rectTransform, holsterX, provisionsTop + 18f, 66f, 22f);
+            UiKit.Place(holsterTitle.rectTransform, p.X, p.Y, p.W, p.H);
             s_holsterTitle = holsterTitle.gameObject;
-            Slot holster = AddSlot(gui, GearSlot.Holster, null, holsterX, provisionsTop + 56f, QuickSize);
+            Slot holster = AddPlaced(gui, GearSlot.Holster, null, "Weapon 2");
             holster.Label = "Weapon 2";
             // its own swap key (config Weapon2Swap); unset = the vanilla hide key swaps, shown greyed in the box
             holster.KeyEntry = Plugin.Weapon2SwapKey;
-            holster.KeyButton = AddKeyButton(gui, holster.KeyEntry, holster.Label, holsterX, provisionsTop + 94f, QuickSize + 2f, 24f);
+            p = PanelLayout.Get("Weapon-2-Taste");
+            holster.KeyButton = AddKeyButton(gui, holster.KeyEntry, holster.Label, p.X, p.Y, p.W, p.H);
             s_holsterKey = holster.KeyButton.GetComponentInParent<Button>()?.gameObject;
 
-            float quickTop = provisionsTop + 116f;
-            UiKit.Divider(s_body, braid, DesignWidth / 2f, quickTop, DesignWidth - 40f);
+            p = PanelLayout.Get("Quickslot-Titel");
+            UiKit.Divider(s_body, braid, DesignWidth / 2f, p.Y - 18f, DesignWidth - 40f);
             TMP_Text quickTitle = UiKit.Text(s_body, header, "QUICKSLOTS · ACTIVE SET", 16f, UiKit.Gold, TextAlignmentOptions.Left);
-            UiKit.Place(quickTitle.rectTransform, DesignWidth / 2f, quickTop + 18f, DesignWidth - 50f, 22f);
+            UiKit.Place(quickTitle.rectTransform, p.X, p.Y, p.W, p.H);
             for (int x = 0; x < Topology.QuickslotCount; x++)
             {
-                float slotX = DesignWidth / 2f + (x - 3.5f) * (QuickSize + 6f);
-                Slot quick = AddSlot(gui, Topology.QuickSlot(x), null, slotX, quickTop + 58f, QuickSize);
+                Slot quick = AddPlaced(gui, Topology.QuickSlot(x), null, "Quickslot " + (x + 1));
                 quick.Label = "Quickslot " + (x + 1);
-                quick.KeyButton = AddKeyButton(gui, quick.Kind, quick.Label, slotX, quickTop + 96f);
+                quick.KeyButton = AddPlacedKey(gui, quick.Kind, quick.Label, "Quickslot-Taste " + (x + 1));
             }
+            p = PanelLayout.Get("Fußzeile");
             s_footer = UiKit.Text(s_body, body, "", 12f, UiKit.Dim, TextAlignmentOptions.Center);
-            UiKit.Place(s_footer.rectTransform, DesignWidth / 2f, quickTop + 124f, DesignWidth - 90f, 18f);
+            UiKit.Place(s_footer.rectTransform, p.X, p.Y, p.W, p.H);
 
             // settings gear in the bottom right corner: the window that moves and sizes the HUD bars
-            Button gear = UiKit.IconButton(s_body, "Settings", UiKit.GearIcon, DesignWidth - 26f, quickTop + 122f, 24f, QuickslotBarEditor.Open);
+            p = PanelLayout.Get("HUD-Zahnrad");
+            Button gear = UiKit.IconButton(s_body, "Settings", UiKit.GearIcon, p.X, p.Y, p.W, QuickslotBarEditor.Open);
             AddTooltip(gui, gear.gameObject, "HUD bars", "Move, resize and turn the quickslot, food and mead bars on your screen.");
 
+            s_root.sizeDelta = new Vector2(DesignWidth, DesignHeight);
             AddTransmogButton(gui);
 
             s_root.gameObject.SetActive(false);
@@ -363,26 +372,42 @@ namespace MordasGearhold.UI
             tooltip.m_text = text;
         }
 
-        /// <summary>The AMMO button: opens and closes the drop-down with the three ammo slots.</summary>
-        private static TMP_Text AddAmmoButton(InventoryGui gui, float x, float y)
+        /// <summary>A slot placed by its PanelLayout part (square: the part's width is the slot size).</summary>
+        private static Slot AddPlaced(InventoryGui gui, GearSlot kind, string label, string part)
         {
+            PanelLayout.Part p = PanelLayout.Get(part);
+            return AddSlot(gui, kind, label, p.X, p.Y, p.W);
+        }
+
+        private static TMP_Text AddPlacedKey(InventoryGui gui, GearSlot kind, string name, string part)
+        {
+            PanelLayout.Part p = PanelLayout.Get(part);
+            return AddKeyButton(gui, Plugin.KeyFor(kind), name, p.X, p.Y, p.W, p.H);
+        }
+
+        /// <summary>The AMMO tab: opens and closes the drop-down with the three ammo slots.</summary>
+        private static TMP_Text AddAmmoButton(InventoryGui gui)
+        {
+            PanelLayout.Part p = PanelLayout.Get("AMMO-Knopf");
             Button button = UnityEngine.Object.Instantiate(gui.m_tabCraft.gameObject, s_body).GetComponent<Button>();
             button.gameObject.name = "AmmoToggle";
             button.gameObject.SetActive(true);
             button.interactable = true;
             button.onClick = new Button.ButtonClickedEvent();
             button.onClick.AddListener(() => s_ammoOpen = !s_ammoOpen);
-            UiKit.Place((RectTransform)button.transform, x, y, 110f, 34f);
+            UiKit.Place((RectTransform)button.transform, p.X, p.Y, p.W, p.H);
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             AddTooltip(gui, button.gameObject, "Ammo", "Arrows and bolts: open to see the three ammo slots and their keys (Alt+1/2/3 switch the ammo in use).");
+            s_ammoNarrow = p.W < 60f;
             return label;
         }
 
         /// <summary>A small framed box with the three ammo slots and their key buttons, hidden until AMMO is clicked.</summary>
-        private static void BuildAmmoDrawer(InventoryGui gui, float centerX, float top)
+        private static void BuildAmmoDrawer(InventoryGui gui)
         {
+            PanelLayout.Part b = PanelLayout.Get("Ammo-Dropdown");
             RectTransform box = UiKit.Rect("AmmoDrawer", s_body);
-            UiKit.Place(box, centerX, top + 50f, 200f, 100f);
+            UiKit.Place(box, b.X, b.Y, b.W, b.H);
             Image back = box.gameObject.AddComponent<Image>();
             Image source = UiKit.Named(gui.m_crafting, "Decription");
             if (source != null) UiKit.CopyLook(back, source, new Color(0f, 0f, 0f, 0.92f));
@@ -392,12 +417,12 @@ namespace MordasGearhold.UI
             s_ammoBox.SetActive(false);
             for (int n = 0; n < Topology.AmmoSlotCount; n++)
             {
-                float x = centerX + (n - 1) * (QuickSize + 12f);
-                Slot ammo = AddSlot(gui, Topology.AmmoSlot(n), null, x, top + 30f, QuickSize);
+                Slot ammo = AddPlaced(gui, Topology.AmmoSlot(n), null, "Ammo " + (n + 1));
                 ammo.Label = "Ammo " + (n + 1);
                 ammo.InDrawer = true;
                 ammo.KeyEntry = Plugin.KeyAmmo[n];
-                ammo.KeyButton = AddKeyButton(gui, ammo.KeyEntry, ammo.Label, x, top + 70f, QuickSize + 2f, 24f);
+                PanelLayout.Part k = PanelLayout.Get("Ammo-Taste " + (n + 1));
+                ammo.KeyButton = AddKeyButton(gui, ammo.KeyEntry, ammo.Label, k.X, k.Y, k.W, k.H);
             }
         }
 
@@ -530,7 +555,7 @@ namespace MordasGearhold.UI
             }
             ItemDrop.ItemData drag = Access.DragItem(s_gui);
             if (s_ammoBox != null && s_ammoBox.activeSelf != s_ammoOpen) s_ammoBox.SetActive(s_ammoOpen);
-            if (s_ammoButton != null) s_ammoButton.text = s_ammoOpen ? "AMMO  ▲" : "AMMO  ▼";
+            if (s_ammoButton != null) s_ammoButton.text = s_ammoNarrow ? (s_ammoOpen ? "◀" : "▶") : (s_ammoOpen ? "AMMO  ▲" : "AMMO  ▼");
             foreach (Slot slot in s_slots)
             {
                 // Trinket/Utility 2 and 3 can be switched off in the config (TrinketSlots, UtilitySlots)
@@ -551,6 +576,10 @@ namespace MordasGearhold.UI
                 }
                 if (!enabled)
                 {
+                    if (slot.KeyButton != null && slot.KeyButton.transform.parent.gameObject.activeSelf)
+                    {
+                        slot.KeyButton.transform.parent.gameObject.SetActive(false); // its key button goes with it
+                    }
                     continue;
                 }
                 slot.Item = Equipment.ItemIn(player, slot.Kind);
