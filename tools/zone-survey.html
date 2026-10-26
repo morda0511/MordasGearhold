@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gearhold Zone Survey</title>
+<style>
+  :root { --bg:#1b1713; --panel:#2b2118; --gold:#e0b64a; --dim:#a8977a; --line:#6b5236; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:#eadfc8; font:13px system-ui, sans-serif; padding:14px; }
+  h1 { margin:0 0 6px; font-size:17px; color:var(--gold); }
+  .bar { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; margin-bottom:10px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 10px; }
+  .p { display:grid; grid-template-columns:140px 160px 48px; gap:6px; align-items:center; }
+  .p span.v { text-align:right; color:var(--gold); font-variant-numeric: tabular-nums; }
+  button, select, input[type=text] { background:#3a2c1f; color:#eadfc8; border:1px solid var(--line); padding:5px 9px; border-radius:4px; }
+  button { cursor:pointer; } button:hover { border-color:var(--gold); }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:10px; }
+  .tile { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:6px; cursor:pointer; }
+  .tile:hover { border-color:var(--gold); }
+  .tile canvas { width:100%; image-rendering:pixelated; background:#111; display:block; }
+  .tile .n { font-size:11px; color:var(--dim); margin-top:4px; word-break:break-all; max-height:2.6em; overflow:hidden; }
+  .chips { display:flex; gap:3px; margin-top:4px; flex-wrap:wrap; }
+  .chip { width:20px; height:14px; border:1px solid #000a; border-radius:2px; }
+  .badge { display:inline-block; padding:1px 6px; border-radius:9px; font-weight:600; margin-right:4px; }
+  .low { background:#7a2b2b; } .ok { background:#2b5a3a; } .max { background:#8a5a1a; }
+  #modal { position:fixed; inset:0; background:#000c; display:none; align-items:center; justify-content:center; z-index:9; }
+  #modal .in { background:var(--panel); border:1px solid var(--gold); border-radius:8px; padding:12px; max-width:96vw; max-height:96vh; overflow:auto; }
+  #modal canvas { image-rendering:pixelated; margin:4px; background:#111; }
+  .hint { color:var(--dim); font-size:12px; line-height:1.45; }
+</style>
+</head>
+<body>
+<h1>Gearhold Zone Survey</h1>
+<div class="hint">Wählt viele Texturen auf einmal (z. B. den Ordner <b>MordasGearhold-textures</b> aus dem Export mit Strg+Shift+F10) und zeigt für jede die gefundenen Farb-Zonen. Mit den Reglern stellst du die Erkennung für <i>alle</i> gleichzeitig ein. Rot = nur 1–2 Zonen (wahrscheinlich zu grob), Orange = Maximum erreicht (vielleicht zu fein).</div>
+<div class="bar">
+  <div class="box">
+    <input id="files" type="file" accept="image/*" multiple webkitdirectory>
+    <label style="margin-left:8px"><input id="onlyModel" type="checkbox" checked> nur Modell-Texturen („model“ im Namen)</label>
+    <div class="row" style="margin-top:6px"><input id="filter" type="text" placeholder="Filter (z. B. Flametal)"> <select id="sort"><option value="name">nach Name</option><option value="zones">nach Zonenzahl</option></select> <button id="csv">Tabelle (CSV) kopieren</button></div>
+    <div id="summary" class="hint" style="margin-top:6px"></div>
+  </div>
+  <div class="box" id="params"></div>
+</div>
+<div id="grid"></div>
+<div id="modal"><div class="in"><div id="mtitle" style="margin-bottom:6px;color:var(--gold)"></div><div id="mbody"></div><div class="hint" style="margin-top:6px">Klick irgendwo schließt das Fenster.</div></div></div>
+
+<script>
+const DETECT = [
+  ["startClusters","Start-Cluster",2,16,1,12],
+  ["maxZones","Max. Zonen",1,8,1,8],
+  ["minShare","Min. Anteil",0,0.1,0.002,0.012],
+  ["merge","Verschmelz-Abstand",0.02,1.2,0.01,0.12],
+  ["bw","Helligkeits-Gewicht",0,2,0.05,0.7],
+  ["wc","Farb-Gewicht",0,20,0.5,6],
+  ["sample","Stichprobe (px)",32,192,16,96],
+  ["soft","Weichheit der Zonen",0.002,1,0.002,0.12],
+];
+let P = {}; DETECT.forEach(d => P[d[0]] = d[5]);
+// ---------------------------------------------------------------- colour helpers (same maths as UnityEngine.Color)
+function rgb2hsv(r, g, b) {
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+  let h = 0;
+  if (d > 0) {
+    if (max === r) h = ((g - b) / d) % 6; else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4;
+    h /= 6; if (h < 0) h += 1;
+  }
+  return [h, max === 0 ? 0 : d / max, max];
+}
+function hsv2rgb(h, s, v) {
+  h = (h - Math.floor(h)) * 6;
+  const i = Math.floor(h), f = h - i, p = v*(1-s), q = v*(1-s*f), t = v*(1-s*(1-f));
+  return [[v,t,p],[q,v,p],[p,v,t],[p,q,v],[t,p,v],[v,p,q]][i % 6];
+}
+const toLin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const toSrgb = c => c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+function oklab(r, g, b) {
+  r = toLin(r); g = toLin(g); b = toLin(b);
+  const l = Math.cbrt(0.4122214708*r + 0.5363325363*g + 0.0514459929*b), m = Math.cbrt(0.2119034982*r + 0.6806995451*g + 0.1073969566*b), s = Math.cbrt(0.0883024619*r + 0.2817188376*g + 0.6299787005*b);
+  return [0.2104542553*l + 0.7936177850*m - 0.0040720468*s, 1.9779984951*l - 2.4285922050*m + 0.4505937099*s, 0.0259040371*l + 0.7827717662*m - 0.8086757660*s];
+}
+function fromOklab(L, a, b) {
+  const l = (L + 0.3963377774*a + 0.2158037573*b) ** 3, m = (L - 0.1055613458*a - 0.0638541728*b) ** 3, s = (L - 0.0894841775*a - 1.2914855480*b) ** 3;
+  return [4.0767416621*l - 3.3077115913*m + 0.2309699292*s, -1.2684380046*l + 2.6097574011*m - 0.3413193965*s, -0.0041960863*l - 0.7034186147*m + 1.7076147010*s]
+    .map(x => Math.min(1, Math.max(0, toSrgb(Math.min(1, Math.max(0, x))))));
+}
+const feature = (L, a, b) => [L * P.bw, a * P.wc, b * P.wc];
+const dist2 = (a, b) => (a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2;
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+// ---------------------------------------------------------------- zone detection (port of Zones.cs)
+function detect(sampleData, useAlpha) {
+  let features = [], colors = [];
+  for (let pass = 0; pass < 2 && features.length < 50; pass++) {
+    features = []; colors = [];
+    for (let i = 0; i < sampleData.length; i += 4) {
+      if (useAlpha && sampleData[i+3] < 128) continue;
+      const r = sampleData[i]/255, g = sampleData[i+1]/255, b = sampleData[i+2]/255;
+      if (pass === 0 && Math.max(r, g, b) < 10/255) continue;
+      const lab = oklab(r, g, b);
+      features.push(feature(lab[0], lab[1], lab[2])); colors.push([r, g, b]);
+    }
+  }
+  if (!features.length) return { centers:[feature(0.6,0,0)], chips:[[.5,.5,.5]], share:[1] };
+  let centers = kmeans(features, P.startClusters);
+  let assign = new Int32Array(features.length), counts = new Float64Array(centers.length);
+  doAssign(features, centers, assign, counts);
+  while (centers.length > 1) {
+    let smallest = 0;
+    for (let i = 1; i < centers.length; i++) if (counts[i] < counts[smallest]) smallest = i;
+    let from = -1, into = -1;
+    if (counts[smallest] / features.length < P.minShare) {
+      from = smallest; into = nearestOther(centers, smallest);
+    } else {
+      let closest = Infinity;
+      for (let i = 0; i < centers.length; i++) for (let j = i+1; j < centers.length; j++) {
+        const d = Math.sqrt(dist2(centers[i], centers[j]));
+        if (d < closest) { closest = d; from = counts[i] < counts[j] ? i : j; into = from === i ? j : i; }
+      }
+      if (closest >= P.merge && centers.length <= P.maxZones) break;
+    }
+    const total = counts[from] + counts[into];
+    if (total > 0) centers[into] = centers[into].map((c,k) => (c*counts[into] + centers[from][k]*counts[from]) / total);
+    centers = centers.filter((_, i) => i !== from);
+    counts = new Float64Array(centers.length);
+    doAssign(features, centers, assign, counts);
+  }
+  const n = centers.length, sums = Array.from({length:n}, () => [0,0,0]);
+  for (let i = 0; i < features.length; i++) { const c = colors[i], s = sums[assign[i]]; s[0]+=c[0]; s[1]+=c[1]; s[2]+=c[2]; }
+  const order = [...Array(n).keys()].sort((a,b) => counts[b] - counts[a]);
+  return {
+    centers: order.map(k => centers[k]),
+    chips: order.map(k => counts[k] > 0 ? sums[k].map(x => x / counts[k]) : [.5,.5,.5]),
+    share: order.map(k => counts[k] / features.length),
+  };
+}
+function nearestOther(centers, index) {
+  let best = index === 0 ? 1 : 0;
+  for (let i = 0; i < centers.length; i++) if (i !== index && dist2(centers[i], centers[index]) < dist2(centers[best], centers[index])) best = i;
+  return best;
+}
+function doAssign(features, centers, assign, counts) {
+  counts.fill(0);
+  for (let i = 0; i < features.length; i++) {
+    let best = 0, bd = Infinity;
+    for (let k = 0; k < centers.length; k++) { const d = dist2(features[i], centers[k]); if (d < bd) { bd = d; best = k; } }
+    assign[i] = best; counts[best]++;
+  }
+}
+function kmeans(features, k) {
+  const rand = rng(20260101);
+  const centers = [features[Math.floor(rand() * features.length)]];
+  const distance = new Float64Array(features.length);
+  while (centers.length < k) {
+    let total = 0;
+    for (let i = 0; i < features.length; i++) { let b = Infinity; for (const c of centers) b = Math.min(b, dist2(features[i], c)); distance[i] = b; total += b; }
+    if (total <= 0) break;
+    let pick = rand() * total, chosen = features.length - 1;
+    for (let i = 0; i < features.length; i++) { pick -= distance[i]; if (pick <= 0) { chosen = i; break; } }
+    centers.push(features[chosen]);
+  }
+  const result = centers.map(c => c.slice()), assign = new Int32Array(features.length), counts = new Float64Array(result.length);
+  for (let it = 0; it < 15; it++) {
+    doAssign(features, result, assign, counts);
+    const sums = result.map(() => [0,0,0]);
+    for (let i = 0; i < features.length; i++) { const s = sums[assign[i]], f = features[i]; s[0]+=f[0]; s[1]+=f[1]; s[2]+=f[2]; }
+    for (let c = 0; c < result.length; c++) if (counts[c] > 0) result[c] = sums[c].map(x => x / counts[c]);
+  }
+  return result;
+}
+
+
+const $ = id => document.getElementById(id);
+const palette = [[230,80,80],[80,170,230],[240,200,60],[110,200,110],[200,110,220],[240,150,60],[120,120,255],[210,210,210]];
+let entries = []; // {name, w, h, data (ImageData), result}
+
+function sampleOf(imageData, size) {
+  const src = document.createElement("canvas"); src.width = imageData.width; src.height = imageData.height;
+  src.getContext("2d").putImageData(imageData, 0, 0);
+  const s = Math.min(1, size / Math.max(imageData.width, imageData.height));
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(imageData.width * s)); c.height = Math.max(1, Math.round(imageData.height * s));
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(src, 0, 0, c.width, c.height);
+  return x.getImageData(0, 0, c.width, c.height);
+}
+function analyse(e) {
+  const small = sampleOf(e.data, P.sample), d = small.data;
+  let opaque = 0; for (let i = 3; i < d.length; i += 4) if (d[i] >= 128) opaque++;
+  const useAlpha = opaque >= d.length / 4 / 20;
+  e.zones = detect(d, useAlpha);
+  // zone map at thumbnail size (max 128): soft weights as in the mod
+  const thumb = sampleOf(e.data, 128), t = thumb.data, z = e.zones.centers.length;
+  const out = new ImageData(thumb.width, thumb.height), o = out.data, w = new Float64Array(z);
+  for (let i = 0; i < t.length; i += 4) {
+    if (useAlpha && t[i+3] < 128) { o[i] = o[i+1] = o[i+2] = 30; o[i+3] = 255; continue; }
+    const lab = oklab(t[i]/255, t[i+1]/255, t[i+2]/255), f = feature(lab[0], lab[1], lab[2]);
+    let best = Infinity; for (let k = 0; k < z; k++) { w[k] = dist2(f, e.zones.centers[k]); if (w[k] < best) best = w[k]; }
+    let sum = 0; for (let k = 0; k < z; k++) { w[k] = Math.exp(-(w[k] - best) / P.soft); sum += w[k]; }
+    let r = 0, g = 0, b = 0; for (let k = 0; k < z; k++) { const c = palette[k % 8]; r += c[0]*w[k]/sum; g += c[1]*w[k]/sum; b += c[2]*w[k]/sum; }
+    const lum = (t[i] + t[i+1] + t[i+2]) / 765 * 0.5 + 0.5;
+    o[i] = r*lum; o[i+1] = g*lum; o[i+2] = b*lum; o[i+3] = 255;
+  }
+  e.map = out;
+}
+const hex = c => "rgb(" + c.map(x => Math.round(x * 255)).join(",") + ")";
+
+function render() {
+  const f = $("filter").value.toLowerCase(), grid = $("grid"); grid.innerHTML = "";
+  let list = entries.filter(e => e.name.toLowerCase().includes(f));
+  if ($("sort").value === "zones") list = list.slice().sort((a, b) => a.zones.centers.length - b.zones.centers.length);
+  const hist = {}; entries.forEach(e => { const n = e.zones.centers.length; hist[n] = (hist[n] || 0) + 1; });
+  $("summary").textContent = entries.length + " Texturen · Zonen: " + Object.keys(hist).sort((a,b)=>a-b).map(k => k + "×" + hist[k]).join("  ");
+  for (const e of list) {
+    const n = e.zones.centers.length, cls = n <= 2 ? "low" : n >= P.maxZones ? "max" : "ok";
+    const tile = document.createElement("div"); tile.className = "tile";
+    const c = document.createElement("canvas"); c.width = e.map.width; c.height = e.map.height; c.getContext("2d").putImageData(e.map, 0, 0);
+    tile.appendChild(c);
+    const info = document.createElement("div"); info.className = "n";
+    info.innerHTML = '<span class="badge ' + cls + '">' + n + ' Zonen</span>' + e.name.replace(/__/g, " · ");
+    tile.appendChild(info);
+    const chips = document.createElement("div"); chips.className = "chips";
+    e.zones.chips.forEach((ch, k) => { const d = document.createElement("div"); d.className = "chip"; d.style.background = hex(ch); d.title = Math.round(e.zones.share[k] * 100) + "%"; chips.appendChild(d); });
+    tile.appendChild(chips);
+    tile.onclick = () => show(e);
+    grid.appendChild(tile);
+  }
+}
+function show(e) {
+  $("mtitle").textContent = e.name + " — " + e.zones.centers.length + " Zonen (" + e.zones.share.map(s => Math.round(s*100) + "%").join(" / ") + ")";
+  const body = $("mbody"); body.innerHTML = "";
+  const a = document.createElement("canvas"); a.width = e.data.width; a.height = e.data.height; a.getContext("2d").putImageData(e.data, 0, 0);
+  const b = document.createElement("canvas"); b.width = e.map.width; b.height = e.map.height; b.getContext("2d").putImageData(e.map, 0, 0);
+  const scale = Math.max(1, Math.floor(480 / Math.max(a.width, a.height)));
+  for (const c of [a, b]) { c.style.width = (c.width * (c === a ? 1 : e.data.width / e.map.width) * scale) + "px"; c.style.height = (c.height * (c === a ? 1 : e.data.height / e.map.height) * scale) + "px"; body.appendChild(c); }
+  $("modal").style.display = "flex";
+}
+$("modal").onclick = () => $("modal").style.display = "none";
+
+let token = 0;
+async function loadFiles(files) {
+  const my = ++token; entries = [];
+  const list = [...files].filter(f => f.type.startsWith("image/") && (!$("onlyModel").checked || /model/i.test(f.name)));
+  let done = 0;
+  for (const file of list) {
+    if (my !== token) return;
+    const url = URL.createObjectURL(file);
+    const im = await new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = url; });
+    if (!im) continue;
+    const s = Math.min(1, 512 / Math.max(im.width, im.height)), w = Math.max(1, Math.round(im.width * s)), h = Math.max(1, Math.round(im.height * s));
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0, w, h);
+    const e = { name: file.name.replace(/\.png$/i, ""), data: x.getImageData(0, 0, w, h) };
+    analyse(e); entries.push(e); URL.revokeObjectURL(url);
+    if (++done % 8 === 0) { render(); await new Promise(r => setTimeout(r, 0)); }
+  }
+  render();
+}
+let timer = null;
+function reanalyse() { clearTimeout(timer); timer = setTimeout(async () => { for (let i = 0; i < entries.length; i++) { analyse(entries[i]); if (i % 10 === 9) await new Promise(r => setTimeout(r, 0)); } render(); }, 120); }
+
+const root = $("params");
+DETECT.forEach(([key, label, min, max, step]) => {
+  const row = document.createElement("div"); row.className = "p";
+  row.innerHTML = '<span>' + label + '</span><input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + P[key] + '"><span class="v">' + P[key] + '</span>';
+  row.querySelector("input").oninput = e => { P[key] = +e.target.value; e.target.nextElementSibling.textContent = P[key]; reanalyse(); };
+  root.appendChild(row);
+});
+$("files").onchange = e => loadFiles(e.target.files);
+$("onlyModel").onchange = () => { if ($("files").files.length) loadFiles($("files").files); };
+$("filter").oninput = render; $("sort").onchange = render;
+$("csv").onclick = () => {
+  const rows = ["name;zones;shares;chips"].concat(entries.map(e => [e.name, e.zones.centers.length, e.zones.share.map(s => Math.round(s*100)).join("/"),
+    e.zones.chips.map(c => "#" + c.map(x => Math.round(x*255).toString(16).padStart(2, "0")).join("")).join("/")].join(";")));
+  navigator.clipboard.writeText(rows.join("\n"));
+};
+</script>
+</body>
+</html>
