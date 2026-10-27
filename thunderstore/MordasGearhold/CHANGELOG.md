@@ -17,7 +17,7 @@
 - Panel is more compact: utility slots sit in a row below the armour, trinkets next to the armour, and the ammo slots moved into a drop-down opened by the AMMO button; less space between food and quickslots.
 - The panel layout comes from a built-in table and can be overridden by a `MordasGearhold.layout.json` in the BepInEx config folder (made with tools/layout-editor.html).
 - Right-click on a Gearhold slot equips / unequips like in the vanilla inventory; the look menu opens from the transmog button (Shift + right-click on a slot is a shortcut).
-- Eight custom slots instead of three (right column and left column under the cape); the panel is longer and the utility / food / quickslot rows moved down. Each slot has its own hotkey (Custom1-8).
+- Nine custom slots instead of three (a column of six under the shield, a column of three under the cape); the panel is longer and the utility / food / quickslot rows moved down. Each slot has its own hotkey (Custom1-9).
 - The settings gear has a SLOTS window: how many trinket, utility, food, mead and quickslots you have (new configs FoodSlots, MeadSlots, QuickslotCount) and the prefab names of the three custom slots, typed in directly.
 - Zones also use the metal map of a texture (when the armour has one), so metal and cloth or leather of a similar colour become different zones.
 - Choosing a colour zone (or ALL) makes it blink in yellow on the character for a moment, so you see what the colour will change.

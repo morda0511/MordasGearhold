@@ -99,6 +99,8 @@ Custom 7 58,646,52,52
 Custom-Taste 7 58,704,56,22
 Custom 8 58,742,52,52
 Custom-Taste 8 58,800,56,22
+Custom 9 402,742,52,52
+Custom-Taste 9 402,800,56,22
 ";
 
         internal const string FileName = "MordasGearhold.layout.json";

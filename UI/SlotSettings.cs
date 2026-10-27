@@ -15,7 +15,7 @@ namespace MordasGearhold.UI
     internal static class SlotSettings
     {
         private const float Width = 470f;
-        private const float Height = 760f;
+        private const float Height = 800f;
 
         private static InventoryGui s_gui;
         private static RectTransform s_window;
