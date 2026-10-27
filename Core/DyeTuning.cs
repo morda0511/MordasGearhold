@@ -16,7 +16,7 @@ namespace MordasGearhold.Core
     internal sealed class ZoneParams
     {
         public int StartClusters = 12, MaxZones = 8, Sample = 96;
-        public float MinShare = 0.012f, MergeDistance = 0.12f, BrightnessWeight = 0.7f, ChromaWeight = 6f, Softness = 0.008f;
+        public float MinShare = 0.012f, MergeDistance = 0.12f, BrightnessWeight = 0.7f, ChromaWeight = 6f, Softness = 0.008f, MetalWeight = 0.8f;
     }
 
     internal static class DyeTuning
@@ -101,6 +101,7 @@ namespace MordasGearhold.Core
                 ChromaWeight = Number(json, "wc", b.ChromaWeight, 0f, 20f),
                 Sample = Mathf.RoundToInt(Number(json, "sample", b.Sample, 24f, 256f)),
                 Softness = Number(json, "soft", b.Softness, 0.001f, 1f),
+                MetalWeight = Number(json, "wm", b.MetalWeight, 0f, 5f),
             };
         }
 

@@ -12,12 +12,12 @@ namespace MordasGearhold.Core
         private static int s_next = 1;
 
         internal readonly int Id = s_next++;
-        internal readonly Vector3[] Centers; // in Zones.Feature space
+        internal readonly Vector4[] Centers; // in Zones.Feature space
         internal readonly Color[] Chips;     // the average colour of each zone, in the original
         internal readonly float[] Share;     // how much of the piece each zone covers (sums to 1)
         internal readonly ZoneParams Params; // the numbers the zones were found with (they also set how softly pixels join them)
 
-        internal ZoneSet(Vector3[] centers, Color[] chips, float[] share, ZoneParams parameters)
+        internal ZoneSet(Vector4[] centers, Color[] chips, float[] share, ZoneParams parameters)
         {
             Centers = centers;
             Chips = chips;
@@ -51,8 +51,19 @@ namespace MordasGearhold.Core
 
         private static readonly Dictionary<string, ZoneSet> s_sets = new Dictionary<string, ZoneSet>();
         /// <summary>The position of a colour in the zone space: OKLab with the lightness and colour axes weighted (DyeTuning).</summary>
-        internal static Vector3 Feature(float lightness, float a, float b, ZoneParams p) =>
-            new Vector3(lightness * p.BrightnessWeight, a * p.ChromaWeight, b * p.ChromaWeight);
+        internal static Vector4 Feature(float lightness, float a, float b, float metal, ZoneParams p) =>
+            new Vector4(lightness * p.BrightnessWeight, a * p.ChromaWeight, b * p.ChromaWeight, metal * p.MetalWeight);
+
+        /// <summary>The metalness (0..1) of the pixel at x, y of a w x h picture, read from a metal map of any size; 0 without a map.</summary>
+        internal static float MetalAt(Color32[] metal, int metalWidth, int metalHeight, int x, int y, int w, int h)
+        {
+            if (metal == null || metalWidth <= 0 || w <= 0 || h <= 0)
+            {
+                return 0f;
+            }
+            int mx = Mathf.Min(metalWidth - 1, x * metalWidth / w), my = Mathf.Min(metalHeight - 1, y * metalHeight / h);
+            return metal[my * metalWidth + mx].r / 255f;
+        }
 
         internal static ZoneSet Of(Texture texture) => texture == null ? null : OfSet(new List<Texture> { texture });
 
@@ -81,13 +92,26 @@ namespace MordasGearhold.Core
 
         private static ZoneSet Detect(List<Texture> textures)
         {
-            List<Vector3> features = new List<Vector3>();
+            List<Vector4> features = new List<Vector4>();
             List<Color> colors = new List<Color>();
             foreach (Texture texture in textures)
             {
                 Texture2D small = TextureDye.ReadBack(texture, SampleSize, false);
                 Color32[] pixels = small.GetPixels32();
+                int sampleWidth = small.width, sampleHeight = small.height;
                 Object.Destroy(small);
+                // the metal map of the same texture (R = how metallic): metal and cloth of one colour are told apart by it
+                Texture metalTexture = DyeRenderer.MetalOf(texture);
+                Color32[] metalPixels = null;
+                int metalWidth = 0, metalHeight = 0;
+                if (metalTexture != null)
+                {
+                    Texture2D metal = TextureDye.ReadBack(metalTexture, SampleSize, false);
+                    metalPixels = metal.GetPixels32();
+                    metalWidth = metal.width;
+                    metalHeight = metal.height;
+                    Object.Destroy(metal);
+                }
 
                 // armour textures keep their coverage in alpha (0 = skin shows through); model textures often have no
                 // useful alpha at all: use it only when a real part of the texture is opaque
@@ -103,25 +127,27 @@ namespace MordasGearhold.Core
                 {
                     features.RemoveRange(start, features.Count - start);
                     colors.RemoveRange(start, colors.Count - start);
-                    foreach (Color32 p in pixels)
+                    for (int pixel = 0; pixel < pixels.Length; pixel++)
                     {
+                        Color32 p = pixels[pixel];
                         if (useAlpha && p.a < 128) continue;
                         if (pass == 0 && System.Math.Max(p.r, System.Math.Max(p.g, p.b)) < 10) continue;
                         Oklab.FromRgb(p.r, p.g, p.b, out float lab0, out float lab1, out float lab2);
-                        features.Add(Feature(lab0, lab1, lab2, P));
+                        float metalness = MetalAt(metalPixels, metalWidth, metalHeight, pixel % sampleWidth, pixel / sampleWidth, sampleWidth, sampleHeight);
+                        features.Add(Feature(lab0, lab1, lab2, metalness, P));
                         colors.Add(new Color(p.r / 255f, p.g / 255f, p.b / 255f));
                     }
                 }
             }
             if (features.Count == 0)
             {
-                return new ZoneSet(new[] { Feature(0.6f, 0f, 0f, P) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f }, P);
+                return new ZoneSet(new[] { Feature(0.6f, 0f, 0f, 0f, P) }, new[] { new Color(0.5f, 0.5f, 0.5f) }, new[] { 1f }, P);
             }
 
             // start with more clusters than zones, so a small accent colour (teal stripes on brown leather) gets
             // its own cluster, then merge down: tiny ones into their neighbour, close ones together, and the closest
             // pairs until at most MaxZones are left
-            Vector3[] centers = KMeans(features, StartClusters);
+            Vector4[] centers = KMeans(features, StartClusters);
             int[] assign = new int[features.Count];
             float[] counts = new float[centers.Length];
             Assign(features, centers, assign, counts);
@@ -145,7 +171,7 @@ namespace MordasGearhold.Core
                     {
                         for (int j = i + 1; j < centers.Length; j++)
                         {
-                            float d = Vector3.Distance(centers[i], centers[j]);
+                            float d = Vector4.Distance(centers[i], centers[j]);
                             if (d < closest)
                             {
                                 closest = d;
@@ -161,7 +187,7 @@ namespace MordasGearhold.Core
                 }
                 float total = counts[from] + counts[into];
                 centers[into] = total > 0f ? (centers[into] * counts[into] + centers[from] * counts[from]) / total : centers[into];
-                List<Vector3> remaining = new List<Vector3>(centers);
+                List<Vector4> remaining = new List<Vector4>(centers);
                 remaining.RemoveAt(from);
                 centers = remaining.ToArray();
                 counts = new float[centers.Length];
@@ -179,7 +205,7 @@ namespace MordasGearhold.Core
             int[] order = new int[n];
             for (int i = 0; i < n; i++) order[i] = i;
             System.Array.Sort(order, (a, b) => counts[b].CompareTo(counts[a]));
-            Vector3[] sortedCenters = new Vector3[n];
+            Vector4[] sortedCenters = new Vector4[n];
             Color[] chips = new Color[n];
             float[] share = new float[n];
             for (int i = 0; i < n; i++)
@@ -193,7 +219,7 @@ namespace MordasGearhold.Core
             return new ZoneSet(sortedCenters, chips, share, P);
         }
 
-        private static int NearestOther(Vector3[] centers, int index)
+        private static int NearestOther(Vector4[] centers, int index)
         {
             int best = index == 0 ? 1 : 0;
             for (int i = 0; i < centers.Length; i++)
@@ -206,7 +232,7 @@ namespace MordasGearhold.Core
             return best;
         }
 
-        private static void Assign(List<Vector3> features, Vector3[] centers, int[] assign, float[] counts)
+        private static void Assign(List<Vector4> features, Vector4[] centers, int[] assign, float[] counts)
         {
             for (int i = 0; i < counts.Length; i++) counts[i] = 0f;
             for (int i = 0; i < features.Count; i++)
@@ -228,10 +254,10 @@ namespace MordasGearhold.Core
         }
 
         /// <summary>Plain k-means with a fixed seed (k-means++ start), so the same texture always gives the same zones.</summary>
-        private static Vector3[] KMeans(List<Vector3> features, int k)
+        private static Vector4[] KMeans(List<Vector4> features, int k)
         {
             System.Random random = new System.Random(20260101);
-            List<Vector3> centers = new List<Vector3> { features[random.Next(features.Count)] };
+            List<Vector4> centers = new List<Vector4> { features[random.Next(features.Count)] };
             float[] distance = new float[features.Count];
             while (centers.Count < k)
             {
@@ -239,7 +265,7 @@ namespace MordasGearhold.Core
                 for (int i = 0; i < features.Count; i++)
                 {
                     float best = float.MaxValue;
-                    foreach (Vector3 c in centers)
+                    foreach (Vector4 c in centers)
                     {
                         best = Mathf.Min(best, (features[i] - c).sqrMagnitude);
                     }
@@ -264,13 +290,13 @@ namespace MordasGearhold.Core
                 centers.Add(features[chosen]);
             }
 
-            Vector3[] result = centers.ToArray();
+            Vector4[] result = centers.ToArray();
             int[] assign = new int[features.Count];
             float[] counts = new float[result.Length];
             for (int iteration = 0; iteration < 15; iteration++)
             {
                 Assign(features, result, assign, counts);
-                Vector3[] sums = new Vector3[result.Length];
+                Vector4[] sums = new Vector4[result.Length];
                 for (int i = 0; i < features.Count; i++) sums[assign[i]] += features[i];
                 for (int c = 0; c < result.Length; c++)
                 {

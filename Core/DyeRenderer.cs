@@ -119,6 +119,11 @@ namespace MordasGearhold.Core
             return Zones.OfSet(textures);
         }
 
+        // the metal map (_MetallicGlossMap / _ChestMetal / _LegsMetal) that belongs to a colour texture, learned when the textures of a piece are listed
+        private static readonly Dictionary<Texture, Texture> s_metalOf = new Dictionary<Texture, Texture>();
+
+        internal static Texture MetalOf(Texture colour) => colour != null && s_metalOf.TryGetValue(colour, out Texture metal) && metal != null ? metal : null;
+
         /// <summary>Every model texture (the main texture of every material) of an object, once each.</summary>
         internal static List<Texture> TexturesOf(GameObject go)
         {
@@ -133,6 +138,11 @@ namespace MordasGearhold.Core
                     {
                         Texture t = material.GetTexture("_MainTex");
                         if (t != null && !list.Contains(t)) list.Add(t);
+                        if (t != null && material.HasProperty("_MetallicGlossMap"))
+                        {
+                            Texture metal = material.GetTexture("_MetallicGlossMap");
+                            if (metal != null) s_metalOf[t] = metal;
+                        }
                     }
                 }
             }
@@ -144,6 +154,15 @@ namespace MordasGearhold.Core
             if (item == null || look == Transmog.Hidden) return null;
             GameObject prefab = !string.IsNullOrEmpty(look) && ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(look) : item.m_dropPrefab;
             return MainTextureOf(prefab != null ? prefab : item.m_dropPrefab);
+        }
+
+        private static readonly int s_chestMetal = Shader.PropertyToID("_ChestMetal");
+        private static readonly int s_legsMetal = Shader.PropertyToID("_LegsMetal");
+
+        private static Material ArmorMaterialOf(int itemHash)
+        {
+            GameObject prefab = itemHash != 0 && ObjectDB.instance != null ? ObjectDB.instance.GetItemPrefab(itemHash) : null;
+            return prefab != null ? prefab.GetComponent<ItemDrop>()?.m_itemData.m_shared.m_armorMaterial : null;
         }
 
         private static Texture OriginalBody(int textureId, int itemHash)
@@ -183,7 +202,13 @@ namespace MordasGearhold.Core
             if (vis == null) return list;
             Texture painted = piece == Transmog.Piece.Chest ? OriginalBody(s_chestTex, s_chestHash(vis))
                 : piece == Transmog.Piece.Legs ? OriginalBody(s_legsTex, s_legHash(vis)) : null;
-            if (painted != null) list.Add(painted);
+            if (painted != null)
+            {
+                list.Add(painted);
+                int metalId = piece == Transmog.Piece.Chest ? s_chestMetal : s_legsMetal;
+                Material armor = ArmorMaterialOf(piece == Transmog.Piece.Chest ? s_chestHash(vis) : s_legHash(vis));
+                if (armor != null && armor.HasProperty(metalId) && armor.GetTexture(metalId) != null) s_metalOf[painted] = armor.GetTexture(metalId);
+            }
             List<GameObject> objects = new List<GameObject>();
             switch (piece)
             {
@@ -612,6 +637,17 @@ namespace MordasGearhold.Core
             int n = data.Source.Length, z = zones.Count;
             data.Weights = new byte[n * z];
             data.Lab = new float[n * 3];
+            Texture metalTexture = DyeRenderer.MetalOf(source);
+            Color32[] metalPixels = null;
+            int metalWidth = 0, metalHeight = 0;
+            if (metalTexture != null)
+            {
+                Texture2D metal = ReadBack(metalTexture, MaxSize, false);
+                metalPixels = metal.GetPixels32();
+                metalWidth = metal.width;
+                metalHeight = metal.height;
+                Object.Destroy(metal);
+            }
             float[] e = new float[z];
             for (int i = 0; i < n; i++)
             {
@@ -620,7 +656,7 @@ namespace MordasGearhold.Core
                 data.Lab[i * 3] = pl;
                 data.Lab[i * 3 + 1] = pa;
                 data.Lab[i * 3 + 2] = pb;
-                Vector3 f = Zones.Feature(pl, pa, pb, zones.Params);
+                Vector4 f = Zones.Feature(pl, pa, pb, Zones.MetalAt(metalPixels, metalWidth, metalHeight, i % data.Width, i / data.Width, data.Width, data.Height), zones.Params);
                 float best = float.MaxValue;
                 for (int k = 0; k < z; k++)
                 {
