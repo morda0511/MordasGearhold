@@ -3,7 +3,7 @@
 # Morda's Gearhold
 *Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.4.0
 
-Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks and armour dyes.
+Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 9 custom slots for items you name, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks with presets, and a colour picker for armour and weapons that other players see too.
 
 ## At a glance
 | | |
@@ -13,8 +13,9 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a seco
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-slots.png" width="80" alt="Weapon 2"> | **Weapon 2** – a second weapon worn on your back or hip; **R** swaps it with the one in your hand. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-ammo.png" width="80" alt="Ammo"> | **3 ammo slots** – switch arrows instantly with Alt+1/2/3. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-trinkets.png" width="80" alt="Trinkets"> | **Up to 3 trinkets and 3 utility items** worn at once (configurable 1–3). |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-transmog.png" width="80" alt="Transmog"> | **Transmog** – wear the look of any armour you know, per set. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-dyes.png" width="80" alt="Dyes"> | **Dyes** – recolour your armour with swatches and fine controls, with a live 3D preview. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-transmog.png" width="80" alt="Transmog"> | **Transmog** – wear the look of any armour you know, per set, and save whole outfits as presets. |
+| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-dyes.png" width="80" alt="Dyes"> | **Dyes** – pick the colour of every material zone of your armour and weapons (swatches, sliders, hex), with a live 3D preview. Other Gearhold players see your colours. |
+| | **Custom slots** – up to nine slots that take only the items you name by prefab name, also from other mods, each with its own hotkey. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
 
 ## In game
@@ -29,7 +30,8 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a seco
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
 ## What it does
-- **Three independent equipment sets.** A set is exactly what lies in the Gearhold panel: armour, shield, three utility items, three trinkets, three ammo slots and 8 quickslots (food, potions, ...).
+- **Three independent equipment sets.** A set is exactly what lies in the Gearhold panel: armour, shield, three utility items, three trinkets, three ammo slots, 8 quickslots (food, potions, ...), food and mead slots and the custom slots.
+- **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 - **Weapons and bows stay in your hotbar.** The inventory grid, hotbar included, is shared by all sets. A set switch never touches it.
 - **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
   - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
@@ -42,7 +44,7 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a seco
   - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
   - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
   - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
-- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
+- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
   - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
 - **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`; by default only the vanilla slot is shown):
   - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
@@ -71,15 +73,16 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, a seco
 Change how your gear **looks** without changing the gear itself.
 
 - **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well.
-- **Armour and shield** (Head, Chest, Legs, Cape, Shield): right-click one of these slots in the Gearhold panel, or click the **transmog button** in its top left corner. The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it.
+- **Armour and shield** (Head, Chest, Legs, Cape, Shield): click the **transmog button** in the panel's top left corner, or Shift + right-click one of these slots (a plain right-click equips and unequips like in the vanilla inventory). The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it. While it is open the inventory and crafting windows step aside, so you see your character.
   - **OWN LOOK** shows the real item.
   - The first cell, **Hide** (a box with a red slash), makes the piece invisible. To take gear off, left-click the slot.
   - Or click one of your unlocked looks of the same kind.
   - Looks are saved **per set**, so each set can have its own outfit.
 - **SAVE and BACK:** every choice shows on your character right away, but only **SAVE** (under the character) keeps it. **< BACK** (top left), Esc or closing the inventory throws the changes away.
-- **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
+- **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or Shift + right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
+- **Presets:** the PRESETS button (top right of the look menu) opens eight preset slots. SAVE stores the looks and colours of your five pieces under that slot, click the name to rename it, LOAD puts it on the active set, X deletes it. Weapon looks and colours belong to the weapons and are not part of a preset.
 - **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory and in quickslots.
 - **Visibility:** other players see your looks too, because the game shares visible gear. A look only shows while real gear is worn in that slot.
 - **Character selection:** the character on the selection screen already wears the looks and colours of its active set.
@@ -87,19 +90,15 @@ Change how your gear **looks** without changing the gear itself.
 ## Dyes (colours)
 Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**.
 
-- **Colour zones:** a piece with several materials (metal, leather, cloth ...) is split into up to four zones by the colours in its texture. In the COLOR section every zone is a small chip: the ring is its original colour, the middle shows its colour now. Click a chip, then colour just that zone; **ALL** colours the whole piece the same, as before. Zones are found automatically and the same way every time, and soft edges keep the transitions smooth.
-- **Colour swatches** (Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink, Black, White, Grey): the piece's main colour is measured and shifted towards the swatch, so "Red" really ends up reddish.
-- **Fine controls:** **Color** turns the colour around the colour wheel (±15° per click), **Intensity** makes it stronger or greyer, **Brightness** lighter or darker (±10 % per click).
-- **RESET** goes back to the original colours of that piece.
+- **Colour zones:** a piece with several materials (metal, leather, cloth ...) is split into up to eight zones, found from the colours of its textures and, where the armour has one, its metal map. In the COLOR section every zone is a small chip: the ring is its original colour, the middle shows its colour now. Click a chip and the zone **blinks yellow** on your character, so you see what you are about to change; then colour just that zone. **ALL** colours the whole piece. Zones are found automatically and the same way every time.
+- **You choose the colour itself:** click a swatch (Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink, Black, White, Grey), drag the **Hue / Saturation / Brightness** sliders, or type a **#RRGGBB** value. The zone takes that colour and keeps its own light, shadow and fine colour variation, so it does not turn into flat paint.
+- **RESET** goes back to the original colours of the chosen zone (or of all of them).
 - Skin under and around the armour keeps its colour: the painted armour is only recoloured where it covers the body.
 - Colours are saved **per set** and work together with looks, so a borrowed look can be dyed as well.
-- **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
-- **Shields and models without colour controls:** shaders that have no hue control of their own (many shields, weapons and some armour) are dyed by recolouring a copy of their texture, so every piece can take a colour. A shield that is put away can be dyed as well; it shows when you wield it.
-- **How it works:** only your character's copy is recoloured, never the item itself or other players' copies.
-  - One colour for the whole piece: helmet, cape, shield and the chest/leg models use the game's own colour controls (`_Hue`, `_Saturation`, `_Value`).
-  - Several zones: a recoloured copy of the model's texture, made once per change.
-  - Armour painted onto the body: a recoloured copy of its texture, made once per change.
-- **Multiplayer:** for now only you see your colours. Showing them to other Gearhold players is planned.
+- **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
+- **Shields and models without colour controls:** shaders that have no hue control of their own (many shields, weapons and some armour) are dyed by recolouring a copy of their texture, so every piece can take a colour.
+- **How it works:** only the copies on the character are recoloured, never the item itself. The recoloured texture is made once per change.
+- **Multiplayer:** see below.
 
 ## Weapon glow
 Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu.
@@ -111,7 +110,7 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 - The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
 - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
 - **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
-- **Multiplayer:** for now only you see the colour.
+- **Multiplayer:** other Gearhold players see the colour too.
 
 ![The weapon look menu with the GLOW colours](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Weapon%20Transmog.png)
 
@@ -119,16 +118,25 @@ Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get 
 
 ![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/HUD%20Settings.png)
 
+## Custom slots
+Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
+- A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
+- The items stay real inventory items (weight, tombstone and saving work as usual) and belong to the active set, so each set can hold something else in the same slot. The allowed names are the same for all sets.
+- Each slot has its own hotkey (config `Custom1` to `Custom9`, or the key button under the slot): it uses the item (eat, drink, equip).
+
+## Multiplayer colours
+Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
+
 ## Panel controls
 | Action | Result |
 |---|---|
 | Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
 | Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item or the coins are picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
-| Right-click a slot | Head, Chest, Legs, Cape, Shield, or a weapon in a quickslot: open the look menu. Other slots: use the item (eat, drink, use this ammo). |
+| Right-click a slot | Use or equip / unequip the item like in the vanilla inventory (eat, drink, use this ammo). Hold **Shift** to open the look menu of armour, a shield or a weapon instead. |
 | Key button under a quickslot, food, mead, ammo or Weapon 2 slot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
 | SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
 
-Slots: Head, Chest, Legs, Cape, Utility 1–3 (left); Shield, Ammo 1–3, Trinket 1–3 (right); Food 1–3, Weapon 2 and Mead 1–3 (above the quickslots); Quickslot 1–8; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
+Slots: Head, Chest, Legs, Cape (left column) and Shield (right column), with the custom slots below them; Utility 1–3 and Trinket 1–3 in a row under YOUR VIKING; Food 1–3, Weapon 2 and Mead 1–3 above the quickslots in the same columns; Quickslot 1–8; the ammo drawer at the right edge; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
 Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 1).
 
 **Key conflicts:**
@@ -153,6 +161,12 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 - **Rows beyond the vanilla limit and the hidden slot rows** are dropped on the ground by vanilla at the next spawn.
 - **Before uninstalling,** empty the panel slots of all three sets and the lower grid rows into a chest.
 
+## Tuning the colouring (for tinkerers)
+These tools are in the project's `tools` folder, not in the mod package. Open the .html files in a browser.
+- **Dye lab** (`tools/dye-lab.html`): load any texture and see how the colouring treats it: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Als Datei speichern" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.
+- **Zone survey** (`tools/zone-survey.html`): **Ctrl+Shift+F10** in the world writes the textures of all armour, capes and shields (and a `materials.txt`) to `BepInEx/config/MordasGearhold-textures`. The survey loads that folder at once and shows the zones of each texture. A texture that needs other numbers gets its own set there; "zones.json speichern" writes `MordasGearhold.zones.json` into the same config folder, read live like the dye file.
+- **Layout editor** (`tools/layout-editor.html`): drag, resize and align every part of the Gearhold panel and export the layout as JSON. Saved as `MordasGearhold.layout.json` in the config folder, it overrides the built-in layout.
+
 ## Installation
 - **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
 - **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
@@ -175,15 +189,3 @@ Source and issues: https://github.com/morda0511/MordasGearhold
 | **[ServerRates](https://thunderstore.io/c/valheim/p/Morda/ServerRates/)** | Server-side rates for dedicated servers (PC and console), live apply, presets. Joining players need no install |
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-footer.png)
-
-## Multiplayer colours
-Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (UI) turns off seeing other players' colours.
-
-## Custom slots
-Up to nine slots (a column under the shield and one under the cape) take only the items you name: set `CustomSlot1` to `CustomSlot9` (config, section 1 - Inventory) to a comma separated list of prefab names, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name. A slot with an empty list is hidden. The items stay real inventory items (weight, tombstone, saving work as usual) and belong to the active set. Right-click uses the item.
-
-## Tuning the colouring (dye lab)
-`tools/dye-lab.html` (in the project, not in the mod package) shows how the colouring treats any texture: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Save as file" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.
-
-## Zones per texture
-`tools/zone-survey.html` loads all exported textures at once (Ctrl+Shift+F10 in the world writes them to `BepInEx/config/MordasGearhold-textures`) and shows the colour zones of each. A texture that needs other numbers gets its own set in the tool; "zones.json speichern" writes `MordasGearhold.zones.json`, which goes into `BepInEx/config` next to the dye file. The mod reads it live like the dye file; textures without an entry use the global numbers.
