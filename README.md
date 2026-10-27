@@ -18,47 +18,23 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 
 | | **Custom slots** – up to nine slots that take only the items you name by prefab name, also from other mods, each with its own hotkey. |
 | <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
 
-## In game
-**The Gearhold panel** – sets, equipment slots, the YOUR VIKING sheet, food, Weapon 2 and mead, and the quickslots with their hotkeys:
-
-![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Gearhold%20menu%20New.png)
-
-**The look menu** – tabs for every piece, pick a look, hide it or dye it, with a 3D preview of your character and SAVE:
-
-![The transmog and dye menu in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Transmog%20Menu.png)
-
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
-## What it does
+## The Gearhold panel
+![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/panel.png)
+
+Everything of a set in one window: the three set tabs, your armour and shield, the YOUR VIKING sheet, the coin slot, and below it the rows with utility, trinkets, food, mead, Weapon 2 and the quickslots.
+
 - **Three independent equipment sets.** A set is exactly what lies in the Gearhold panel: armour, shield, three utility items, three trinkets, three ammo slots, 8 quickslots (food, potions, ...), food and mead slots and the custom slots.
-- **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 - **Weapons and bows stay in your hotbar.** The inventory grid, hotbar included, is shared by all sets. A set switch never touches it.
-- **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
-  - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
-  - All Gearhold hotkeys only work while you play in the world: not in menus, not in the build menu and never while you type into a text field (e.g. a search box).
-- **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Food slots take food only, mead slots meads and potions. Each has its own hotkey (set with the button under the slot, like the quickslots; unbound at first); right-click eats or drinks too. When one of your three food buffs runs out, Gearhold eats from the food slots on its own (`AutoEatFoodSlots`, on by default; `AutoEatEarly` eats again as soon as the game allows). On the HUD they get their own bars: food next to the food boxes at the bottom left, meads right of the quickslots.
-- **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
-  - **Move the bars:** the **settings gear** in the bottom right corner of the panel opens a small window. Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the panel steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
-- **Weapon 2** (between the food and mead slots, per set): put a second weapon there, melee, bow or crossbow.
-  - The hide key (**R**) swaps it with the weapon in your hand. Press it again to swap back. With an empty slot, or no weapon in hand, R works like vanilla.
-  - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
-  - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
-  - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
-- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
-  - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
-- **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`; by default only the vanilla slot is shown):
-  - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
-  - Right-click a trinket or utility item in the inventory: when slot 1 is taken, it goes into a free slot 2 or 3.
-  - On death all three go into the grave like the rest of the set.
 - **YOUR VIKING** shows:
   - your armour and weight,
   - the equipment modifiers (movement, stamina costs, heat),
   - **WEAPON** (only while a weapon is drawn): damage per type, stamina/eitr use, block armour, block force, parry bonus, knockback, backstab, durability,
   - **SHIELD** (only while a shield is worn): block armour, block force, parry bonus,
   - **UTILITY** (only with worn utility items): each item by name with its while-worn effect, and with Path of Valheiman its fixed bonuses (belts, rings) and enchantments,
-  - **TRINKETS** (only with active trinkets): total max adrenaline, and each effect with the game's own description,
-    e.g. what happens at full adrenaline,
-  - **RESISTANCES** (e.g. Frost: Resistant, Spirit: Immune), including effects active right now.
+  - **TRINKETS** (only with active trinkets): total max adrenaline, and each effect with the game's own description, e.g. what happens at full adrenaline,
+  - **RESISTANCES** (e.g. Frost: Resistant, Spirit: Immune), including effects active right now,
   - **ENCHANTMENTS** (with Path of Valheiman): the enchantments of your worn armour, shield, utility items and trinkets, added up (two "+5% Fire damage" become "+10% Fire damage"). The drawn weapon lists its own enchantments under WEAPON.
 
   Health, stamina and eitr are left out because the vanilla HUD already shows them.
@@ -69,8 +45,61 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 
   - Put the weapon away, and the shield goes too. Swapping one weapon for another, or eating, keeps it.
   - With a bow or two-hander, the shield is put away but stays in the shield slot.
 
+## Quickslots, food, mead, trinkets and Weapon 2
+![Utility, trinkets, food, Weapon 2, mead and the quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/bottom-rows.png)
+
+The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with the second weapon between them, and the 8 quickslots, all with the key you set under each slot.
+
+- **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
+  - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
+  - All Gearhold hotkeys only work while you play in the world: not in menus, not in the build menu and never while you type into a text field (e.g. a search box).
+- **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Food slots take food only, mead slots meads and potions. Each has its own hotkey (set with the button under the slot, like the quickslots; unbound at first); right-click eats or drinks too. When one of your three food buffs runs out, Gearhold eats from the food slots on its own (`AutoEatFoodSlots`, on by default; `AutoEatEarly` eats again as soon as the game allows). On the HUD they get their own bars: food next to the food boxes at the bottom left, meads right of the quickslots.
+- **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`, or in the SLOTS window; by default only the vanilla slot is shown):
+  - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
+  - Right-click a trinket or utility item in the inventory: when slot 1 is taken, it goes into a free slot 2 or 3.
+  - On death all three go into the grave like the rest of the set.
+- **Weapon 2** (between the food and mead slots, per set): put a second weapon there, melee, bow or crossbow.
+  - The hide key (**R**) swaps it with the weapon in your hand. Press it again to swap back. With an empty slot, or no weapon in hand, R works like vanilla.
+  - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
+  - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
+  - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
+
+## Ammo
+![The ammo drawer at the right edge of the panel](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/ammo-drawer.png)
+
+Three ammo slots in a drawer on the right edge of the panel. Click the arrow tab to open or close it.
+
+- **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
+- While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
+
+## Custom slots and the SLOTS window
+![Custom slots in the panel](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/custom-slots.png)
+
+Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
+
+- A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
+- The items stay real inventory items (weight, tombstone and saving work as usual) and belong to the active set, so each set can hold something else in the same slot. The allowed names are the same for all sets.
+- Each slot has its own hotkey (config `Custom1` to `Custom9`, or the key button under the slot): it uses the item (eat, drink, equip).
+
+![The SLOTS window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/slots-window.png)
+
+- **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
+
+## HUD bars
+![Quickslot, food and mead bars on the HUD](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/hud-bars.png)
+
+Your quickslots, food and meads as small bars on the screen, so you do not need the panel open.
+
+- **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
+
+![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/hud-bars-window.png)
+
+- **Move the bars:** the settings gear in the panel's top bar opens a small window (the HUD bars window). Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the inventory steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
+
 ## Transmog (looks)
-Change how your gear **looks** without changing the gear itself.
+![The look menu](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/look-menu.png)
+
+Change how your gear **looks** without changing the gear itself. The menu opens in the middle of the screen with your character in 3D, a tab for each piece and the looks you have unlocked.
 
 - **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well.
 - **Armour and shield** (Head, Chest, Legs, Cape, Shield): click the **transmog button** in the panel's top left corner, or Shift + right-click one of these slots (a plain right-click equips and unequips like in the vanilla inventory). The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it. While it is open the inventory and crafting windows step aside, so you see your character.
@@ -82,50 +111,49 @@ Change how your gear **looks** without changing the gear itself.
 - **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or Shift + right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
-- **Presets:** the PRESETS button (top right of the look menu) opens eight preset slots. SAVE stores the looks and colours of your five pieces under that slot, click the name to rename it, LOAD puts it on the active set, X deletes it. Weapon looks and colours belong to the weapons and are not part of a preset.
 - **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory and in quickslots.
 - **Visibility:** other players see your looks too, because the game shares visible gear. A look only shows while real gear is worn in that slot.
 - **Character selection:** the character on the selection screen already wears the looks and colours of its active set.
 
+### Presets
+![The preset slots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/presets.png)
+
+Save a whole outfit and put it on again later.
+
+- The PRESETS button (top right of the look menu) opens eight preset slots. SAVE stores the looks and colours of your five pieces under that slot, click the name to rename it, LOAD puts it on the active set, X deletes it. Weapon looks and colours belong to the weapons and are not part of a preset.
+
 ## Dyes (colours)
-Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**.
+![The colour zones and the colour picker](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/colour-zones.png)
+
+Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**. Pick a zone, then a colour.
 
 - **Colour zones:** a piece with several materials (metal, leather, cloth ...) is split into up to eight zones, found from the colours of its textures and, where the armour has one, its metal map. In the COLOR section every zone is a small chip: the ring is its original colour, the middle shows its colour now. Click a chip and the zone **blinks yellow** on your character, so you see what you are about to change; then colour just that zone. **ALL** colours the whole piece. Zones are found automatically and the same way every time.
 - **You choose the colour itself:** click a swatch (Red, Orange, Yellow, Green, Teal, Blue, Purple, Pink, Black, White, Grey), drag the **Hue / Saturation / Brightness** sliders, or type a **#RRGGBB** value. The zone takes that colour and keeps its own light, shadow and fine colour variation, so it does not turn into flat paint.
 - **RESET** goes back to the original colours of the chosen zone (or of all of them).
 - Skin under and around the armour keeps its colour: the painted armour is only recoloured where it covers the body.
 - Colours are saved **per set** and work together with looks, so a borrowed look can be dyed as well.
-- **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
 - **Shields and models without colour controls:** shaders that have no hue control of their own (many shields, weapons and some armour) are dyed by recolouring a copy of their texture, so every piece can take a colour.
 - **How it works:** only the copies on the character are recoloured, never the item itself. The recoloured texture is made once per change.
-- **Multiplayer:** see below.
 
-## Weapon glow
-Weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu.
+### Weapons: dye and glow
+![The weapon look menu with colours and GLOW](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/weapon-look.png)
 
-- **Colour swatches:** every coloured glow part takes the chosen colour: particles, lights, glowing materials and the swing trail. **White** makes them white.
-- Brightness and strength stay, so fire still flickers like fire.
-- Smoke, white shimmer and the hit effects keep their own colours.
-- **RESET** gives the weapon its own colours back.
-- The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
-- Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
+Weapons get the same COLOR section, and fire, frost and lightning weapons get GLOW and SHINE on top.
+
+- **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
+- **Weapon glow:** weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu.
+  - **Colour swatches:** every coloured glow part takes the chosen colour: particles, lights, glowing materials and the swing trail. **White** makes them white.
+  - Brightness and strength stay, so fire still flickers like fire.
+  - Smoke, white shimmer and the hit effects keep their own colours.
+  - **RESET** gives the weapon its own colours back.
+  - The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
+  - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
 - **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
-- **Multiplayer:** other Gearhold players see the colour too.
 
-![The weapon look menu with the GLOW colours](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/Weapon%20Transmog.png)
-
-**The HUD bars window** (settings gear in the bottom right corner of the panel) – move, resize and turn each of the quickslot, food and mead bars:
-
-![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/HUD%20Settings.png)
-
-## Custom slots
-Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
-- A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
-- The items stay real inventory items (weight, tombstone and saving work as usual) and belong to the active set, so each set can hold something else in the same slot. The allowed names are the same for all sets.
-- Each slot has its own hotkey (config `Custom1` to `Custom9`, or the key button under the slot): it uses the item (eat, drink, equip).
-
-## Multiplayer colours
+### Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
+
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
 
 ## Panel controls
 | Action | Result |
