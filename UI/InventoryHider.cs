@@ -52,7 +52,7 @@ namespace MordasGearhold.UI
                 e.CanvasEnabled = e.Canvas.enabled;
                 e.Canvas.enabled = false;
                 s_hidden.Add(e);
-                Plugin.Log.LogInfo("Gearhold hides window \"" + child.name + "\" (own CanvasGroup: " + !e.GroupAdded + ", own Canvas: " + !e.CanvasAdded + ", animator: " + (child.GetComponent<Animator>() != null) + ")");
+                Plugin.Log.LogInfo("Gearhold hides window \"" + child.name + "\" (own CanvasGroup: " + !e.GroupAdded + ", own Canvas: " + !e.CanvasAdded + ")");
             }
         }
 
