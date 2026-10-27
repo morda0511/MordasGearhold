@@ -39,6 +39,8 @@ namespace MordasGearhold.UI
             Refresh();
             s_window.SetAsLastSibling();
             s_window.gameObject.SetActive(true);
+            // the vanilla inventory and the crafting window go; the Gearhold panel stays, so the counts can be seen working
+            InventoryHider.Hide(s_window, "MordasGearholdPanel");
         }
 
         internal static void Close()
@@ -47,6 +49,7 @@ namespace MordasGearhold.UI
             {
                 s_window.gameObject.SetActive(false);
             }
+            InventoryHider.Restore();
             TypingGuard.End();
         }
 

@@ -12,8 +12,8 @@ namespace MordasGearhold.UI
         private static readonly List<(CanvasGroup group, float alpha, bool interactable, bool blocks, bool added)> s_hidden =
             new List<(CanvasGroup, float, bool, bool, bool)>();
 
-        /// <summary>Hides all siblings of <paramref name="keep"/>. Does nothing when already hidden (a redraw of the open window).</summary>
-        internal static void Hide(RectTransform keep)
+        /// <summary>Hides all siblings of <paramref name="keep"/> except those named in <paramref name="alsoKeep"/>. Does nothing when already hidden (a redraw of the open window).</summary>
+        internal static void Hide(RectTransform keep, params string[] alsoKeep)
         {
             if (keep == null || keep.parent == null || s_hidden.Count > 0)
             {
@@ -21,7 +21,7 @@ namespace MordasGearhold.UI
             }
             foreach (Transform child in keep.parent)
             {
-                if (child == keep || !child.gameObject.activeSelf)
+                if (child == keep || !child.gameObject.activeSelf || System.Array.IndexOf(alsoKeep, child.name) >= 0)
                 {
                     continue;
                 }
