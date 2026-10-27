@@ -88,8 +88,12 @@ Your quickslots, food and meads as small bars on the screen, so you do not need 
 
 - **Move the bars:** the settings gear in the panel's top bar opens a small window (the HUD bars window). Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the inventory steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
 
-## Transmog (looks)
-![The look and colour menu](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Transmog%2Bdye%20menu.png)
+## Transmog and dyes
+![The look menu with the looks (transmog) and the colours (dyes)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Transmog%2Bdye%20menu.png)
+
+One menu for how your gear looks and what colour it has: your character in 3D on the left, a tab for each piece, the looks you have unlocked and below them the COLOR section.
+
+### Transmog (looks)
 
 Change how your gear **looks** without changing the gear itself. The menu opens in the middle of the screen with your character in 3D, a tab for each piece and the looks you have unlocked.
 
@@ -114,8 +118,7 @@ Save a whole outfit and put it on again later.
 
 - The PRESETS button (top right of the look menu) opens eight preset slots. SAVE stores the looks and colours of your five pieces under that slot, click the name to rename it, LOAD puts it on the active set, X deletes it. Weapon looks and colours belong to the weapons and are not part of a preset.
 
-## Dyes (colours)
-![The colour zones and the colour picker (in the look menu)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Transmog%2Bdye%20menu.png)
+### Dyes (colours)
 
 Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is shown in **3D** on the left, so every choice is visible at once (drag to turn it, mouse wheel to zoom); below the looks you find **COLOR**. Pick a zone, then a colour.
 
@@ -127,7 +130,7 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
 - **Shields and models without colour controls:** shaders that have no hue control of their own (many shields, weapons and some armour) are dyed by recolouring a copy of their texture, so every piece can take a colour.
 - **How it works:** only the copies on the character are recoloured, never the item itself. The recoloured texture is made once per change.
 
-### Weapons: dye and glow
+#### Weapons: dye and glow
 Weapons get the same COLOR section, and fire, frost and lightning weapons get GLOW and SHINE on top.
 
 - **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
@@ -140,7 +143,7 @@ Weapons get the same COLOR section, and fire, frost and lightning weapons get GL
   - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
 - **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
 
-### Multiplayer colours
+#### Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
