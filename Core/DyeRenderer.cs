@@ -222,7 +222,7 @@ namespace MordasGearhold.Core
 
         private static Plan PlanFor(Player player, Transmog.Piece piece)
         {
-            DyeValue[] dyes = Dye.GetZones(player, piece);
+            DyeValue[] dyes = ZoneFlash.Modify(player, piece, Dye.GetZones(player, piece));
             bool same = true;
             for (int i = 1; i < dyes.Length; i++)
             {
@@ -431,7 +431,7 @@ namespace MordasGearhold.Core
         private static void DyeWeapon(Player player, GameObject go, ItemDrop.ItemData item)
         {
             if (go == null || item == null || !Transmog.IsWeapon(item)) return;
-            DyeValue[] dyes = Dye.GetItemZones(item);
+            DyeValue[] dyes = ZoneFlash.ModifyItem(item, Dye.GetItemZones(item));
             DyeWeaponCore(go, dyes, Dye.ItemDyed(item) ? WeaponZones(item) : null);
         }
 

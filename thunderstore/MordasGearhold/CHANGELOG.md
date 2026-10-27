@@ -17,6 +17,7 @@
 - Panel is more compact: utility slots sit in a row below the armour, trinkets next to the armour, and the ammo slots moved into a drop-down opened by the AMMO button; less space between food and quickslots.
 - The panel layout comes from a built-in table and can be overridden by a `MordasGearhold.layout.json` in the BepInEx config folder (made with tools/layout-editor.html).
 - Right-click on a Gearhold slot equips / unequips like in the vanilla inventory; the look menu opens from the transmog button (Shift + right-click on a slot is a shortcut).
+- Choosing a colour zone (or ALL) makes it blink in yellow on the character for a moment, so you see what the colour will change.
 - Colouring fixes: pixels now belong clearly to one zone (they were smeared over all zones before, so several zones changed the same area), and all textures of a piece are split by the same zones (before, a zone could exist only on one texture and change nothing on the others).
 - Single textures can have their own zone numbers (MordasGearhold.zones.json, made with tools/zone-survey.html).
 - Colour zones reworked: found in the OKLab colour space (up to 8 zones instead of 4, dark teal and dark brown stay apart), and a chosen colour keeps the texture's own light, shadow and fine colour variation instead of looking flat and plastic. Tunable live with the dye file (new keys wc, detail).

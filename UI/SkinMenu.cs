@@ -98,6 +98,7 @@ namespace MordasGearhold.UI
         /// <summary>Closes the menu. Without <paramref name="save"/>, every change made in it is undone.</summary>
         internal static void Close(bool save = false)
         {
+            ZoneFlash.Stop();
             if (save) FlushPending(); else s_pending = null;
             Action revert = s_revert;
             s_revert = null;
@@ -128,6 +129,7 @@ namespace MordasGearhold.UI
         internal static void Tick()
         {
             TypingGuard.Tick();
+            ZoneFlash.Tick();
             TickPending();
             if (IsOpen && !InventoryGui.IsVisible())
             {
@@ -154,6 +156,7 @@ namespace MordasGearhold.UI
             public Action<DyeValue> SetAll;
             public Action<int, int, DyeValue> SetZone;
             public Func<Texture> BaseTexture;
+            public Action<int, int> Flash; // blink a zone (-1 = all) on the character: zone, zone count
             public object Key; // a different key resets the chosen zone
         }
 
@@ -164,6 +167,7 @@ namespace MordasGearhold.UI
             SetAll = dye => Dye.Set(player, piece, dye),
             SetZone = (zone, count, dye) => Dye.SetZone(player, piece, zone, count, dye),
             BaseTexture = () => DyeRenderer.BaseTexture(player, piece),
+            Flash = (zone, count) => ZoneFlash.Start(player, piece, null, zone, count),
             Key = piece,
         };
 
@@ -174,6 +178,7 @@ namespace MordasGearhold.UI
             SetAll = dye => Dye.SetItem(player, weapon, dye),
             SetZone = (zone, count, dye) => Dye.SetItemZone(player, weapon, zone, count, dye),
             BaseTexture = () => DyeRenderer.WeaponTexture(weapon),
+            Flash = (zone, count) => ZoneFlash.Start(player, null, weapon, zone, count),
             Key = weapon,
         };
 
@@ -567,12 +572,12 @@ namespace MordasGearhold.UI
                 float rowWidth = (zoneCount + 1) * chipSize + zoneCount * gap;
                 float x0 = cx - rowWidth / 2f + chipSize / 2f;
                 float chipY = top + ColorHeader + ZoneRow / 2f - 4f;
-                chipButtons[0] = AddChip(gui, "ALL", x0, chipY, chipSize, null, out Image _, () => { FlushPending(); s_zone = -1; Refresh(); });
+                chipButtons[0] = AddChip(gui, "ALL", x0, chipY, chipSize, null, out Image _, () => { FlushPending(); s_zone = -1; Refresh(); target.Flash(-1, zoneCount); });
                 for (int k = 0; k < zoneCount; k++)
                 {
                     int zone = k;
                     float x = x0 + (k + 1) * (chipSize + gap);
-                    chipButtons[k + 1] = AddChip(gui, "Zone " + (k + 1), x, chipY, chipSize, zones.Chips[k], out chipCentres[k], () => { FlushPending(); s_zone = zone; Refresh(); });
+                    chipButtons[k + 1] = AddChip(gui, "Zone " + (k + 1), x, chipY, chipSize, zones.Chips[k], out chipCentres[k], () => { FlushPending(); s_zone = zone; Refresh(); target.Flash(zone, zoneCount); });
                 }
             }
 
@@ -655,6 +660,7 @@ namespace MordasGearhold.UI
 
         private static void ApplyDye(DyeTarget target, DyeValue d, bool zoned, int zoneCount)
         {
+            ZoneFlash.Stop(); // the blinking shows the old colours: a new colour ends it first
             if (s_zone < 0 || !zoned) target.SetAll(d);
             else target.SetZone(s_zone, zoneCount, d);
         }
