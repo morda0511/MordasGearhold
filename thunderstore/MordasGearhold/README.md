@@ -75,6 +75,8 @@ Up to nine slots (a column under the shield and one under the cape) take only th
 - The items stay real inventory items (weight, tombstone and saving work as usual) and belong to the active set, so each set can hold something else in the same slot. The allowed names are the same for all sets.
 - Each slot has its own hotkey (config `Custom1` to `Custom9`, or the key button under the slot): it uses the item (eat, drink, equip).
 
+![The SLOTS window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/slots-window.png)
+
 - **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 
 ## HUD bars
@@ -82,7 +84,7 @@ Your quickslots, food and meads as small bars on the screen, so you do not need 
 
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
 
-![The HUD bars window (top) and the SLOTS window (bottom)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Hud%2BOnventory%20Settings.png)
+![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/hud-bars-window.png)
 
 - **Move the bars:** the settings gear in the panel's top bar opens a small window (the HUD bars window). Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the inventory steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
 
