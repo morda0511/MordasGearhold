@@ -49,56 +49,68 @@ namespace MordasGearhold.Core
         /// <summary>Drops every remembered zone set (the tuning changed): they are found again with the new numbers.</summary>
         internal static void Forget() => s_sets.Clear();
 
-        private static readonly Dictionary<Texture, ZoneSet> s_sets = new Dictionary<Texture, ZoneSet>();
+        private static readonly Dictionary<string, ZoneSet> s_sets = new Dictionary<string, ZoneSet>();
         /// <summary>The position of a colour in the zone space: OKLab with the lightness and colour axes weighted (DyeTuning).</summary>
         internal static Vector3 Feature(float lightness, float a, float b, ZoneParams p) =>
             new Vector3(lightness * p.BrightnessWeight, a * p.ChromaWeight, b * p.ChromaWeight);
 
-        internal static ZoneSet Of(Texture texture)
+        internal static ZoneSet Of(Texture texture) => texture == null ? null : OfSet(new List<Texture> { texture });
+
+        /// <summary>
+        /// The zones of everything one piece shows: the colours of all its textures (model textures, the painted body
+        /// texture) are looked at together, so every texture is split by the same zones and a zone chip changes what
+        /// it says it changes on all of them. The first texture names the set for the per-texture numbers.
+        /// </summary>
+        internal static ZoneSet OfSet(List<Texture> textures)
         {
-            if (texture == null)
+            if (textures == null || textures.Count == 0)
             {
                 return null;
             }
-            if (s_sets.TryGetValue(texture, out ZoneSet known) && known != null)
+            string key = string.Join(",", textures.ConvertAll(t => t.GetInstanceID().ToString()));
+            if (s_sets.TryGetValue(key, out ZoneSet known) && known != null)
             {
                 return known;
             }
-            P = DyeTuning.ParamsFor(texture.name);
-            ZoneSet found = Detect(texture);
-            s_sets[texture] = found;
-            Plugin.Log.LogInfo($"Colour zones of {texture.name}: {found.Count} ({string.Join(", ", System.Array.ConvertAll(found.Share, s => (s * 100f).ToString("0") + "%"))})");
+            P = DyeTuning.ParamsFor(textures[0].name);
+            ZoneSet found = Detect(textures);
+            s_sets[key] = found;
+            Plugin.Log.LogInfo($"Colour zones of {string.Join(" + ", textures.ConvertAll(t => t.name))}: {found.Count} ({string.Join(", ", System.Array.ConvertAll(found.Share, s => (s * 100f).ToString("0") + "%"))})");
             return found;
         }
 
-        private static ZoneSet Detect(Texture texture)
+        private static ZoneSet Detect(List<Texture> textures)
         {
-            Texture2D small = TextureDye.ReadBack(texture, SampleSize, false);
-            Color32[] pixels = small.GetPixels32();
-            Object.Destroy(small);
-
-            // armour textures keep their coverage in alpha (0 = skin shows through); model textures often have no
-            // useful alpha at all: use it only when a real part of the texture is opaque
-            int opaque = 0;
-            foreach (Color32 p in pixels)
+            List<Vector3> features = new List<Vector3>();
+            List<Color> colors = new List<Color>();
+            foreach (Texture texture in textures)
             {
-                if (p.a >= 128) opaque++;
-            }
-            bool useAlpha = opaque >= pixels.Length / 20;
+                Texture2D small = TextureDye.ReadBack(texture, SampleSize, false);
+                Color32[] pixels = small.GetPixels32();
+                Object.Destroy(small);
 
-            List<Vector3> features = new List<Vector3>(pixels.Length);
-            List<Color> colors = new List<Color>(pixels.Length);
-            for (int pass = 0; pass < 2 && features.Count < 50; pass++)
-            {
-                features.Clear();
-                colors.Clear();
+                // armour textures keep their coverage in alpha (0 = skin shows through); model textures often have no
+                // useful alpha at all: use it only when a real part of the texture is opaque
+                int opaque = 0;
                 foreach (Color32 p in pixels)
                 {
-                    if (useAlpha && p.a < 128) continue;
-                    if (pass == 0 && System.Math.Max(p.r, System.Math.Max(p.g, p.b)) < 10) continue; // pure black outlines say nothing about the material
-                    Oklab.FromRgb(p.r, p.g, p.b, out float lab0, out float lab1, out float lab2);
-                    features.Add(Feature(lab0, lab1, lab2, P));
-                    colors.Add(new Color(p.r / 255f, p.g / 255f, p.b / 255f));
+                    if (p.a >= 128) opaque++;
+                }
+                bool useAlpha = opaque >= pixels.Length / 20;
+                // pure black outlines say nothing about the material; keep them only when nothing else is there
+                int start = features.Count;
+                for (int pass = 0; pass < 2 && features.Count - start < 50; pass++)
+                {
+                    features.RemoveRange(start, features.Count - start);
+                    colors.RemoveRange(start, colors.Count - start);
+                    foreach (Color32 p in pixels)
+                    {
+                        if (useAlpha && p.a < 128) continue;
+                        if (pass == 0 && System.Math.Max(p.r, System.Math.Max(p.g, p.b)) < 10) continue;
+                        Oklab.FromRgb(p.r, p.g, p.b, out float lab0, out float lab1, out float lab2);
+                        features.Add(Feature(lab0, lab1, lab2, P));
+                        colors.Add(new Color(p.r / 255f, p.g / 255f, p.b / 255f));
+                    }
                 }
             }
             if (features.Count == 0)

@@ -111,7 +111,33 @@ namespace MordasGearhold.Core
         /// <summary>The texture of a weapon's model (or of its chosen look), also while it is not drawn.</summary>
         internal static Texture WeaponTexture(ItemDrop.ItemData weapon) => PrefabOf(weapon, Transmog.GetItemLook(weapon));
 
-        internal static ZoneSet WeaponZones(ItemDrop.ItemData weapon) => Zones.Of(WeaponTexture(weapon));
+        internal static ZoneSet WeaponZones(ItemDrop.ItemData weapon)
+        {
+            GameObject prefab = weapon != null ? (!string.IsNullOrEmpty(Transmog.GetItemLook(weapon)) && Transmog.GetItemLook(weapon) != Transmog.Hidden && ObjectDB.instance != null
+                ? ObjectDB.instance.GetItemPrefab(Transmog.GetItemLook(weapon)) : weapon.m_dropPrefab) : null;
+            List<Texture> textures = TexturesOf(prefab != null ? prefab : weapon?.m_dropPrefab);
+            return Zones.OfSet(textures);
+        }
+
+        /// <summary>Every model texture (the main texture of every material) of an object, once each.</summary>
+        internal static List<Texture> TexturesOf(GameObject go)
+        {
+            List<Texture> list = new List<Texture>();
+            if (go == null) return list;
+            foreach (Renderer renderer in go.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer)) continue;
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material != null && material.HasProperty("_MainTex"))
+                    {
+                        Texture t = material.GetTexture("_MainTex");
+                        if (t != null && !list.Contains(t)) list.Add(t);
+                    }
+                }
+            }
+            return list;
+        }
 
         private static Texture PrefabOf(ItemDrop.ItemData item, string look)
         {
@@ -147,7 +173,43 @@ namespace MordasGearhold.Core
         }
 
         /// <summary>The colour zones of a piece, from the texture that shows its colours (null without one).</summary>
-        internal static ZoneSet ZonesOf(Player player, Transmog.Piece piece) => Zones.Of(BaseTexture(player, piece));
+        internal static ZoneSet ZonesOf(Player player, Transmog.Piece piece) => Zones.OfSet(PieceTextures(player, piece));
+
+        /// <summary>All textures the visible piece uses: the painted body texture (chest, legs) and the textures of its models.</summary>
+        private static List<Texture> PieceTextures(Player player, Transmog.Piece piece)
+        {
+            List<Texture> list = new List<Texture>();
+            VisEquipment vis = player != null ? s_vis(player) : null;
+            if (vis == null) return list;
+            Texture painted = piece == Transmog.Piece.Chest ? OriginalBody(s_chestTex, s_chestHash(vis))
+                : piece == Transmog.Piece.Legs ? OriginalBody(s_legsTex, s_legHash(vis)) : null;
+            if (painted != null) list.Add(painted);
+            List<GameObject> objects = new List<GameObject>();
+            switch (piece)
+            {
+                case Transmog.Piece.Helmet: objects.Add(s_helmet(vis)); break;
+                case Transmog.Piece.Chest: if (s_chest(vis) != null) objects.AddRange(s_chest(vis)); break;
+                case Transmog.Piece.Legs: if (s_legs(vis) != null) objects.AddRange(s_legs(vis)); break;
+                case Transmog.Piece.Shoulder: if (s_shoulder(vis) != null) objects.AddRange(s_shoulder(vis)); break;
+                case Transmog.Piece.Shield:
+                    if (IsShield(s_leftHash(vis))) objects.Add(s_left(vis));
+                    if (IsShield(s_leftBackHash(vis))) objects.Add(s_leftBack(vis));
+                    break;
+            }
+            foreach (GameObject go in objects)
+            {
+                foreach (Texture t in TexturesOf(go))
+                {
+                    if (!list.Contains(t)) list.Add(t);
+                }
+            }
+            if (list.Count == 0)
+            {
+                Texture own = ItemTexture(player, piece);
+                if (own != null) list.Add(own);
+            }
+            return list;
+        }
 
         /// <summary>What to do for one piece: one colour for all of it, or a dye per colour zone.</summary>
         private sealed class Plan
@@ -400,7 +462,7 @@ namespace MordasGearhold.Core
                     Material material = materials[i];
                     Texture main = material != null && material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
                     if (main == null) continue;
-                    ZoneSet zones = baseZones ?? Zones.Of(main);
+                    ZoneSet zones = baseZones ?? Zones.OfSet(TexturesOf(go));
                     DyeValue[] fitted = new DyeValue[zones.Count];
                     for (int k = 0; k < fitted.Length; k++)
                     {

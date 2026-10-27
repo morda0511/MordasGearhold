@@ -37,6 +37,7 @@ namespace MordasGearhold.Core
         {
             Directory.CreateDirectory(folder);
             HashSet<Texture> done = new HashSet<Texture>();
+            System.Text.StringBuilder report = new System.Text.StringBuilder();
             int count = 0;
             if (ObjectDB.instance == null) return 0;
             foreach (GameObject prefab in ObjectDB.instance.m_items)
@@ -57,6 +58,7 @@ namespace MordasGearhold.Core
                 Material armor = drop.m_itemData.m_shared.m_armorMaterial;
                 if (armor != null)
                 {
+                    count += Describe(folder, prefab.name, "armorMaterial", armor, report, done);
                     count += Save(folder, prefab.name, "chest", armor.HasProperty(s_chestTex) ? armor.GetTexture(s_chestTex) : null, done);
                     count += Save(folder, prefab.name, "legs", armor.HasProperty(s_legsTex) ? armor.GetTexture(s_legsTex) : null, done);
                 }
@@ -69,7 +71,29 @@ namespace MordasGearhold.Core
                         {
                             count += Save(folder, prefab.name, "model", material.GetTexture("_MainTex"), done);
                         }
+                        count += Describe(folder, prefab.name, renderer.name, material, report, done);
                     }
+                }
+            }
+            File.WriteAllText(Path.Combine(folder, "materials.txt"), report.ToString());
+            return count;
+        }
+
+        /// <summary>Lists the shader and every texture of a material in the report, and exports the metal / gloss maps (they tell metal from cloth).</summary>
+        private static int Describe(string folder, string item, string where, Material material, System.Text.StringBuilder report, HashSet<Texture> done)
+        {
+            if (material == null || material.shader == null) return 0;
+            int count = 0;
+            report.Append(item).Append(" | ").Append(where).Append(" | ").Append(material.name).Append(" | ").Append(material.shader.name).AppendLine();
+            for (int i = 0; i < material.shader.GetPropertyCount(); i++)
+            {
+                if (material.shader.GetPropertyType(i) != UnityEngine.Rendering.ShaderPropertyType.Texture) continue;
+                string property = material.shader.GetPropertyName(i);
+                Texture texture = material.GetTexture(property);
+                report.Append("    ").Append(property).Append(" = ").Append(texture != null ? texture.name + " " + texture.width + "x" + texture.height : "-").AppendLine();
+                if (texture != null && (property.IndexOf("Metal", System.StringComparison.OrdinalIgnoreCase) >= 0 || property.IndexOf("Gloss", System.StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    count += Save(folder, item, property.TrimStart('_'), texture, done);
                 }
             }
             return count;

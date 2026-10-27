@@ -16,7 +16,7 @@ namespace MordasGearhold.Core
     internal sealed class ZoneParams
     {
         public int StartClusters = 12, MaxZones = 8, Sample = 96;
-        public float MinShare = 0.012f, MergeDistance = 0.12f, BrightnessWeight = 0.7f, ChromaWeight = 6f, Softness = 0.12f;
+        public float MinShare = 0.012f, MergeDistance = 0.12f, BrightnessWeight = 0.7f, ChromaWeight = 6f, Softness = 0.008f;
     }
 
     internal static class DyeTuning
