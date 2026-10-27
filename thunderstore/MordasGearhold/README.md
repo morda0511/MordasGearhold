@@ -65,16 +65,12 @@ The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with 
   - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
 
 ## Ammo
-![The ammo drawer at the right edge of the panel](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/ammo-drawer.png)
-
 Three ammo slots in a drawer on the right edge of the panel. Click the arrow tab to open or close it.
 
 - **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
 - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
 
 ## Custom slots and the SLOTS window
-![Custom slots in the panel](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/custom-slots.png)
-
 Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
 
 - A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
@@ -86,8 +82,6 @@ Up to nine slots (a column under the shield and one under the cape) take only th
 - **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 
 ## HUD bars
-![Quickslot, food and mead bars on the HUD](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/hud-bars.png)
-
 Your quickslots, food and meads as small bars on the screen, so you do not need the panel open.
 
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
@@ -136,8 +130,6 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
 - **How it works:** only the copies on the character are recoloured, never the item itself. The recoloured texture is made once per change.
 
 ### Weapons: dye and glow
-![The weapon look menu with colours and GLOW](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/weapon-look.png)
-
 Weapons get the same COLOR section, and fire, frost and lightning weapons get GLOW and SHINE on top.
 
 - **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
