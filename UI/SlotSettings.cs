@@ -15,7 +15,7 @@ namespace MordasGearhold.UI
     internal static class SlotSettings
     {
         private const float Width = 470f;
-        private const float Height = 520f;
+        private const float Height = 760f;
 
         private static InventoryGui s_gui;
         private static RectTransform s_window;
@@ -139,12 +139,12 @@ namespace MordasGearhold.UI
             for (int i = 0; i < Topology.CustomSlotCount; i++)
             {
                 int n = i;
-                float y = 360f + i * 46f;
+                float y = 360f + i * 42f;
                 TMP_Text label = UiKit.Text(s_window, gui.m_recipeDecription, "Slot " + (i + 1), 16f, UiKit.Parchment, TextAlignmentOptions.Left);
                 UiKit.Place(label.rectTransform, 62f, y - 8f, 70f, 22f);
                 AddField(gui, 280f, y - 8f, 300f, 28f, Plugin.CustomSlotPrefabs[i].Value, value => Plugin.CustomSlotPrefabs[n].Value = value.Trim());
                 s_customNames[i] = UiKit.Text(s_window, gui.m_recipeDecription, "", 12f, UiKit.Dim, TextAlignmentOptions.Left);
-                UiKit.Place(s_customNames[i].rectTransform, 280f, y + 14f, 300f, 16f);
+                UiKit.Place(s_customNames[i].rectTransform, 280f, y + 13f, 300f, 14f);
             }
             AddButton(gui, "DONE", Width / 2f, Height - 32f, 130f, Close);
             s_window.gameObject.SetActive(false);

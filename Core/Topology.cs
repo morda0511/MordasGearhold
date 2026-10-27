@@ -15,7 +15,7 @@ namespace MordasGearhold.Core
         Quick1 = 16, Quick2, Quick3, Quick4, Quick5, Quick6, Quick7, Quick8, // hidden row 2
         Food1 = 24, Food2, Food3, Mead1, Mead2, Mead3,                     // hidden row 3 (since 1.2.0)
         Holster = 30,                                                      // hidden row 3 (since 1.3.8): second weapon, R swaps; 31 free
-        Custom1 = 32, Custom2, Custom3                                     // hidden row 4 (since 1.4.0): hold only the items named in the config
+        Custom1 = 32, Custom2, Custom3, Custom4, Custom5, Custom6, Custom7, Custom8                                  // hidden row 4 (since 1.4.0): hold only the items named in the config
     }
 
     /// <summary>
@@ -120,7 +120,12 @@ namespace MordasGearhold.Core
                 case GearSlot.Holster: return Plugin.EnableWeapon2.Value;
                 case GearSlot.Custom1:
                 case GearSlot.Custom2:
-                case GearSlot.Custom3: return CustomPrefabs(slot).Count > 0;
+                case GearSlot.Custom3:
+                case GearSlot.Custom4:
+                case GearSlot.Custom5:
+                case GearSlot.Custom6:
+                case GearSlot.Custom7:
+                case GearSlot.Custom8: return CustomPrefabs(slot).Count > 0;
                 default:
                     if (IsFoodSlot(slot)) return slot - GearSlot.Food1 < Plugin.FoodSlots.Value;
                     if (IsMeadSlot(slot)) return slot - GearSlot.Mead1 < Plugin.MeadSlots.Value;
@@ -163,9 +168,9 @@ namespace MordasGearhold.Core
             return names.Count > 1 ? label + " +" + (names.Count - 1) : label;
         }
 
-        internal const int CustomSlotCount = 3;
+        internal const int CustomSlotCount = 8;
 
-        internal static bool IsCustomSlot(GearSlot slot) => slot >= GearSlot.Custom1 && slot <= GearSlot.Custom3;
+        internal static bool IsCustomSlot(GearSlot slot) => slot >= GearSlot.Custom1 && slot <= GearSlot.Custom8;
 
         private static readonly string[] s_customRaw = new string[CustomSlotCount];
         private static readonly HashSet<string>[] s_customSets = new HashSet<string>[CustomSlotCount];

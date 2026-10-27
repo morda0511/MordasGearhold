@@ -271,7 +271,7 @@ namespace MordasGearhold
         {
             GearSlot.Quick1, GearSlot.Quick2, GearSlot.Quick3, GearSlot.Quick4, GearSlot.Quick5, GearSlot.Quick6, GearSlot.Quick7, GearSlot.Quick8,
             GearSlot.Food1, GearSlot.Food2, GearSlot.Food3, GearSlot.Mead1, GearSlot.Mead2, GearSlot.Mead3,
-            GearSlot.Custom1, GearSlot.Custom2, GearSlot.Custom3,
+            GearSlot.Custom1, GearSlot.Custom2, GearSlot.Custom3, GearSlot.Custom4, GearSlot.Custom5, GearSlot.Custom6, GearSlot.Custom7, GearSlot.Custom8,
         };
 
         /// <summary>The use key of a quickslot, food or mead slot; null for other slots.</summary>
