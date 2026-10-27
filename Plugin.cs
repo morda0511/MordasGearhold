@@ -30,6 +30,9 @@ namespace MordasGearhold
         internal static ConfigEntry<int> ExtraRows;
         internal static ConfigEntry<int> TrinketSlots;
         internal static ConfigEntry<int> UtilitySlots;
+        internal static ConfigEntry<int> FoodSlots;
+        internal static ConfigEntry<int> MeadSlots;
+        internal static ConfigEntry<int> QuickslotCount;
         internal static readonly ConfigEntry<string>[] CustomSlotPrefabs = new ConfigEntry<string>[Topology.CustomSlotCount];
         internal static ConfigEntry<KeyboardShortcut> KeySet1;
         internal static ConfigEntry<KeyboardShortcut> Weapon2SwapKey;
@@ -89,6 +92,15 @@ namespace MordasGearhold
                 new ConfigDescription("How many utility slots the panel has (1 = only the vanilla slot). " +
                     "An item in a slot that is switched off goes back into the inventory grid.",
                     new AcceptableValueRange<int>(1, 3)));
+            FoodSlots = Config.Bind("1 - Inventory", "FoodSlots", 3,
+                new ConfigDescription("How many food slots the panel has. An item in a slot that is switched off goes back into the inventory grid.",
+                    new AcceptableValueRange<int>(0, 3)));
+            MeadSlots = Config.Bind("1 - Inventory", "MeadSlots", 3,
+                new ConfigDescription("How many mead slots the panel has. An item in a slot that is switched off goes back into the inventory grid.",
+                    new AcceptableValueRange<int>(0, 3)));
+            QuickslotCount = Config.Bind("1 - Inventory", "QuickslotCount", 8,
+                new ConfigDescription("How many quickslots the panel has. An item in a slot that is switched off goes back into the inventory grid.",
+                    new AcceptableValueRange<int>(0, 8)));
 
             for (int i = 0; i < CustomSlotPrefabs.Length; i++)
             {

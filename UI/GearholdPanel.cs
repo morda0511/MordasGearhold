@@ -58,6 +58,7 @@ namespace MordasGearhold.UI
         {
             SkinMenu.Tick();
             QuickslotBarEditor.Tick();
+            SlotSettings.Tick();
             InventoryGui gui = InventoryGui.instance;
             Player player = Player.m_localPlayer;
             if (gui == null || s_failed)

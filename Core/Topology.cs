@@ -121,9 +121,21 @@ namespace MordasGearhold.Core
                 case GearSlot.Custom1:
                 case GearSlot.Custom2:
                 case GearSlot.Custom3: return CustomPrefabs(slot).Count > 0;
-                default: return true;
+                default:
+                    if (IsFoodSlot(slot)) return slot - GearSlot.Food1 < Plugin.FoodSlots.Value;
+                    if (IsMeadSlot(slot)) return slot - GearSlot.Mead1 < Plugin.MeadSlots.Value;
+                    if (slot >= GearSlot.Quick1 && slot <= GearSlot.Quick8) return slot - GearSlot.Quick1 < Plugin.QuickslotCount.Value;
+                    return true;
             }
         }
+
+        /// <summary>The slots whose count the config sets (trinket 2/3, utility 2/3, food, mead, quickslots): items in a switched-off one go back into the grid.</summary>
+        internal static readonly GearSlot[] CountedSlots =
+        {
+            GearSlot.Trinket2, GearSlot.Trinket3, GearSlot.Utility2, GearSlot.Utility3,
+            GearSlot.Food1, GearSlot.Food2, GearSlot.Food3, GearSlot.Mead1, GearSlot.Mead2, GearSlot.Mead3,
+            GearSlot.Quick1, GearSlot.Quick2, GearSlot.Quick3, GearSlot.Quick4, GearSlot.Quick5, GearSlot.Quick6, GearSlot.Quick7, GearSlot.Quick8,
+        };
 
         internal static readonly GearSlot[] ExtraSlots ={ GearSlot.Trinket2, GearSlot.Trinket3, GearSlot.Utility2, GearSlot.Utility3 };
 

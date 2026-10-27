@@ -141,7 +141,7 @@ namespace MordasGearhold.Patches
         /// </summary>
         private static void EmptyDisabledSlots(Player player)
         {
-            foreach (GearSlot slot in Topology.ExtraSlots)
+            foreach (GearSlot slot in Topology.CountedSlots)
             {
                 if (Topology.IsEnabled(slot))
                 {

@@ -192,6 +192,12 @@ namespace MordasGearhold.UI
                 ShowValues();
             });
             AddButton(gui, "DONE", Width / 2f + 80f, Height - 36f, 130f, Close);
+            // the slot counts and the custom slot names have their own window
+            AddButton(gui, "SLOTS", Width - 70f, 28f, 100f, () =>
+            {
+                Close();
+                SlotSettings.Open();
+            });
             s_window.gameObject.SetActive(false);
         }
 
