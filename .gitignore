@@ -12,3 +12,4 @@ thunderstore/*/plugins/
 
 # Local only: source of the embedded icon and old test sheets.
 thunderstore-assets/transmog-icon-source.png
+tools/samples/
