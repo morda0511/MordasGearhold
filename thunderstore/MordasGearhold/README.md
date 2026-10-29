@@ -1,9 +1,14 @@
 ![Morda's Gearhold – Inventory, Loadouts & Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-banner.png)
 
-# Morda's Gearhold
-*Inventory, Loadouts & Quickslots* – Valheim 1.0.20, BepInEx 5.4.23.x · version 1.4.0
+<br>
 
-Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 9 custom slots for items you name, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks with presets, and a colour picker for armour and weapons that other players see too.
+**Three sets. One inventory. Your gear, your look, your colours.**
+
+Switch your whole loadout with one key, keep food, potions and ammo on hotkeys, wear a second weapon on your back, and dress every piece of armour in any look and any colour. Other players see it too.
+
+> **Needs no server mod.** Valheim 1.0.20 · BepInExPack 5.4.2350+ · Everyone sees your looks; your colours are seen by players who also have Gearhold.
+
+[Source and issues](https://github.com/morda0511/MordasGearhold) · [More mods by Morda](https://thunderstore.io/c/valheim/p/Morda/)
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-at-a-glance.png)
 
@@ -15,14 +20,41 @@ Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 
 |:---:|:---:|:---:|:---:|
 | **Trinkets**<br>Up to 3 trinkets and 3 utility items | **Transmog**<br>Wear any known look, save outfits as presets | **Dyes**<br>Colour every material zone, others see it | **Death safe**<br>Only the active set goes into the grave |
 
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-panel-controls.png)
+
+| Action | Result |
+|---|---|
+| Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
+| Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item or the coins are picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
+| Right-click a slot | Use or equip / unequip the item like in the vanilla inventory (eat, drink, use this ammo). Hold **Shift** to open the look menu of armour, a shield or a weapon instead. |
+| Key button under a quickslot, food, mead, ammo or Weapon 2 slot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
+| SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
+
+### Where everything is
+
+Slots: Head, Chest, Legs, Cape (left column) and Shield (right column), with the custom slots below them; Utility 1–3 and Trinket 1–3 in a row under YOUR VIKING; Food 1–3, Weapon 2 and Mead 1–3 above the quickslots in the same columns; Quickslot 1–8; the ammo drawer at the right edge; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
+Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 1).
+
+### Keys and limits
+
+**Key conflicts:**
+- A key you assign is taken away from any other Gearhold hotkey that used it.
+- A key that vanilla also uses (e.g. X = Sit, Q = Auto-run) shows a note.
+
+**No set switch** while attacking, dodging or swimming, while armour is still being put on, or while you hold an item on the cursor.
+
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-the-gearhold-panel.png)
 
 ![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Gearhold_Inventory.png)
 
 Everything of a set in one window: the three set tabs, your armour and shield, the YOUR VIKING sheet, the coin slot, and below it the rows with utility, trinkets, food, mead, Weapon 2 and the quickslots.
 
+### Sets
+
 - **Three independent equipment sets.** A set is exactly what lies in the Gearhold panel: armour, shield, three utility items, three trinkets, three ammo slots, 8 quickslots (food, potions, ...), food and mead slots and the custom slots.
 - **Weapons and bows stay in your hotbar.** The inventory grid, hotbar included, is shared by all sets. A set switch never touches it.
+### YOUR VIKING
+
 - **YOUR VIKING** shows:
   - your armour and weight,
   - the equipment modifiers (movement, stamina costs, heat),
@@ -34,6 +66,8 @@ Everything of a set in one window: the three set tabs, your armour and shield, t
   - **ENCHANTMENTS** (with Path of Valheiman): the enchantments of your worn armour, shield, utility items and trinkets, added up (two "+5% Fire damage" become "+10% Fire damage"). The drawn weapon lists its own enchantments under WEAPON.
 
   Health, stamina and eitr are left out because the vanilla HUD already shows them.
+### Coins, auto-equip, auto-shield
+
 - **Coin slot** (top right of the panel, next to the title): coins you pick up go in there on their own and **weigh nothing**. It is shared by all three sets and has **no limit**: one full stack lies in the slot, everything beyond is kept in a purse with your character, and the slot shows the total. Traders see and take the whole amount. Coins in the purse stay with you when you die; the stack in the slot goes into the grave as usual. Turn the automatic moving off with `AutoStoreCoins`.
 - **Auto-equip:** new armour, shields, trinkets and ammo you pick up or craft go into an **empty** slot only. Gear you already wear is never replaced. A new trinket goes into Trinket 2 or 3 when Trinket 1 is taken.
 - **Auto-shield:**
@@ -45,14 +79,22 @@ Everything of a set in one window: the three set tabs, your armour and shield, t
 
 The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with the second weapon between them, and the 8 quickslots, all with the key you set under each slot.
 
+### Quickslots
+
 - **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
   - Unlike the vanilla hotbar, a quickslot key never hands its item to what you are looking at (item stand, mannequin, ...). Switch this with `QuickslotsUseOnTarget`.
   - All Gearhold hotkeys only work while you play in the world: not in menus, not in the build menu and never while you type into a text field (e.g. a search box).
+### Food and mead
+
 - **Food and mead slots:** 3 food and 3 mead slots right above the quickslots, per set. Food slots take food only, mead slots meads and potions. Each has its own hotkey (set with the button under the slot, like the quickslots; unbound at first); right-click eats or drinks too. When one of your three food buffs runs out, Gearhold eats from the food slots on its own (`AutoEatFoodSlots`, on by default; `AutoEatEarly` eats again as soon as the game allows). On the HUD they get their own bars: food next to the food boxes at the bottom left, meads right of the quickslots.
+### Trinkets and utility items
+
 - **Up to three trinkets and three utility items at once** (switch slots 2 and 3 on with `TrinketSlots` / `UtilitySlots`, or in the SLOTS window; by default only the vanilla slot is shown):
   - Slot 1 is the normal vanilla slot. Slots 2 and 3 are always active while something lies in them.
   - Right-click a trinket or utility item in the inventory: when slot 1 is taken, it goes into a free slot 2 or 3.
   - On death all three go into the grave like the rest of the set.
+### Weapon 2
+
 - **Weapon 2** (between the food and mead slots, per set): put a second weapon there, melee, bow or crossbow.
   - The hide key (**R**) swaps it with the weapon in your hand. Press it again to swap back. With an empty slot, or no weapon in hand, R works like vanilla.
   - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
@@ -63,6 +105,8 @@ The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with 
 
 Three ammo slots in a drawer on the right edge of the panel. Click the arrow tab to open or close it.
 
+### Ammo drawer
+
 - **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
 - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
 
@@ -70,11 +114,15 @@ Three ammo slots in a drawer on the right edge of the panel. Click the arrow tab
 
 Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
 
+### Rules
+
 - A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
 - The items stay real inventory items (weight, tombstone and saving work as usual) and belong to the active set, so each set can hold something else in the same slot. The allowed names are the same for all sets.
 - Each slot has its own hotkey (config `Custom1` to `Custom9`, or the key button under the slot): it uses the item (eat, drink, equip).
 
 ![The SLOTS window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/slots-window.png)
+
+### SLOTS window
 
 - **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 
@@ -82,9 +130,13 @@ Up to nine slots (a column under the shield and one under the cape) take only th
 
 Your quickslots, food and meads as small bars on the screen, so you do not need the panel open.
 
+### Quickslot bar
+
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
 
 ![The HUD bars window](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/hud-bars-window.png)
+
+### Move the bars
 
 - **Move the bars:** the settings gear in the panel's top bar opens a small window (the HUD bars window). Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the inventory steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
 
@@ -147,26 +199,16 @@ Weapons get the same COLOR section, and fire, frost and lightning weapons get GL
 #### Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
 
-![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-panel-controls.png)
+#### Tuning the colouring (for tinkerers)
+These tools are in the project's `tools` folder, not in the mod package. Open the .html files in a browser.
+- **Dye lab** (`tools/dye-lab.html`): load any texture and see how the colouring treats it: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Als Datei speichern" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.
+- **Zone survey** (`tools/zone-survey.html`): **Ctrl+Shift+F10** in the world writes the textures of all armour, capes and shields (and a `materials.txt`) to `BepInEx/config/MordasGearhold-textures`. The survey loads that folder at once and shows the zones of each texture. A texture that needs other numbers gets its own set there; "zones.json speichern" writes `MordasGearhold.zones.json` into the same config folder, read live like the dye file.
+- **Layout editor** (`tools/layout-editor.html`): drag, resize and align every part of the Gearhold panel and export the layout as JSON. Saved as `MordasGearhold.layout.json` in the config folder, it overrides the built-in layout.
 
-| Action | Result |
-|---|---|
-| Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
-| Left-click a filled slot | Equipment goes back into the inventory grid. A quickslot item or the coins are picked up: click another quickslot to move or swap it, or an inventory cell to put it back. |
-| Right-click a slot | Use or equip / unequip the item like in the vanilla inventory (eat, drink, use this ammo). Hold **Shift** to open the look menu of armour, a shield or a weapon instead. |
-| Key button under a quickslot, food, mead, ammo or Weapon 2 slot | Click, then press the new key (Shift/Ctrl/Alt allowed). Esc cancels, Delete clears. |
-| SET 1 / SET 2 / SET 3 tabs or hotkeys | Switch sets. |
-
-Slots: Head, Chest, Legs, Cape (left column) and Shield (right column), with the custom slots below them; Utility 1–3 and Trinket 1–3 in a row under YOUR VIKING; Food 1–3, Weapon 2 and Mead 1–3 above the quickslots in the same columns; Quickslot 1–8; the ammo drawer at the right edge; the coin slot (top right). YOUR VIKING scrolls with the mouse wheel when it is longer than the panel.
-Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 1).
-
-**Key conflicts:**
-- A key you assign is taken away from any other Gearhold hotkey that used it.
-- A key that vanilla also uses (e.g. X = Sit, Q = Auto-run) shows a note.
-
-**No set switch** while attacking, dodging or swimming, while armour is still being put on, or while you hold an item on the cursor.
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-death-and-tombstone.png)
+
+### What happens
 
 - **Into the grave** go the inventory grid and the active set's Gearhold slots, under the normal vanilla rules.
 - **The other two sets** stay safely on the character.
@@ -175,31 +217,30 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-safety.png)
 
+### Your items are safe
+
 - **Items of a missing mod** are never deleted. They stay as dormant records and come back when the mod is installed again.
 - **A set switch** runs within one game frame: every record is checked first, with a journal and rollback.
 - **Damaged data** is never overwritten. It is kept under `MordasGearhold.Quarantine.*`, and the log says why.
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-uninstalling.png)
 
+### Before you remove the mod
+
 - **The two inactive sets** stay stored in the save, but cannot be reached without the mod. They come back on reinstall.
 - **Rows beyond the vanilla limit and the hidden slot rows** are dropped on the ground by vanilla at the next spawn.
 - **Before uninstalling,** empty the panel slots of all three sets and the lower grid rows into a chest.
 
-## Tuning the colouring (for tinkerers)
-These tools are in the project's `tools` folder, not in the mod package. Open the .html files in a browser.
-- **Dye lab** (`tools/dye-lab.html`): load any texture and see how the colouring treats it: it finds the colour zones, lets you pick a colour per zone and change every number behind it. "Als Datei speichern" gives `MordasGearhold.dye.json`; put it in the `BepInEx/config` folder of your profile. The mod reads it again whenever it changes, finds the zones anew and recolours characters at once, no restart. Deleting the file brings back the defaults.
-- **Zone survey** (`tools/zone-survey.html`): **Ctrl+Shift+F10** in the world writes the textures of all armour, capes and shields (and a `materials.txt`) to `BepInEx/config/MordasGearhold-textures`. The survey loads that folder at once and shows the zones of each texture. A texture that needs other numbers gets its own set there; "zones.json speichern" writes `MordasGearhold.zones.json` into the same config folder, read live like the dye file.
-- **Layout editor** (`tools/layout-editor.html`): drag, resize and align every part of the Gearhold panel and export the layout as JSON. Saved as `MordasGearhold.layout.json` in the config folder, it overrides the built-in layout.
-
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-installation.png)
 
-- **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
-- **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
+1. **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
+2. **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
+### Works with
+
 - **Path of Valheiman:** works together. Gearhold switches Path of Valheiman's own equipment system (its slots beside the crafting window, purse and tool bar) off through Path of Valheiman's API, because both would use the same inventory rows. Its passive tree, loot and everything else keep working, and its item tooltips (enchantments, sockets, ...) also show on the Gearhold slots. It also never rebuilds its old inventory rows on load any more; anything still lying in a slot it does not belong in is moved into your inventory by Gearhold.
 - **StoreAndCraft:** its dump (hotkey, hover-store, auto-stack) never takes anything out of the Gearhold slots (quickslots, food, meads, ammo, coins ...), and its Sort only sorts the grid.
 - **Not compatible:** ExtraSlots and AzuExtendedPlayerInventory (they take over the same inventory rows).
 
-Source and issues: https://github.com/morda0511/MordasGearhold
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-more-mods-by-morda.png)
 
