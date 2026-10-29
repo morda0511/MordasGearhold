@@ -5,22 +5,18 @@
 
 Three switchable equipment sets, a shared inventory, 8 hotkey quickslots, up to 9 custom slots for items you name, a second weapon on your back or hip, 3 ammo slots, up to 3 trinkets and utility items, transmog looks with presets, and a colour picker for armour and weapons that other players see too.
 
-## At a glance
-| | |
-|---|---|
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-sets.png" width="80" alt="Sets"> | **3 equipment sets** – switch your whole loadout with one click or hotkey. The inventory stays shared. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-quickslots.png" width="80" alt="Quickslots"> | **8 quickslots** with your own hotkeys and a small bar on the HUD. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-slots.png" width="80" alt="Weapon 2"> | **Weapon 2** – a second weapon worn on your back or hip; **R** swaps it with the one in your hand. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-ammo.png" width="80" alt="Ammo"> | **3 ammo slots** – switch arrows instantly with Alt+1/2/3. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-trinkets.png" width="80" alt="Trinkets"> | **Up to 3 trinkets and 3 utility items** worn at once (configurable 1–3). |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-transmog.png" width="80" alt="Transmog"> | **Transmog** – wear the look of any armour you know, per set, and save whole outfits as presets. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-dyes.png" width="80" alt="Dyes"> | **Dyes** – pick the colour of every material zone of your armour and weapons (swatches, sliders, hex), with a live 3D preview. Other Gearhold players see your colours. |
-| | **Custom slots** – up to nine slots that take only the items you name by prefab name, also from other mods, each with its own hotkey. |
-| <img src="https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/icon-deathsafe.png" width="80" alt="Death safe"> | **Death safe** – only the active set goes into the grave; looting it puts everything back in place. |
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-at-a-glance.png)
 
-![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
+| ![Sets](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-sets-192.png) | ![Quickslots](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-quickslots-192.png) | ![Weapon 2](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-weapon2-192.png) | ![Ammo](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-ammo-192.png) |
+|:---:|:---:|:---:|:---:|
+| **Sets**<br>3 loadouts, one click or hotkey, shared inventory | **Quickslots**<br>8 hotkey slots plus up to 9 custom slots | **Weapon 2**<br>A second weapon on back or hip, R swaps | **Ammo**<br>3 ammo slots, Alt+1/2/3 |
 
-## The Gearhold panel
+| ![Trinkets](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-trinkets-192.png) | ![Transmog](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-transmog-192.png) | ![Dyes](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-dyes-192.png) | ![Death safe](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/glance-deathsafe-192.png) |
+|:---:|:---:|:---:|:---:|
+| **Trinkets**<br>Up to 3 trinkets and 3 utility items | **Transmog**<br>Wear any known look, save outfits as presets | **Dyes**<br>Colour every material zone, others see it | **Death safe**<br>Only the active set goes into the grave |
+
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-the-gearhold-panel.png)
+
 ![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Gearhold_Inventory.png)
 
 Everything of a set in one window: the three set tabs, your armour and shield, the YOUR VIKING sheet, the coin slot, and below it the rows with utility, trinkets, food, mead, Weapon 2 and the quickslots.
@@ -45,7 +41,8 @@ Everything of a set in one window: the three set tabs, your armour and shield, t
   - Put the weapon away, and the shield goes too. Swapping one weapon for another, or eating, keeps it.
   - With a bow or two-hander, the shield is put away but stays in the shield slot.
 
-## Quickslots, food, mead, trinkets and Weapon 2
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-quickslots-and-weapon-2.png)
+
 The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with the second weapon between them, and the 8 quickslots, all with the key you set under each slot.
 
 - **Quickslots** with their own hotkeys (default `Z`, `B`, `N`, `H`), changeable right in the panel. Example: put food in, press the key, eat.
@@ -62,13 +59,15 @@ The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with 
   - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
   - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
 
-## Ammo
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-ammo.png)
+
 Three ammo slots in a drawer on the right edge of the panel. Click the arrow tab to open or close it.
 
 - **Three ammo slots:** `Alt+1`, `Alt+2`, `Alt+3` pick the ammo you shoot. The slots sit in a drawer at the right edge of the panel: click the arrow tab (AMMO) to open or close it. Each key sits as a button under its slot: click it to set another one. Holding Alt keeps the vanilla hotbar from also using item 1–3.
 - While a bow is drawn, a small list above it in the hotbar shows the fitting arrows from your ammo slots with their amount; the ones in use are gold (`ShowBowAmmo`).
 
-## Custom slots and the SLOTS window
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-custom-slots.png)
+
 Up to nine slots (a column under the shield and one under the cape) take only the items you name: type the prefab names in the SLOTS window, or set `CustomSlot1` to `CustomSlot9` in the config (section 1 - Inventory), as a comma separated list, e.g. `Wishbone,Demister`. Items of other mods work too, as long as you use their prefab name.
 
 - A slot with an empty list is hidden. Under each slot you see the name of the item in it, or of the first name in its list.
@@ -79,7 +78,8 @@ Up to nine slots (a column under the shield and one under the cape) take only th
 
 - **SLOTS window:** the settings gear in the panel's top bar has a SLOTS button. There you set how many trinket, utility, food, mead and quickslots you have, and type the prefab names of the custom slots. The same values are in the config file.
 
-## HUD bars
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-hud-bars.png)
+
 Your quickslots, food and meads as small bars on the screen, so you do not need the panel open.
 
 - **Quickslot bar on the HUD:** at the bottom centre you see every occupied quickslot with its item and amount, and its hotkey on one line above it (also long keys like `Alt+1`). A changed key shows up immediately. The bar hides while the inventory is open; its size is set with `QuickslotBarScale`.
@@ -88,7 +88,8 @@ Your quickslots, food and meads as small bars on the screen, so you do not need 
 
 - **Move the bars:** the settings gear in the panel's top bar opens a small window (the HUD bars window). Pick QUICKSLOTS, FOOD or MEAD, move that bar with the sliders (left/right, up/down), set its size and choose ROW or COLUMN for it. While it is open the inventory steps aside and all three bars show on screen, so you see every move at once. RESET puts the chosen bar back to its default spot, size and layout.
 
-## Transmog and dyes
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-transmog-and-dyes.png)
+
 ![The look menu with the looks (transmog) and the colours (dyes)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Transmog%2Bdye%20menu.png)
 
 One menu for how your gear looks and what colour it has: your character in 3D on the left, a tab for each piece, the looks you have unlocked and below them the COLOR section.
@@ -146,9 +147,8 @@ Weapons get the same COLOR section, and fire, frost and lightning weapons get GL
 #### Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
 
-![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-panel-controls.png)
 
-## Panel controls
 | Action | Result |
 |---|---|
 | Left-click an item in the inventory, then left-click a slot | The item moves into the slot. Armour is equipped; ammo is equipped if you have none in use. |
@@ -166,18 +166,21 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 
 **No set switch** while attacking, dodging or swimming, while armour is still being put on, or while you hold an item on the cursor.
 
-## Death and tombstone
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-death-and-tombstone.png)
+
 - **Into the grave** go the inventory grid and the active set's Gearhold slots, under the normal vanilla rules.
 - **The other two sets** stay safely on the character.
 - **The grave remembers its set.** If another set is active when you loot it, Gearhold switches back first. Items return to their old places, and gear in empty slots is worn again.
 - **Whatever does not fit** stays in the grave, as in vanilla.
 
-## Safety
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-safety.png)
+
 - **Items of a missing mod** are never deleted. They stay as dormant records and come back when the mod is installed again.
 - **A set switch** runs within one game frame: every record is checked first, with a journal and rollback.
 - **Damaged data** is never overwritten. It is kept under `MordasGearhold.Quarantine.*`, and the log says why.
 
-## Uninstalling – please read
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-uninstalling.png)
+
 - **The two inactive sets** stay stored in the save, but cannot be reached without the mod. They come back on reinstall.
 - **Rows beyond the vanilla limit and the hidden slot rows** are dropped on the ground by vanilla at the next spawn.
 - **Before uninstalling,** empty the panel slots of all three sets and the lower grid rows into a chest.
@@ -188,7 +191,8 @@ These tools are in the project's `tools` folder, not in the mod package. Open th
 - **Zone survey** (`tools/zone-survey.html`): **Ctrl+Shift+F10** in the world writes the textures of all armour, capes and shields (and a `materials.txt`) to `BepInEx/config/MordasGearhold-textures`. The survey loads that folder at once and shows the zones of each texture. A texture that needs other numbers gets its own set there; "zones.json speichern" writes `MordasGearhold.zones.json` into the same config folder, read live like the dye file.
 - **Layout editor** (`tools/layout-editor.html`): drag, resize and align every part of the Gearhold panel and export the layout as JSON. Saved as `MordasGearhold.layout.json` in the config folder, it overrides the built-in layout.
 
-## Installation
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-installation.png)
+
 - **Mod manager (recommended):** install *Morda's Gearhold* with r2modman or the Thunderstore Mod Manager.
 - **Manual:** install [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/). Then put `MordasGearhold.dll` into `BepInEx/plugins/MordasGearhold/`.
 - **Path of Valheiman:** works together. Gearhold switches Path of Valheiman's own equipment system (its slots beside the crafting window, purse and tool bar) off through Path of Valheiman's API, because both would use the same inventory rows. Its passive tree, loot and everything else keep working, and its item tooltips (enchantments, sockets, ...) also show on the Gearhold slots. It also never rebuilds its old inventory rows on load any more; anything still lying in a slot it does not belong in is moved into your inventory by Gearhold.
@@ -197,16 +201,14 @@ These tools are in the project's `tools` folder, not in the mod package. Open th
 
 Source and issues: https://github.com/morda0511/MordasGearhold
 
-![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/divider-norse.png)
+![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-more-mods-by-morda.png)
 
-## More mods by Morda
+| [![StoreAndCraft](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-storeandcraft-192.png)](https://thunderstore.io/c/valheim/p/Morda/StoreAndCraft/) | [![Workbenches+](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-workbenches-192.png)](https://thunderstore.io/c/valheim/p/Morda/WorkbenchesPlus/) | [![Forager's Garden](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-foragers-192.png)](https://thunderstore.io/c/valheim/p/Morda/ForagersGarden/) | [![Valheim Mannequins](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-mannequins-192.png)](https://thunderstore.io/c/valheim/p/Morda/ValheimMannequins/) |
+|:---:|:---:|:---:|:---:|
+| **[StoreAndCraft](https://thunderstore.io/c/valheim/p/Morda/StoreAndCraft/)** | **[Workbenches+](https://thunderstore.io/c/valheim/p/Morda/WorkbenchesPlus/)** | **[Forager's Garden](https://thunderstore.io/c/valheim/p/Morda/ForagersGarden/)** | **[Valheim Mannequins](https://thunderstore.io/c/valheim/p/Morda/ValheimMannequins/)** |
 
-| Mod | What it does |
-|:---|:---|
-| **[StoreAndCraft](https://thunderstore.io/c/valheim/p/Morda/StoreAndCraft/)** | A base that works with you: auto-store, dump, craft and build from chests, storage displays, feed trough, F10 settings panel |
-| **[WorkbenchesPlus](https://thunderstore.io/c/valheim/p/Morda/WorkbenchesPlus/)** | Sort and filter crafting menus: craftable first, categories, armor and weapon sets by biome tier, search, favorites, dismantle |
-| **[Forager's Garden](https://thunderstore.io/c/valheim/p/Morda/ForagersGarden/)** | Berry bushes, wild herbs and mushrooms with the Cultivator, plus Ice, Royal Jelly and Crystal beehives |
-| **[Valheim Mannequins](https://thunderstore.io/c/valheim/p/Morda/ValheimMannequins/)** | Player-shaped mannequins: dress them with real gear, pose and name them, keep several gear sets |
-| **[ServerRates](https://thunderstore.io/c/valheim/p/Morda/ServerRates/)** | Server-side rates for dedicated servers (PC and console), live apply, presets. Joining players need no install |
+| [![ServerRates](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-serverrates-192.png)](https://thunderstore.io/c/valheim/p/Morda/ServerRates/) | [![Smooth Build Repair](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-smoothbuildrepair-192.png)](https://thunderstore.io/c/valheim/p/Morda/SmoothBuildRepair/) | [![Any Angle](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/logo-anyangle-192.png)](https://thunderstore.io/c/valheim/p/Morda/AnyAngle/) |
+|:---:|:---:|:---:|
+| **[ServerRates](https://thunderstore.io/c/valheim/p/Morda/ServerRates/)** | **[Smooth Build Repair](https://thunderstore.io/c/valheim/p/Morda/SmoothBuildRepair/)** | **[Any Angle](https://thunderstore.io/c/valheim/p/Morda/AnyAngle/)** |
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/mordas-gearhold-footer.png)
