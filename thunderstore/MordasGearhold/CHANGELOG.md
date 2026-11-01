@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.1
+- The look menu has a new layout: the pieces are icon buttons in a row under a search bar, the looks sit in a bigger grid on a dark box, the character and the colour box are on the right. Boxes and dividers use the golden rule of the crafting window.
+- New WEAPONS tab: every weapon you carry (inventory, quickslots, Weapon 2) in one list. Click one to take it in hand and change its look and colours; the weapon you held before comes back when the menu closes.
+- Search and sort (name or power) for the looks. The first cell, Original, takes off the look and the colours (also GLOW and SHINE) of the piece or weapon.
+- GLOW and SHINE are tabs in the colour box next to COLOR, with the same swatches, sliders and hex field. GLOW is only offered on weapons with an effect of their own, SHINE on weapons upgraded to level 3 or more.
+- A card at the bottom of the look grid shows what the piece looks like now.
+- Gear no recipe makes (for example clothes bought from a trader) unlocks its look as soon as you carry it.
+- SAVE and BACK close the inventory as well, so the cursor and the camera are free again.
+- The Gearhold panel has golden frames round the slots and YOUR VIKING, the hotkey buttons no longer cover the slots and the custom slots are spaced out. It steps aside while Skills, Trophies, Achievements or the message log are open.
+- The Weapon 2 key now only equips the weapon from its slot, like a right-click on it; pressing it again brings the previous weapon back. Nothing moves in your hotbar any more.
+- The preview camera is 50 cm further back, so the feet are not cut off.
+- Quieter log: colour zones and similar notes are debug messages now. The two developer dumps (Ctrl+Shift+F9 and F10) only work with the new config option DevTools.
+
 ## 1.4.0
 - Colour zones: a piece is split into up to four zones by the colours of its texture (metal, leather, cloth ...). In the COLOR section pick a zone chip (ring = original colour, middle = colour now) and dye just that zone; ALL still colours the whole piece.
 - A dyed zone has one colour all over, so Red is red also where a small accent colour fell into the zone. Small accent colours get their own zone more often.
