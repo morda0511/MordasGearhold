@@ -299,14 +299,14 @@ namespace MordasGearhold.Core
             {
                 int lowest = inventory.GetAllItems().Select(i => i.m_gridPos.y + 1).DefaultIfEmpty(0).Max();
                 state.GridRows = Math.Max(wantGrid, lowest);
-                Plugin.Log.LogInfo($"Gearhold layout initialised: {state.GridRows} inventory rows.");
+                Plugin.Log.LogDebug($"Gearhold layout initialised: {state.GridRows} inventory rows.");
             }
             state.HiddenRows = HiddenRows;
             if (state.GridRows != wantGrid)
             {
                 if (TryResize(player, ref state, wantGrid, out string reason))
                 {
-                    Plugin.Log.LogInfo($"Gearhold layout changed: {state.GridRows} inventory rows.");
+                    Plugin.Log.LogDebug($"Gearhold layout changed: {state.GridRows} inventory rows.");
                 }
                 else
                 {

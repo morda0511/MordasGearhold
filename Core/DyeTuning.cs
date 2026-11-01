@@ -59,7 +59,7 @@ namespace MordasGearhold.Core
                 if (both == s_stamp) return false;
                 s_stamp = both;
                 Load(stamp == DateTime.MinValue ? null : File.ReadAllText(path), zonesStamp == DateTime.MinValue ? null : File.ReadAllText(zonesPath));
-                Plugin.Log.LogInfo(stamp == DateTime.MinValue ? "Gearhold dye numbers: file gone, defaults." : "Gearhold dye numbers loaded from " + FileName);
+                Plugin.Log.LogDebug(stamp == DateTime.MinValue ? "Gearhold dye numbers: file gone, defaults." : "Gearhold dye numbers loaded from " + FileName);
                 return true;
             }
             catch (Exception ex)

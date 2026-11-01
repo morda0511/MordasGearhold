@@ -68,6 +68,7 @@ namespace MordasGearhold
         internal static ConfigEntry<bool> ShowQuickslotBar;
         internal static ConfigEntry<bool> ShowBowAmmo;
         internal static ConfigEntry<bool> ShowOthersColors;
+        internal static ConfigEntry<bool> DevTools;
         internal static ConfigEntry<float> QuickslotBarScale;
         internal static ConfigEntry<float> QuickslotBarX;
         internal static ConfigEntry<float> QuickslotBarY;
@@ -176,6 +177,8 @@ namespace MordasGearhold
                 "Under a bow in the hotbar, show the fitting arrows of the Gearhold ammo slots with their amount; the ammo in use is highlighted.");
             ShowOthersColors = Config.Bind("4 - UI", "ShowOthersColors", true,
                 "See the dyes and weapon glow colours other players with Gearhold chose for their gear. Your own colours are sent to them regardless.");
+            DevTools = Config.Bind("9 - Developer", "DevTools", false,
+                "For mod makers only: Ctrl+Shift+F10 writes all armour textures and Ctrl+Shift+F9 a list of every weapon's effects into the config folder.");
             QuickslotBarScale = Config.Bind("4 - UI", "QuickslotBarScale", 0.75f,
                 new ConfigDescription("Size of the quickslot bar on the HUD (1 = size of the vanilla hotbar).", new AcceptableValueRange<float>(QuickslotBarEditor.MinScale, QuickslotBarEditor.MaxScale)));
             QuickslotBarX = Config.Bind("4 - UI", "QuickslotBarX", 0f,
@@ -221,7 +224,11 @@ namespace MordasGearhold
             {
                 return;
             }
-            TextureExport.Tick();
+            if (DevTools.Value)
+            {
+                TextureExport.Tick();
+                WeaponEffectsExport.Tick();
+            }
             Patches.Equipment.LateShieldCheck(player);
             Patches.Trinkets.Tick(player);
             Patches.Coins.Tick(player);

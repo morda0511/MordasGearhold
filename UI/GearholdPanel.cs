@@ -86,7 +86,7 @@ namespace MordasGearhold.UI
             }
             // the panel steps aside while the quickslot bar is being moved, so the bar is not hidden behind it
             bool visible = Plugin.ShowPanel.Value && InventoryGui.IsVisible() && player != null && GearholdState.IsReady(player)
-                && !QuickslotBarEditor.IsOpen;
+                && !QuickslotBarEditor.IsOpen && !VanillaWindowOpen(gui);
             if (s_root.gameObject.activeSelf != visible)
             {
                 s_root.gameObject.SetActive(visible);
@@ -105,6 +105,35 @@ namespace MordasGearhold.UI
                     Plugin.Log.LogError("Gearhold panel failed, panel disabled until restart: " + ex);
                 }
             }
+        }
+
+        // the windows of the inventory's top tabs (messages and effects, skills, trophies, achievements) open in the middle
+        // of the screen, where the panel sits: the panel steps aside while one of them is open
+        private static readonly string[] s_windowFields = { "m_textsDialog", "m_skillsDialog", "m_trophiesPanel", "m_achievementsPanel" };
+        private static System.Reflection.FieldInfo[] s_windows;
+
+        private static bool VanillaWindowOpen(InventoryGui gui)
+        {
+            if (s_windows == null)
+            {
+                List<System.Reflection.FieldInfo> found = new List<System.Reflection.FieldInfo>();
+                foreach (string name in s_windowFields)
+                {
+                    System.Reflection.FieldInfo field = HarmonyLib.AccessTools.Field(typeof(InventoryGui), name);
+                    if (field != null) found.Add(field);
+                }
+                s_windows = found.ToArray();
+            }
+            foreach (System.Reflection.FieldInfo field in s_windows)
+            {
+                object value = field.GetValue(gui);
+                GameObject go = value is Component c ? c.gameObject : value as GameObject;
+                if (go != null && go.activeInHierarchy)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         // ------------------------------------------------------------------ build
@@ -134,7 +163,7 @@ namespace MordasGearhold.UI
             {
                 boardImage.color = UiKit.PanelFallback;
             }
-            Plugin.Log.LogInfo("Gearhold panel background: " + (board != null ? board.name + " / " + board.sprite.name : "none found, plain fallback"));
+            Plugin.Log.LogDebug("Gearhold panel background: " + (board != null ? board.name + " / " + board.sprite.name : "none found, plain fallback"));
             Image braid = UiKit.Named(gui.m_crafting, "BraidLineHorisontalMedium");
             Image descriptionBox = UiKit.Named(gui.m_crafting, "Decription");
 
@@ -174,6 +203,11 @@ namespace MordasGearhold.UI
             s_body.offsetMin = s_body.offsetMax = Vector2.zero;
 
 
+            // the golden rule of the crafting window's tabs as a divider: under the title and under the set tabs
+            Image rule = UiKit.Named(gui.m_crafting, "TabsButtons/TabBorder");
+            UiKit.Divider(s_body, rule, DesignWidth / 2f, 80f, DesignWidth - 40f);
+            UiKit.Divider(s_body, rule, DesignWidth / 2f, 132f, DesignWidth - 40f);
+
             // armour on the left, shield and trinkets on the right, the character sheet in between
             // (slot 1 of utility/trinket = vanilla slot, 2 and 3 always active); every position comes from PanelLayout
             AddPlaced(gui, GearSlot.Helmet, "Head", "Kopf");
@@ -207,6 +241,9 @@ namespace MordasGearhold.UI
                 UiKit.CopyLook(box, descriptionBox, Color.clear);
                 box.raycastTarget = false;
             }
+            RectTransform sheetFrame = UiKit.Rect("SheetFrame", s_body);
+            UiKit.Place(sheetFrame, sheet.X, sheet.Y, sheet.W + 4f, sheet.H + 4f);
+            UiKit.AddFrame(sheetFrame, 0f);
             TMP_Text viking = UiKit.Text(s_body, header, "YOUR VIKING", 22f, UiKit.Gold, TextAlignmentOptions.Center);
             UiKit.Place(viking.rectTransform, sheet.X, sheetTop + 14f, sheet.W - 18f, 28f);
             s_stats = BuildScrollingSheet(gui, body, sheet.X, sheetTop + 34f, sheet.W - 16f, sheetBottom - 8f);
@@ -495,6 +532,7 @@ namespace MordasGearhold.UI
                 UiKit.Place(caption.rectTransform, x, y + size / 2f + 11f, 110f, 18f);
                 slot.Caption = caption;
             }
+            UiKit.AddFrame(go.transform, 3f / (size / native.x)); // a golden frame round every slot (one small image each)
             s_slots.Add(slot);
             return slot;
         }

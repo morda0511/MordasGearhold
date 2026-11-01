@@ -1,0 +1,98 @@
+player weapons 148 with extra effect parts 72
+
+== lightning+blood (12)
+  AtgeirGold_BloodLightning | Thunderblood Atgeir | Polearms | dmg=lightning | parts=7
+  AxeGold_BloodLightning | Thunderblood Axe | Axes | dmg=lightning | parts=7
+  BattleaxeGold_BloodLightning | Thunderblood Greataxe | Axes | dmg=lightning | parts=11
+  BowGold_BloodLightning | Thunderblood Bow | Bows | dmg=lightning, spirit | parts=9
+  CrossbowGold_BloodLightning | Thunderblood Crossbow | Crossbows | dmg=lightning | parts=11
+  FistGold_BloodLightning | Thunderblood Knucklechains | Unarmed | dmg=lightning | parts=18
+  KnifeGold_BloodLightning | Thunderblood Dagger | Knives | dmg=lightning | parts=7
+  MaceGold_BloodLightning | Thunderblood Mace | Clubs | dmg=lightning | parts=8
+  SledgeGold_BloodLightning | Thunderblood Sledge | Clubs | dmg=lightning | parts=8
+  SpearGold_BloodLightning | Thunderblood Spear | Spears | dmg=lightning | parts=7
+  StaffThunderBlood | Lightning Strike | ElementalMagic | dmg=lightning | parts=1
+  SwordGold_BloodLightning | Thunderblood Sword | Swords | dmg=lightning | parts=7
+
+== frost/fire flames (21)
+  AtgeirGold_FrostFire | Frostfire Atgeir | Polearms | dmg=fire, frost | parts=4
+  AxeGold_FrostFire | Frostfire Axe | Axes | dmg=fire, frost | parts=5
+  BattleaxeGold_FrostFire | Frostfire Greataxe | Axes | dmg=fire, frost | parts=5
+  BowGold_FrostFire | Frostfire Bow | Bows | dmg=fire, frost, spirit | parts=6
+  CrossbowGold_FrostFire | Frostfire Crossbow | Crossbows | dmg=fire, frost | parts=9
+  FistGold_FrostFire | Frostfire Knucklechains | Unarmed | dmg=fire, frost | parts=21
+  FW_BattleaxeCrystal | Crystal Battleaxe | Axes | dmg=spirit | parts=2
+  FW_StaffFireball | Staff of Embers | ElementalMagic | dmg=fire | parts=6
+  KnifeGold_FrostFire | Frostfire Dagger | Knives | dmg=fire, frost | parts=4
+  MaceGold_FrostFire | Frostfire Mace | Clubs | dmg=fire, frost | parts=5
+  SledgeGold_FrostFire | Frostfire Sledge | Clubs | dmg=fire, frost | parts=4
+  SpearGold_FrostFire | Frostfire Spear | Spears | dmg=fire, frost | parts=4
+  StaffClusterbomb | Staff of Fracturing | ElementalMagic | dmg=fire | parts=6
+  StaffFireball | Staff of Embers | ElementalMagic | dmg=fire | parts=8
+  StaffIceShards | Staff of Frost | ElementalMagic | dmg=frost | parts=4
+  StaffShield | Staff of Protection | BloodMagic | dmg=- | parts=2
+  StaffSkeleton | Dead Raiser | BloodMagic | dmg=- | parts=5
+  StaffSpiritCaller | Spirit Caller | BloodMagic | dmg=- | parts=5
+  SwordDyrnwyn | Dyrnwyn | Swords | dmg=fire | parts=5
+  SwordGold_FrostFire | Frostfire Sword | Swords | dmg=fire, frost | parts=5
+  SwordIronFire | Dyrnwyn | Swords | dmg=fire | parts=7
+
+== lightning (7)
+  AtgeirHimminAfl | Himminafl | Polearms | dmg=lightning | parts=4
+  AxeBerzerkrLightning | Thundering Berserkir Axes | Axes | dmg=lightning | parts=4
+  BowAshlandsStorm | Storm Fang | Bows | dmg=lightning | parts=4
+  CrossbowRipperLightning | Storm Ripper | Crossbows | dmg=lightning | parts=3
+  MaceEldnerLightning | Storm Star | Clubs | dmg=lightning | parts=4
+  SpearSplitner_Lightning | Splitnir the Storming | Spears | dmg=lightning | parts=3
+  SwordNiedhoggLightning | Nidhögg the Thundering | Swords | dmg=lightning | parts=4
+
+== blood (8)
+  AxeBerzerkrBlood | Bleeding Berserkir Axes | Axes | dmg=- | parts=3
+  AxeJotunBane | Jotun Bane | Axes | dmg=poison | parts=5
+  BowAshlandsBlood | Blood Fang | Bows | dmg=- | parts=3
+  CrossbowRipperBlood | Wound Ripper | Crossbows | dmg=- | parts=2
+  MaceEldnerBlood | Bloodgeon | Clubs | dmg=- | parts=3
+  MaceSilver | Frostner | Clubs | dmg=frost, spirit | parts=2
+  SpearSplitner_Blood | Splitnir the Bleeding | Spears | dmg=- | parts=2
+  SwordNiedhoggBlood | Nidhögg the Bleeding | Swords | dmg=- | parts=3
+
+== nature (6)
+  AxeBerzerkrNature | Primal Berserkir Axes | Axes | dmg=poison | parts=2
+  BowAshlandsRoot | Root Fang | Bows | dmg=poison | parts=4
+  CrossbowRipperNature | Root Ripper | Crossbows | dmg=poison | parts=3
+  MaceEldnerNature | Klossen | Clubs | dmg=poison | parts=4
+  SpearSplitner_Nature | Splitnir the Primal | Spears | dmg=poison | parts=3
+  SwordNiedhoggNature | Nidhögg the Primal | Swords | dmg=poison | parts=4
+
+== frost/fire flames+spirit/crystal/void (1)
+  BattleaxeCrystal | Crystal Battleaxe | Axes | dmg=spirit | parts=3
+
+== other (12)
+  BattleaxeSkullSplittur | Skull Splittur | Axes | dmg=- | parts=3
+  BowDraugrFang | Draugr Fang | Bows | dmg=poison | parts=2
+  BowSpineSnap | Spinesnap | Bows | dmg=spirit | parts=2
+  FW_BowDraugrFang | Draugr Fang | Bows | dmg=poison | parts=2
+  MaceEldner | Flametal Mace | Clubs | dmg=- | parts=1
+  MaceNeedle | Porcupine | Clubs | dmg=- | parts=2
+  SledgeCheat | Cheat sledge | Clubs | dmg=- | parts=2
+  StaffFrostOrbs | Northern Vengeance | BloodMagic | dmg=- | parts=2
+  StaffOrbofAhri | Echo Spike | BloodMagic | dmg=- | parts=1
+  SwordCheat | Cheat sword | Swords | dmg=- | parts=1
+  SwordMistwalker | Mistwalker | Swords | dmg=frost | parts=3
+  SwordNiedhogg | Nidhögg | Swords | dmg=- | parts=1
+
+== lightning+frost/fire flames (2)
+  FW_StaffLightning | Dundr | ElementalMagic | dmg=lightning | parts=4
+  StaffLightning | Dundr | ElementalMagic | dmg=lightning | parts=4
+
+== spirit/crystal/void (1)
+  KnifeVoid | Voidcaller | Knives | dmg=- | parts=2
+
+== frost/fire flames+nature (1)
+  StaffGreenRoots | Staff of the Wild | ElementalMagic | dmg=poison | parts=10
+
+== frost/fire flames+blood (1)
+  StaffRedTroll | Trollstav | BloodMagic | dmg=- | parts=6
+
+unique effect leaf names:
+ x63, Lightning x44, flare x29, flames x27, Clouds x21, fx_Torch_Basic x19, Sparcs x14, Splats x13, embers x12, Swirls x10, Particle System x10, Spores x9, blood drip x6, Spores_World x6, flames_world x6, NordAtgier_Thunderblood_mat x3, nordcrossbow_thunderblood_mat x3, Lighting x2, nordaxe_thunderblood x2, nordaxe_frostflame_mat x2, battleaxe_mistlands_mat x2, nordfistweapon_thunderblood_mat x2, staffs_mat x2, Orb_Staff_mat x2, poison drip x1, poison splat x1, poison drip swing x1, Glow x1, CrystalAxe_mat x1, nordbow_thunderblood_mat x1, voidcloud x1, eldner_mat x1, eldner_blood_mat x1, eldner_lightning_mat x1, eldner_nature_mat x1, nordmace_thunderblood_mat x1, nordmace_frostflame_mat x1, maceneedle x1, soft cloud x1, vfx_BloodHit 1 x1, nordsledge_thunderblood_mat x1, staffs_surtlingcore x1, Frost_orbs_staff_mat x1, shieldstaffbulbs_mat x1, SkeletonItem_mat x1, ThunderBlood_staff x1, Burny vfx x1, Dyrnwyn_mat x1, nordsword_thunderblood_mat x1, nordsword_frostflame_mat x1, flames_local x1, smoke x1, weapons1_fire x1, MistWalker_Mat x1, NiedhoggSlayer_mat x1, Niedhogg_blood_mat x1, Niedhogg_lightning_mat x1, Niedhogg_nature_mat x1

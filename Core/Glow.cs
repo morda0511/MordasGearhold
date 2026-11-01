@@ -14,15 +14,23 @@ namespace MordasGearhold.Core
         public bool IsSet;
         public bool White;
         public int Hue; // 0..359
+        public bool Toned; // a chosen saturation and brightness too (colour picker), not only a hue (the old swatches)
+        public int Sat;    // 0..100, with Toned
+        public int Val;    // 0..100, with Toned: how much of the part's own brightness stays
 
         internal static GlowValue Parse(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return default;
             if (raw == "white") return new GlowValue { IsSet = true, White = true };
+            string[] parts = raw.Split(',');
+            if (parts.Length == 3 && int.TryParse(parts[0], out int h3) && int.TryParse(parts[1], out int s3) && int.TryParse(parts[2], out int v3))
+            {
+                return new GlowValue { IsSet = true, Toned = true, Hue = ((h3 % 360) + 360) % 360, Sat = Mathf.Clamp(s3, 0, 100), Val = Mathf.Clamp(v3, 0, 100) };
+            }
             return int.TryParse(raw, out int hue) ? new GlowValue { IsSet = true, Hue = ((hue % 360) + 360) % 360 } : default;
         }
 
-        public override string ToString() => !IsSet ? "" : White ? "white" : Hue.ToString();
+        public override string ToString() => !IsSet ? "" : White ? "white" : Toned ? Hue + "," + Sat + "," + Val : Hue.ToString();
 
         /// <summary>
         /// The colour with its hue replaced: brightness, strength and alpha stay, so fire still looks like fire.
@@ -33,7 +41,7 @@ namespace MordasGearhold.Core
             if (!IsSet) return c;
             Color.RGBToHSV(c, out _, out float s, out float v);
             if (s < 0.12f || v <= 0f) return c;
-            Color result = Color.HSVToRGB(White ? 0f : Hue / 360f, White ? 0f : s, v, true);
+            Color result = Color.HSVToRGB(White ? 0f : Hue / 360f, White ? 0f : (Toned ? Sat / 100f : s), Toned && !White ? v * Val / 100f : v, true);
             result.a = c.a;
             return result;
         }
@@ -46,7 +54,9 @@ namespace MordasGearhold.Core
         {
             if (!IsSet || White) return c;
             Color.RGBToHSV(c, out _, out float s, out float v);
-            Color result = Color.HSVToRGB(Hue / 360f, Mathf.Max(s, 0.8f), Mathf.Max(v, 0.9f), true);
+            Color result = Toned
+                ? Color.HSVToRGB(Hue / 360f, Sat / 100f, Mathf.Max(v, 0.9f) * Val / 100f, true)
+                : Color.HSVToRGB(Hue / 360f, Mathf.Max(s, 0.8f), Mathf.Max(v, 0.9f), true);
             result.a = c.a;
             return result;
         }
@@ -83,15 +93,37 @@ namespace MordasGearhold.Core
         internal static bool CanGlow(ItemDrop.ItemData item)
         {
             GameObject prefab = item?.m_dropPrefab;
-            return prefab != null && (prefab.GetComponentInChildren<ParticleSystem>(true) != null || prefab.GetComponentInChildren<Light>(true) != null);
+            if (prefab == null) return false;
+            // every weapon carries a small particle system on its root and the upgrade shimmer: those are no glow of their own
+            foreach (ParticleSystem ps in prefab.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                if (ps.transform != prefab.transform && !InShineObject(ps.transform, prefab.transform)) return true;
+            }
+            foreach (Light light in prefab.GetComponentsInChildren<Light>(true))
+            {
+                if (!InShineObject(light.transform, prefab.transform)) return true;
+            }
+            return false;
         }
 
-        /// <summary>True when the weapon has the upgrade shimmer.</summary>
+        /// <summary>Upgrade level from which the shimmer shows on a weapon, so SHINE is only offered where it can be seen.</summary>
+        internal const int ShineFromQuality = 3;
+
+        /// <summary>True when the weapon has the upgrade shimmer and is upgraded far enough to show it.</summary>
         internal static bool CanShine(ItemDrop.ItemData item)
         {
             GameObject prefab = item?.m_dropPrefab;
-            if (prefab == null) return false;
+            if (prefab == null || item.m_quality < ShineFromQuality) return false;
             foreach (Transform t in prefab.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.IndexOf(ShineObject, System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
+        }
+
+        private static bool InShineObject(Transform t, Transform root)
+        {
+            for (; t != null && t != root; t = t.parent)
             {
                 if (t.name.IndexOf(ShineObject, System.StringComparison.OrdinalIgnoreCase) >= 0) return true;
             }
@@ -390,7 +422,7 @@ namespace MordasGearhold.Core
                 }
             }
             sb.Append("\n  swing trails: ").Append(m_trails.Count);
-            Plugin.Log.LogInfo(sb.ToString());
+            Plugin.Log.LogDebug(sb.ToString());
         }
 
         // Lights that particle systems create themselves copy a Light that lives outside this weapon (a shared

@@ -102,19 +102,42 @@ namespace MordasGearhold.Core
         }
 
         /// <summary>Adds the item's look to the unlocked looks. Returns true when it was new.</summary>
-        internal static bool Unlock(Player player, ItemDrop.ItemData item)
+        internal static bool Unlock(Player player, ItemDrop.ItemData item) => item?.m_dropPrefab != null && Unlock(player, item.m_dropPrefab);
+
+        /// <summary>Same, from the item's prefab (e.g. what a trader sells, which has no instance yet).</summary>
+        internal static bool Unlock(Player player, GameObject prefab)
         {
-            if (item?.m_dropPrefab == null || !Unlockable(item))
+            ItemDrop drop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
+            if (drop == null || !Unlockable(drop.m_itemData))
             {
                 return false;
             }
             HashSet<string> set = Unlocked(player);
-            if (!set.Add(item.m_dropPrefab.name))
+            if (!set.Add(prefab.name))
             {
                 return false;
             }
             player.m_customData[UnlockKey] = string.Join(",", set.OrderBy(n => n, StringComparer.Ordinal));
             return true;
+        }
+
+        // names of every item some recipe makes: gear that is not in here (a trader's clothes, for example) has no recipe to unlock it
+        private static HashSet<string> s_recipeItems;
+
+        private static bool HasRecipe(GameObject prefab)
+        {
+            if (s_recipeItems == null || s_recipeItems.Count == 0)
+            {
+                s_recipeItems = new HashSet<string>(StringComparer.Ordinal);
+                if (ObjectDB.instance != null)
+                {
+                    foreach (Recipe recipe in ObjectDB.instance.m_recipes)
+                    {
+                        if (recipe != null && recipe.m_item != null) s_recipeItems.Add(recipe.m_item.gameObject.name);
+                    }
+                }
+            }
+            return s_recipeItems.Contains(prefab.name);
         }
 
         private static float s_nextScan;
@@ -130,7 +153,8 @@ namespace MordasGearhold.Core
             long me = player.GetPlayerID();
             foreach (ItemDrop.ItemData item in player.GetInventory().GetAllItems())
             {
-                if (item.m_crafterID == me)
+                // crafted by you, or gear no recipe makes (bought from a trader, found): its look is yours as well
+                if (item.m_crafterID == me || (item.m_dropPrefab != null && !HasRecipe(item.m_dropPrefab)))
                 {
                     Unlock(player, item);
                 }

@@ -80,20 +80,36 @@ namespace MordasGearhold.Patches
                 return false;
             }
             ItemDrop.ItemData stored = Equipment.ItemIn(player, GearSlot.Holster);
-            if (stored == null || stored.m_equipped || !Topology.IsHolsterWeapon(stored))
+            if (stored == null || !Topology.IsHolsterWeapon(stored))
             {
                 return false;
+            }
+            Inventory inventory = player.GetInventory();
+            if (stored.m_equipped)
+            {
+                // the holstered weapon is in hand: the weapon it replaced comes back, like a right-click on it
+                ItemDrop.ItemData back = s_replaced;
+                s_replaced = null;
+                if (back == null || back.m_equipped || !inventory.ContainsItem(back))
+                {
+                    return false;
+                }
+                player.UseItem(null, back, true);
+                return true;
             }
             ItemDrop.ItemData held = HeldWeapon(player);
             if (held == null)
             {
                 return false;
             }
-            player.UnequipItem(held);
-            Equipment.MoveToCell(player, held, Topology.Cell(player, GearSlot.Holster)); // stored takes held's old cell
-            player.EquipItem(stored);
+            // only the right-click on the Weapon 2 slot: the weapon stays in its cell, the one in hand goes away
+            s_replaced = held;
+            player.UseItem(null, stored, true);
             return true;
         }
+
+        /// <summary>The weapon the holstered one replaced in the hand (it stays in its own cell).</summary>
+        private static ItemDrop.ItemData s_replaced;
 
         [HarmonyPatch(typeof(Player), "Update")]
         private static class Player_Update

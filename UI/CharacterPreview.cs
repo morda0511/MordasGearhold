@@ -19,13 +19,13 @@ namespace MordasGearhold.UI
         private const int TextureWidth = 512;
         private const int TextureHeight = 768;
         private const float MinDistance = 1.6f;
-        private const float MaxDistance = 4.5f;
+        private const float MaxDistance = 5.0f;
 
         private static Camera s_camera;
         private static RenderTexture s_texture;
         private static int s_layer = -1;
         private static float s_yaw;
-        private static float s_distance = 3.4f;
+        private static float s_distance = 3.9f;
 
         private static readonly List<Renderer> s_renderers = new List<Renderer>();
         private static readonly List<int> s_layers = new List<int>();

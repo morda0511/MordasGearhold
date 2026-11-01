@@ -37,11 +37,11 @@ Trinket 2 360,856,46,46
 Trinket 3 412,856,46,46
 Utility-Titel 118,778,160,22
 Custom 1 402,262,52,52
-Custom-Taste 1 402,320,56,22
-Custom 2 402,358,52,52
-Custom-Taste 2 402,416,56,22
-Custom 3 402,454,52,52
-Custom-Taste 3 402,512,56,22
+Custom-Taste 1 402,318,56,22
+Custom 2 402,362,52,52
+Custom-Taste 2 402,418,56,22
+Custom 3 402,462,52,52
+Custom-Taste 3 402,518,56,22
 Utility 1 48,856,46,46
 Utility 2 100,856,46,46
 Utility 3 152,856,46,46
@@ -57,61 +57,61 @@ Food-Titel 100,910,156,22
 Food 1 48,945,46,46
 Food 2 100,945,46,46
 Food 3 152,945,46,46
-Food-Taste 1 48,979,48,24
-Food-Taste 2 100,979,48,24
-Food-Taste 3 152,979,48,24
+Food-Taste 1 48,988,48,24
+Food-Taste 2 100,988,48,24
+Food-Taste 3 152,988,48,24
 Weapon-2-Titel 230,910,66,22
 Weapon 2 230,945,46,46
-Weapon-2-Taste 230,979,48,24
+Weapon-2-Taste 230,988,48,24
 Mead-Titel 360,910,156,22
 Mead 1 308,945,46,46
 Mead 2 360,945,46,46
 Mead 3 412,945,46,46
-Mead-Taste 1 308,979,48,24
-Mead-Taste 2 360,979,48,24
-Mead-Taste 3 412,979,48,24
+Mead-Taste 1 308,988,48,24
+Mead-Taste 2 360,988,48,24
+Mead-Taste 3 412,988,48,24
 Quickslot-Titel 230,1000,410,22
-Quickslot 1 48,1020,46,46
-Quickslot 2 100,1020,46,46
-Quickslot 3 152,1020,46,46
-Quickslot 4 204,1020,46,46
-Quickslot 5 256,1020,46,46
-Quickslot 6 308,1020,46,46
-Quickslot 7 360,1020,46,46
-Quickslot 8 412,1020,46,46
-Quickslot-Taste 1 48,1052,48,24
-Quickslot-Taste 2 100,1052,48,24
-Quickslot-Taste 3 152,1052,48,24
-Quickslot-Taste 4 204,1052,48,24
-Quickslot-Taste 5 256,1052,48,24
-Quickslot-Taste 6 308,1052,48,24
-Quickslot-Taste 7 360,1052,48,24
-Quickslot-Taste 8 412,1052,48,24
-Fußzeile 230,1078,370,18
+Quickslot 1 48,1032,46,46
+Quickslot 2 100,1032,46,46
+Quickslot 3 152,1032,46,46
+Quickslot 4 204,1032,46,46
+Quickslot 5 256,1032,46,46
+Quickslot 6 308,1032,46,46
+Quickslot 7 360,1032,46,46
+Quickslot 8 412,1032,46,46
+Quickslot-Taste 1 48,1072,48,24
+Quickslot-Taste 2 100,1072,48,24
+Quickslot-Taste 3 152,1072,48,24
+Quickslot-Taste 4 204,1072,48,24
+Quickslot-Taste 5 256,1072,48,24
+Quickslot-Taste 6 308,1072,48,24
+Quickslot-Taste 7 360,1072,48,24
+Quickslot-Taste 8 412,1072,48,24
+Fußzeile 230,1092,370,16
 HUD-Zahnrad 368,46,26,26
-Custom 4 402,550,52,52
-Custom-Taste 4 402,608,56,22
-Custom 5 402,646,52,52
-Custom-Taste 5 402,704,56,22
-Custom 6 58,550,52,52
-Custom-Taste 6 58,608,56,22
-Custom 7 58,646,52,52
-Custom-Taste 7 58,704,56,22
-Custom 8 58,742,52,52
-Custom-Taste 8 58,800,56,22
-Custom 9 402,742,52,52
-Custom-Taste 9 402,800,56,22
+Custom 4 402,562,52,52
+Custom-Taste 4 402,618,56,22
+Custom 5 402,662,52,52
+Custom-Taste 5 402,718,56,22
+Custom 6 58,562,52,52
+Custom-Taste 6 58,618,56,22
+Custom 7 58,662,52,52
+Custom-Taste 7 58,718,56,22
+Custom 8 58,762,52,52
+Custom-Taste 8 58,818,56,22
+Custom 9 402,762,52,52
+Custom-Taste 9 402,818,56,22
 ";
 
         internal const string FileName = "MordasGearhold.layout.json";
         private static readonly Dictionary<string, Part> s_parts = new Dictionary<string, Part>();
-        internal static float Height { get; private set; } = 1090f;
+        internal static float Height { get; private set; } = 1104f;
 
         /// <summary>Reads the built-in layout, then the optional file on top of it.</summary>
         internal static void Load()
         {
             s_parts.Clear();
-            Height = 1090f;
+            Height = 1104f;
             foreach (string line in Defaults.Split('\n'))
             {
                 string text = line.Trim();
@@ -139,7 +139,7 @@ Custom-Taste 9 402,800,56,22
                     part.H = Math.Max(4f, Field(m.Groups[2].Value, "height", part.H));
                     s_parts[m.Groups[1].Value] = part;
                 }
-                Plugin.Log.LogInfo("Gearhold panel layout loaded from " + path);
+                Plugin.Log.LogDebug("Gearhold panel layout loaded from " + path);
             }
             catch (Exception ex)
             {

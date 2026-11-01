@@ -86,7 +86,7 @@ namespace MordasGearhold.Core
             P = DyeTuning.ParamsFor(textures[0].name);
             ZoneSet found = Detect(textures);
             s_sets[key] = found;
-            Plugin.Log.LogInfo($"Colour zones of {string.Join(" + ", textures.ConvertAll(t => t.name))}: {found.Count} ({string.Join(", ", System.Array.ConvertAll(found.Share, s => (s * 100f).ToString("0") + "%"))})");
+            Plugin.Log.LogDebug($"Colour zones of {string.Join(" + ", textures.ConvertAll(t => t.name))}: {found.Count} ({string.Join(", ", System.Array.ConvertAll(found.Share, s => (s * 100f).ToString("0") + "%"))})");
             return found;
         }
 

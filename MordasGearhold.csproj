@@ -34,6 +34,12 @@
   <ItemGroup>
     <!-- panel icons as raw 128x128 alpha bytes (Assets/*.png is the editable source), loaded with UiKit.EmbeddedSprite -->
     <EmbeddedResource Include="Assets\transmog-icon.alpha" LogicalName="MordasGearhold.transmog-icon.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-helm.alpha" LogicalName="MordasGearhold.icon-helm.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-brustpanzer.alpha" LogicalName="MordasGearhold.icon-brustpanzer.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-legs.alpha" LogicalName="MordasGearhold.icon-legs.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-cape.alpha" LogicalName="MordasGearhold.icon-cape.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-schild.alpha" LogicalName="MordasGearhold.icon-schild.alpha" />
+    <EmbeddedResource Include="Assets\TranmogUIIcons\icon-waffe.alpha" LogicalName="MordasGearhold.icon-waffe.alpha" />
   </ItemGroup>
 
   <!-- Copies the plugin into the Thunderstore profile used for testing (same convention as the sibling mods). -->

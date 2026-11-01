@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,59 @@ namespace MordasGearhold.UI
         internal static readonly Color Rule = new Color(1f, 0.79f, 0.43f, 0.35f);
         internal static readonly Color PanelFallback = new Color(0.11f, 0.09f, 0.075f, 0.97f);
 
+        private static readonly Dictionary<string, Sprite> s_vanillaSprites = new Dictionary<string, Sprite>();
+        private static Material s_litHud;
+
+        /// <summary>A sprite of the game's own UI by name (e.g. "text_field"); null when it is not there.</summary>
+        internal static Sprite VanillaSprite(string name)
+        {
+            if (s_vanillaSprites.TryGetValue(name, out Sprite found) && found != null)
+            {
+                return found;
+            }
+            foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            {
+                if (sprite != null && !string.IsNullOrEmpty(sprite.name) && !s_vanillaSprites.ContainsKey(sprite.name))
+                {
+                    s_vanillaSprites[sprite.name] = sprite;
+                }
+            }
+            return s_vanillaSprites.TryGetValue(name, out found) ? found : null;
+        }
+
+        /// <summary>
+        /// The look of the game's own text boxes (the "text_field" frame, lit like the other windows) for an input field's
+        /// background. Without the sprite it falls back to a plain dark box.
+        /// </summary>
+        internal static void StyleField(Image image, bool editable = true)
+        {
+            Sprite sprite = VanillaSprite("text_field");
+            if (sprite == null)
+            {
+                image.sprite = null;
+                image.color = new Color(0.08f, 0.05f, 0.02f, editable ? 0.75f : 0.4f);
+                return;
+            }
+            image.sprite = sprite;
+            image.type = sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
+            image.color = editable ? Color.white : new Color(1f, 1f, 1f, 0.55f);
+            if (s_litHud == null)
+            {
+                foreach (Material material in Resources.FindObjectsOfTypeAll<Material>())
+                {
+                    if (material != null && material.shader != null && material.shader.name == "Custom/LitGui" && material.name == "lithud")
+                    {
+                        s_litHud = material;
+                        break;
+                    }
+                }
+            }
+            if (s_litHud != null)
+            {
+                image.material = s_litHud;
+            }
+        }
+
         private static Sprite s_transmogIcon;
         private static Sprite s_gearIcon;
 
@@ -21,6 +75,64 @@ namespace MordasGearhold.UI
 
         /// <summary>A settings gear, drawn once in code (white, tint with Image.color).</summary>
         internal static Sprite GearIcon => s_gearIcon != null ? s_gearIcon : (s_gearIcon = DrawGear(64));
+
+        private static Sprite s_frameSprite;
+
+        /// <summary>A thin golden outline, nine-sliced: one small image frames any box (white, tint it with Image.color).</summary>
+        internal static Sprite FrameSprite()
+        {
+            if (s_frameSprite != null)
+            {
+                return s_frameSprite;
+            }
+            const int size = 12;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { name = "MordasGearholdFrame", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            Color32[] pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int edge = Mathf.Min(Mathf.Min(x, size - 1 - x), Mathf.Min(y, size - 1 - y));
+                    byte alpha = edge == 0 ? (byte)255 : edge == 1 ? (byte)110 : (byte)0; // a bright line with a soft inner edge
+                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+                }
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            s_frameSprite = Sprite.Create(texture, new UnityEngine.Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(3f, 3f, 3f, 3f));
+            return s_frameSprite;
+        }
+
+        internal static readonly Color FrameColor = new Color(0.86f, 0.66f, 0.3f, 0.85f);
+
+        /// <summary>Puts a golden frame around a box: a child stretched over it, <paramref name="margin"/> units outside.</summary>
+        internal static Image AddFrame(Transform box, float margin)
+        {
+            RectTransform rect = Rect("Frame", box);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(-margin, -margin);
+            rect.offsetMax = new Vector2(margin, margin);
+            Image image = rect.gameObject.AddComponent<Image>();
+            image.sprite = FrameSprite();
+            image.type = Image.Type.Sliced;
+            image.color = FrameColor;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        private static readonly Dictionary<string, Sprite> s_pieceIcons = new Dictionary<string, Sprite>();
+
+        /// <summary>The icon of a piece tab (helm, brustpanzer, legs, cape, schild, waffe): line art from the DLL, tint it with Image.color.</summary>
+        internal static Sprite PieceIcon(string name)
+        {
+            if (!s_pieceIcons.TryGetValue(name, out Sprite sprite) || sprite == null)
+            {
+                sprite = EmbeddedSprite("MordasGearhold.icon-" + name + ".alpha");
+                s_pieceIcons[name] = sprite;
+            }
+            return sprite;
+        }
 
         private static Sprite EmbeddedSprite(string resource)
         {

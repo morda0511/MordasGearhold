@@ -234,7 +234,7 @@ namespace MordasGearhold.Core
             {
                 Plugin.Log.LogWarning($"Set {target + 1}: {targetRemainder.Records.Count} items stay stored with the set (missing prefab or no free cell).");
             }
-            Plugin.Log.LogInfo($"Switched set {from + 1} -> {target + 1}: stored {outgoing.Count}, restored {placed.Count}, dormant {targetRemainder.Records.Count}.");
+            Plugin.Log.LogDebug($"Switched set {from + 1} -> {target + 1}: stored {outgoing.Count}, restored {placed.Count}, dormant {targetRemainder.Records.Count}.");
             return true;
         }
 
