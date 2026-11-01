@@ -45,7 +45,7 @@ Right-click on Trinket/Utility 2 or 3 makes it the main one (it swaps with slot 
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-the-gearhold-panel.png)
 
-![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Gearhold_Inventory.png)
+![The Gearhold panel in game](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/gearhold-panel-v2.png)
 
 Everything of a set in one window: the three set tabs, your armour and shield, the YOUR VIKING sheet, the coin slot, and below it the rows with utility, trinkets, food, mead, Weapon 2 and the quickslots.
 
@@ -96,7 +96,7 @@ The lower rows of the panel: utility and trinkets, 3 food and 3 mead slots with 
 ### Weapon 2
 
 - **Weapon 2** (between the food and mead slots, per set): put a second weapon there, melee, bow or crossbow.
-  - The hide key (**R**) swaps it with the weapon in your hand. Press it again to swap back. With an empty slot, or no weapon in hand, R works like vanilla.
+  - The hide key (**R**) takes the weapon from the slot into your hand, like a right-click on it: it stays in its slot and nothing moves in your hotbar. Press it again to get the previous weapon back. With an empty slot, or no weapon in hand, R works like vanilla.
   - **Own swap key:** click the box under the slot and press a key (`Weapon2Swap`). Then only that key swaps and R is vanilla again. Delete clears it.
   - **Worn on the body:** the weapon hangs where vanilla puts a weapon away: one-handers at the hip, two-handers, atgeirs and bows on the back. Other players see it too (`ShowWeapon2OnBody`).
   - Switch the whole feature off with `EnableWeapon2`: the slot is gone, R is vanilla, a weapon still in the slot goes back into the inventory.
@@ -142,7 +142,7 @@ Your quickslots, food and meads as small bars on the screen, so you do not need 
 
 ![](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/mordas-gearhold/dividers/divider-transmog-and-dyes.png)
 
-![The look menu with the looks (transmog) and the colours (dyes)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/Transmog%2Bdye%20menu.png)
+![The look menu with the looks (transmog) and the colours (dyes)](https://raw.githubusercontent.com/morda0511/MordasGearhold/main/thunderstore-assets/screenshots/transmog-dye-menu-v2.png)
 
 One menu for how your gear looks and what colour it has: your character in 3D on the left, a tab for each piece, the looks you have unlocked and below them the COLOR section.
 
@@ -150,14 +150,14 @@ One menu for how your gear looks and what colour it has: your character in 3D on
 
 Change how your gear **looks** without changing the gear itself. The menu opens in the middle of the screen with your character in 3D, a tab for each piece and the looks you have unlocked.
 
-- **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well.
+- **Unlocking:** every piece whose recipe you know is available right away, the same list the crafting menu uses. You do not need to own it. Pieces you crafted count as well. Gear no recipe makes (for example clothes you buy from a trader) unlocks its look as soon as you carry it.
 - **Armour and shield** (Head, Chest, Legs, Cape, Shield): click the **transmog button** in the panel's top left corner, or Shift + right-click one of these slots (a plain right-click equips and unequips like in the vanilla inventory). The menu opens in the middle of the screen, with a tab for each piece, so you can dress your whole set without leaving it. While it is open the inventory and crafting windows step aside, so you see your character.
-  - **OWN LOOK** shows the real item.
-  - The first cell, **Hide** (a box with a red slash), makes the piece invisible. To take gear off, left-click the slot.
+  - **Original** (the first cell, showing your real item) takes the chosen look off again.
+  - The second cell, **Hide** (a box with a red slash), makes the piece invisible. To take gear off, left-click the slot.
   - Or click one of your unlocked looks of the same kind.
   - Looks are saved **per set**, so each set can have its own outfit.
 - **SAVE and BACK:** every choice shows on your character right away, but only **SAVE** (under the character) keeps it. **< BACK** (top left), Esc or closing the inventory throws the changes away.
-- **Weapons and bows:** `Alt` + right-click the weapon in the inventory, or Shift + right-click it in a quickslot. Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
+- **Weapons and bows:** Open the **WEAPONS** tab in the list on the left: it shows every weapon you carry (inventory, quickslots, Weapon 2). Pick one, then its look and colour. (`Alt` + right-click on a weapon opens the same tab.) Only looks of the same weapon kind are offered (axe as axe, sword as sword), so grip and animations always fit.
   - The look stays with that weapon, in every set.
   - Upgrading a weapon at a workbench makes a new item, so its look has to be picked again.
 - **Marker:** a piece with a chosen look, colour or Hide shows a small gold sparkle (✦) in the top-left corner of its slot. This also works for weapons in the inventory and in quickslots.
@@ -187,14 +187,14 @@ Recolour Head, Chest, Legs, Cape and Shield in the same menu: your character is 
 Weapons get the same COLOR section, and fire, frost and lightning weapons get GLOW and SHINE on top.
 
 - **Weapons can be dyed too:** open the look menu of a weapon (`Alt` + right-click it in the inventory, or Shift + right-click it in a quickslot). It has the same COLOR section with colour zones. The colours belong to that weapon and follow it into every set; a dyed weapon gets the sparkle marker. The preview shows the weapon while you hold it; the zones are found from its model, so you can also dye one that is put away.
-- **Weapon glow:** weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu.
+- **Weapon glow:** weapons with glow effects (fire, frost, lightning, glowing cores and runes) get a **GLOW** section in their look menu (plain weapons without such an effect show none).
   - **Colour swatches:** every coloured glow part takes the chosen colour: particles, lights, glowing materials and the swing trail. **White** makes them white.
   - Brightness and strength stay, so fire still flickers like fire.
   - Smoke, white shimmer and the hit effects keep their own colours.
   - **RESET** gives the weapon its own colours back.
   - The colour belongs to that weapon and follows it into every set. A weapon with a glow colour gets the sparkle marker too.
   - Like the looks, it shows once you **SAVE**. Draw the weapon to see it in the preview.
-- **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
+- **SHINE:** upgraded weapons also carry a white shimmer. Weapons that have it and are upgraded to level 3 or more show a second row, SHINE, with the same swatches; it colours that shimmer (and its light) on its own. It is only visible on weapons that are upgraded far enough to shimmer.
 
 #### Multiplayer colours
 Your dyes (all colour zones), weapon dyes and GLOW / SHINE colours are sent to the other players in range through your player's network data (one short text, only when it changes). Players who also have Gearhold see them on your character, also on the Weapon 2 on your body; everyone else sees the normal colours, and the server needs no mod. `ShowOthersColors` (config, UI) turns off seeing other players' colours.
